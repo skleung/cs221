@@ -30,10 +30,14 @@ class Edge:
 
   # player: whoever controls this edge
   # inRoad: not sure if we need this, but perhaps we could have a road of edges...
-  
+  def __init__(self, node1, node2, player = None):
+    self.node1 = node1
+    self.node2 = node2
+    self.player = player
+
 class Board:
   def __init__(self, layout):
-    nodes = {} # maps dice numbers to nodes
+    nodes = {} # maps dice numbers to nodes x, y?
     for tile in layout.tiles:
       if tile.edge:;
 

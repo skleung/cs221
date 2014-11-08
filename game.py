@@ -17,8 +17,7 @@ class GameStateData:
   """
   def initialize(self, layout = None):
     self.deck = Deck()
-    # Initialize board based on the layout (though, this can be hard coded for now)
-    # If layout == None: hardcode the board values
+    self.board = Board(layout)
 
 class GameState:
   def __init__( self, prevState = None ):

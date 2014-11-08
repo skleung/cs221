@@ -18,3 +18,6 @@ class Deck:
     self.cards += [Card("Victory")]*5 + [Card("Soldier")]*14 + [Card("Monopoly")]*2 + [Card("Plenty")]*2 + [Card("Road")]*2 
     # shuffles cards
     random.shuffle(self.cards)
+
+  def drawCard(self):
+    return self.cards.pop(0)
