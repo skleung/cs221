@@ -1,4 +1,5 @@
 RESOURCE_NAMES = ["Sheep", "Wheat", "Ore", "Brick", "Wood"]
+import random
 
 class Card:
   def __init__(self, value):
@@ -14,7 +15,8 @@ class Deck:
   def __init__(self):
     self.cards = []
     for resource in RESOURCE_NAMES:
-      self.cards+= [Card(resource)]*12 #TODO: Research this number?
+      self.cards+= [Card(resource)]*12 
+      #TODO: How many resource cards of each type do we have in a deck?
     self.cards += [Card("Victory")]*5 + [Card("Soldier")]*14 + [Card("Monopoly")]*2 + [Card("Plenty")]*2 + [Card("Road")]*2 
     # shuffles cards
     random.shuffle(self.cards)
