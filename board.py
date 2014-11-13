@@ -31,6 +31,7 @@ class Vertex:
     self.player = None
     self.isSettlement = False
     self.isCity = False
+    self.roads = []
 
   def settle(self, player):
     self.isSettlement = True
@@ -49,6 +50,13 @@ class Edge:
     self.X = X
     self.Y = Y
     self.player = player
+    
+  def build(self, player, startVertex, endVertex):
+    self.player = player
+    self.start = startVertex
+    self.end = endVertex
+    startVertex.roads.append(self)
+    endVertex.roads.append(self)
 
 # Keeps track of resource + numberchit
 class Tile:
@@ -106,14 +114,17 @@ class Board:
       for j in range(numCols*2+2):
         self.vertices[i][j] = Vertex(i, j)
         self.edges[i][j] = Edge(i, j)
+    self.allSettlements = []
 
   def applyAction(self, playerIndex, action):
     if action[0] == Actions.SETTLE:
       vertex = action[1]
       vertex.settle(playerIndex)
+      self.allSettlements.append(vertex)
     if action[0] == Actions.ROAD:
       edge = action[1]
-      edge.player = playerIndex
+      tips = self.getVertexEnds(action[1])
+      edge.build(playerIndex, tips[0], tips[1])
 
   def getNeighborHexes(self, hex):
     neighbors = []
@@ -134,6 +145,14 @@ class Board:
     if hexFour != None: neighbors.append(hexFour)
     if hexFive != None: neighbors.append(hexFive)
     if hexSix != None: neighbors.append(hexSix)
+    return neighbors
+
+  def getNeighborVerticesViaRoad(self, vertex):
+    neighbors = []
+    for road in vertex.roads:
+      node = road.start if road.start != vertex else road.end
+      if road is None: continue
+      neighbors.append(node)
     return neighbors
 
   def getNeighborVertices(self, vertex):

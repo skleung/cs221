@@ -2,6 +2,7 @@ from gameUtil import *
 import random
 from board import *
 from enum import Enum
+import pdb
 
 VICTORY_POINTS_TO_WIN = 10
 STARTING_NUM_OF_CARDS = 7
@@ -19,13 +20,18 @@ class Agent:
     self.name = name
     self.agentIndex = agentIndex
     self.victoryPoints = 0
+    
+    # List of edges
+    self.roads = []
+    
+    # List of vertices
+    self.settlements = []
+
     # TODO(sierrakn): Make this a Counter of resource type -> number of that resource in hand
     self.resources = ([ResourceTypes.WOOL, ResourceTypes.BRICK, 
       ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER])
-    # List of edges
-    self.roads = []
-    # List of vertices
-    self.settlements = []
+    
+
   # to string method will print the agent's name
   def __str__(self):
     return self.name
@@ -168,18 +174,49 @@ class GameState:
     board = self.data.board
     # TODO(sierrakn): change to actual resources
     if len(agent.resources) > 3:
-      for edge in agent.roads:
-        # TODO(sierrakn): smarter way to check if two away from settlement?
-        vertices = board.getVertexEnds(edge)
-        for vertex in vertices:
+      # for edge in agent.roads:
+      #   # TODO(sierrakn): smarter way to check if two away from settlement?
+      #   vertices = board.getVertexEnds(edge)
+      #   for vertex in vertices:
+      #     print "Starting looking from settlement " + str((vertex.X, vertex.Y))
+      #     canSettle = True
+      #     if vertex.isSettlement: canSettle = False; continue
+      #     for neighborVertex in board.getNeighborVertices(vertex):
+      #       if neighborVertex.isSettlement: canSettle = False; break
+      #       print "Jumped to neighbor at " + str((neighborVertex.X, neighborVertex.Y))
+      #       for secondNeighbor in board.getNeighborVertices(neighborVertex):
+      #         if secondNeighbor.isSettlement: canSettle = False; break
+      #         print "Looking at neighbor " + str((secondNeighbor.X, secondNeighbor.Y))
+      #     if canSettle: 
+      #       print "Can settle!"
+      #       legalActions.append((Actions.SETTLE, vertex))
+
+      # Check each road
+      for road in agent.roads:
+        roadEnds = board.getVertexEnds(road)
+
+        # Look at the endpoints (up to 2) of this road to see
+        # if we can put a settlement here
+        for roadEnd in roadEnds:
+
+          # We can settle here if it's empty and it's >= two away from
+          # every other settlement
+          if roadEnd.isSettlement: continue
+          oneAwayVertices = board.getNeighborVerticesViaRoad(roadEnd)
           canSettle = True
-          if vertex.isSettlement: canSettle = False; continue
-          for neighborVertex in board.getNeighborVertices(vertex):
-            if neighborVertex.isSettlement: canSettle = False; break
-            for secondNeighbor in board.getNeighborVertices(neighborVertex):
-              if secondNeighbor.isSettlement: canSettle = False; break
-          if canSettle: 
-            legalActions.append((Actions.SETTLE, vertex))
+
+          # Go through all vertices 1 step away and see if there are
+          # any settlements.  If there are, stop checking - we can't settle here :(
+          for oneAwayVertex in oneAwayVertices:
+            if oneAwayVertex.isSettlement:
+              canSettle = False
+              break
+
+          # If we can settle at roadEnd, then it's a valid action
+          if canSettle:
+            legalActions.append((Actions.SETTLE, roadEnd))
+
+
     # build road connecting to either settlement or road
     if len(agent.resources) > 2:
       for vertex in agent.settlements:
@@ -239,18 +276,42 @@ class Game:
       # roll dice
       # TODO(sierrakn): Actually roll dice and distribute resources accordingly
       for ag in state.data.agents:
+        oldResourceNum = len(ag.resources)
         ag.updateResources(state)
+        print "Agent " + str(ag.agentIndex) + " gained " + str(len(ag.resources) - oldResourceNum) + " resources.  Total: " + str(len(ag.resources))
       # get an action from the state
+      #response = raw_input(">")
       action = agent.getAction(state)
-      print agentIndex
-      print action
       agent.applyAction(action)
       board.applyAction(agent.agentIndex, action)
+      printGameActionForAgent(action, agent, board)
       # store move history
       self.moveHistory.append((agent.name, action))
       agentIndex = (agentIndex+1) % numAgents
 
     print state.data.agents[state.gameOver()], " won the game"
+
+
+# Debugging method to print out info about the agent's action
+def printGameActionForAgent(action, agent, board):
+  print "---------- PLAYER " + str(agent.agentIndex) + "----------"
+  print "Victory points: " + str(agent.victoryPoints)
+  print "Resources: " + str(len(agent.resources))
+  print "Settlements: " + " ".join([str((s.X, s.Y)) for s in agent.settlements])
+  s = ""
+  for road in agent.roads:
+    ends = board.getVertexEnds(road)
+    if len(ends) == 1:
+      s += ", " + str(ends[0]) + " to None"
+    elif len(ends) == 2:
+      s += ", " + str((ends[0].X, ends[0].Y)) + " to " + str((ends[1].X, ends[1].Y))
+    elif len(ends) == 0:
+      s += ", " + "None to None??"
+  print "Roads: " + s
+  print "----------------------------"
+
+  print "Took action " + str(action[0])
+  print "\n\n\n"
 
 gState = GameState() 
 #initializes the game state
