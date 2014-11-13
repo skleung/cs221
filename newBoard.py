@@ -94,15 +94,17 @@ Which is necessary to know when creating layouts
 class Board:
   # Layout is just a double list of Tiles, some will be None
   def __init__(self, layout):
-    self.hexagons = [[0 for x in xrange(10)] for x in xrange(10)] 
-    self.edges = [[0 for x in xrange(22)] for x in xrange(22)] 
-    self.vertices = [[0 for x in xrange(22)] for x in xrange(22)] 
-    for i in range(len(layout)):
-      for j in range(len(layout[0])):
+    numRows = len(layout)
+    numCols = len(layout[0])
+    self.hexagons = [[0 for x in xrange(numCols)] for x in xrange(numRows)] 
+    self.edges = [[0 for x in xrange(numCols*2+2)] for x in xrange(numRows*2+2)] 
+    self.vertices = [[0 for x in xrange(numCols*2+2)] for x in xrange(numRows*2+2)] 
+    for i in range(numRows):
+      for j in range(numCols):
         tile = layout[i][j]
         self.hexagons[i][j] = Hexagon(i, j, tile.resource, tile.number)
-    for i in range(22):
-      for j in range(22):
+    for i in range(numRows*2+2):
+      for j in range(numCols*2+2):
         self.vertices[i][j] = Vertex(i, j)
         self.edges[i][j] = Edge(i, j)
 
