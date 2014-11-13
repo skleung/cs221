@@ -1,8 +1,13 @@
 from gameUtil import *
 import random
+from board import *
+from enum import Enum
 
 VICTORY_POINTS_TO_WIN = 2
 STARTING_NUM_OF_CARDS = 7
+SETTLEMENT_POINTS = 3
+
+Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
 """
 This class defines a player agent and allows a user to retrieve possible actions from the agent
 hand = a list of Cards that the agent holds
@@ -12,7 +17,12 @@ class Agent:
   def __init__(self, name):
     self.name = name
     self.victoryPoints = 0
-    self.hand = []
+    self.resources = ([ResourceTypes.WOOL, ResourceTypes.BRICK, 
+      ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER])
+    # List of edges
+    self.roads = []
+    # List of vertices
+    self.settlements = []
   # to string method will print the agent's name
   def __str__(self):
     return self.name
@@ -21,19 +31,25 @@ class Agent:
   The Agent will receive a GameState and returns a tuple containing string and its metadata
   (e.g. ('settle', metadata telling where the agent decided to settle))
   """
-  def getActions(self, state):
-    # TODO: get possible actions from the current state
-    # I think these should be tuples because we may need addiitonal info for some of these actions
-    # e.g. settle should need some metadata that describes the best place to settle.
-    return [("draw", None), ("settle", None)]
-
-  #TODO: get the "best" action according to minimax?
   def getAction(self, state):
-    return "draw"
+    #TODO: get the "best" action according to minimax?
+    return state 
 
-  def updateAgent(self, state, action):
-    if action == "draw":
-      self.drawCard(state)
+  def applyAction(self, action):
+    if action[0] == Actions.SETTLE:
+      self.settlements.append(action[1])
+      self.victoryPoints = self.victoryPoints + SETTLEMENT_POINTS
+    if action[0] == Actions.ROAD:
+      self.roads.append(action[1])
+
+  # TODO(sierrakn): Actually roll dice and distribute resources accordingly
+  def updateResources(self, state):
+    totalHexes = Set()
+    for vertex in self.settlements:
+      hexes = state.data.board.getHexes(vertex)
+      totalHexes.add(hexes) # avoid duplicates
+    for hex in totalHexes:
+      resources.append(ResourceTypes.WOOL)
 
   def drawCard(self, state):
     card = state.data.deck.drawCard()
@@ -77,18 +93,17 @@ class GameStateData:
       copiedStates.append( agentState.copy() )
     return copiedStates
 
-        
-
   """
   This method should be called to start or initialize the GameStateData
   nPlayers: number of players in this game
   players: an array of player objects that contain information about each player
   layout: an optional parameter that specifies a particular board set up
   """
-  def initialize(self, agents, layout=None):
+  def initialize(self, agents, board):
     #creates a new deck by calling the deck's constructor
     self.deck = Deck()
     self.agents = agents
+    self.board = board
 
 
 class GameState:
@@ -120,16 +135,63 @@ class GameState:
   Creates a GameState based on a layout if it exists
   """
   def initialize(self, layout = None):
-    self.data = GameStateData()
     print "Enter the number of player agents:"
     numAgents = int(raw_input())
-    #creates an array of player agents
+    # creates an array of player agents
     agents = [Agent("Player"+str(i)) for i in range(numAgents)]
-    # TODO: initialize the board
-    #initializes the game state's data with the number of agents and the player agents
-    self.data.initialize(agents)
+    # initialize board
+    board = Board(BeginnerLayout)
+    # initializes the game state's data with the number of agents and the player agents
+    self.data.initialize(agents, board)
     for agent in self.data.agents:
       agent.initialize(self)
+
+  # Get possible actions from the current state
+  # An action is a tuple with action and metadata
+  # For SETTLE this is the Vertex
+  # For ROAD this is the Edge
+  def getLegalActions(self, state, agentIndex=0):
+    if self.gameOver >= -1: return []
+    legalActions = []
+    agent = state.data.agents[agentIndex]
+    board = state.data.board
+    # TODO(sierrakn): change to actual resources
+    if len(agent.resources) > 3:
+      for edge in agent.roads:
+        # TODO(sierrakn): smarter way to check if two away from settlement?
+        vertices = board.getVertexEnds(edge)
+        for vertex in vertices:
+          canSettle = True
+          if vertex.isSettlement: canSettle = False; continue
+          for neighborVertex in board.getNeighborVertices(vertex):
+            if neighborVertex.isSettlement: canSettle = False; break
+            for secondNeighbor in board.getNeighborVertices(neighborVertex)
+              if secondNeighbor.isSettlement: canSettle = False; break
+          if canSettle: 
+            legalActions.append((Actions.SETTLE, vertex))
+    # build road connecting to either settlement or road
+    if len(agent.resources) > 2:
+      for vertex in agent.settlements:
+        vertexEdges = board.getEdgesOfVertex(vertex)
+        for roadEdge in vertexEdges:
+          if roadEdge.player == None: legalActions.append((Actions.ROAD, roadEdge))
+      for edge in agent.roads:
+        vertices = board.getVertexEnds(edge)
+        for vertex in vertices:
+          if vertex.isSettlement: continue
+          roadEdges = board.getEdgesOfVertex(vertex)
+          for roadEdge in roadEdges: 
+            if roadEdge.player == None: legalActions.append((Actions.ROAD, roadEdge))
+
+    return legalActions
+
+  def generateSuccessor(self, playerIndex, action):
+    # Check that successors exist
+    if self.gameOver(): raise Exception('Can\'t generate a successor of a terminal state.')
+    # Copy current state
+    state = GameState(self)
+    state.data.agents[playerIndex].applyAction(action)
+    return state
 
   def getNumAgents(self):
     return len(self.data.agents)
@@ -140,21 +202,11 @@ class GameState:
         return i
     return -1
 
-  def generateSuccessor(self, playerIndex, action):
-    #TODO: Update the game's state based on the action taken
-
-    # Check that successors exist
-    if self.gameOver(): raise Exception('Can\'t generate a successor of a terminal state.')
-
-    # Copy current state
-    state = GameState(self)
-
 
 """
 The Game class manages the control flow to solicit actions from agents
 """
 class Game: 
-
   def __init__(self):
     self.gameOver = False
     self.moveHistory = []
@@ -164,11 +216,14 @@ class Game:
     numAgents = len(state.data.agents)
     while (state.gameOver() < 0):
       agent = state.data.agents[agentIndex]
-      #get an action from the state
+      # roll dice
+      # TODO(sierrakn): Actually roll dice and distribute resources accordingly
+      for agent in state.data.agents:
+        agent.updateResources(state)
+      # get an action from the state
       action = agent.getAction(state)
-      agent.updateAgent(state, action)
-
-      #store move history
+      agent.applyAction(action)
+      # store move history
       self.moveHistory.append((agent.name, action))
       agentIndex = (agentIndex+1) % numAgents
 
