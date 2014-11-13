@@ -35,6 +35,19 @@ class Tile:
 
 
   """
+  Method: isOccupied
+  ---------------------------
+  Parameters: None
+  Returns: True/False depending on whether or not the tile has been used
+
+  Returns whether or not this tile is occupied
+  ---------------------------
+  """
+  def isOccupied(self):
+    return self.structure != Structure.NONE
+
+
+  """
   Method: settle
   ---------------------------
   Parameters:
@@ -46,7 +59,7 @@ class Tile:
   ---------------------------
   """
   def settle(self, playerIndex):
-    if self.player != None: raise Exception("This tile is already used!")
+    if self.isOccupied(): raise Exception("This tile is already used!")
     self.player = playerIndex
     self.structure = Structure.SETTLEMENT
 
@@ -64,7 +77,7 @@ class Tile:
   ---------------------------
   """
   def buildRoad(self, playerIndex):
-    if self.player != None: raise Exception("This tile is already used!")
+    if self.isOccupied(): raise Exception("This tile is already used!")
 
     self.player = playerIndex
     self.structure = Structure.ROAD
@@ -101,9 +114,10 @@ class Tile:
   ---------------------------
   """
   def strRepresentation(self):
-    if self.structure == Structure.NONE: return "--"
+    if not self.isOccupied(): return "--"
     elif self.structure == Structure.ROAD: return "R" + str(self.player)
     elif self.structure == Structure.SETTLEMENT: return "S" + str(self.player)
+    raise Exception("strRepresentation - invalid tile")
 
 
 
@@ -120,7 +134,7 @@ class BasicBoard:
   """
 
   def __init__(self, size):
-    self.board = [[Tile(ResourceTypes.BRICK, 5, j, i) for i in xrange(size)] for j in xrange(size)]
+    self.board = [[Tile(ResourceTypes.BRICK, 5, i, j) for i in xrange(size)] for j in xrange(size)]
     self.settlements = []
     self.roads = []
     self.size = size
@@ -140,7 +154,7 @@ class BasicBoard:
   """
   def getTile(self, x, y):
     if 0 <= x < self.size and 0 <= y < self.size:
-      return self.board[x][y]
+      return self.board[y][x]
     return None
 
 
@@ -158,8 +172,14 @@ class BasicBoard:
   ---------------------------
   """
   def printBoard(self):
-    for row in self.board:
-      s = "["
+    # Print top numbers
+    s = "     "
+    for i in xrange(self.size):
+      s += str(i) + "   "
+    print s
+
+    for i, row in enumerate(self.board):
+      s = str(i) + " ["
       for tile in row:
         s += " " + tile.strRepresentation() + " "
       print s + "]"
@@ -171,7 +191,7 @@ class BasicBoard:
   Parameters:
     playerIndex: the index of the player that is taking an action
     action: a tuple (ACTION_TYPE, Tile) representing the action to be
-    taken and where that action should be taken.
+            taken and where that action should be taken.
   Returns: NA
 
   Updates the board to take the given action for the given player.  The action
@@ -179,7 +199,8 @@ class BasicBoard:
   ---------------------------
   """
   def applyAction(self, playerIndex, action):
-
+    if action == None: return
+    
     # Mark the tile as a settlement
     if action[0] == Actions.SETTLE:
       tile = action[1]
@@ -198,20 +219,23 @@ class BasicBoard:
   ---------------------------
   Parameters:
     tile: the Tile object to find the neighbors of
-  Returns: a list of all the non-diagonal adjacent tiles to this tile
+  Returns: a list of all the adjacent tiles to this tile
 
   Returns a list of all of the tiles immediately surrounding
-  the passed-in tile (NOT DIAGONAL)
+  the passed-in tile
   ---------------------------
   """
-  def getNeighborTiles(self, tile):
+  def getNeighborTiles(self, tile, diagonals=False):
     neighbors = []
 
     for dx in range(-1, 2):
       for dy in range(-1, 2):
 
-        # Ignore diagonal tiles and the original tile
-        if (dx != 0 and dy != 0) or (dx == 0 and dy == 0): continue
+        # Ignore the original tile
+        if dx == 0 and dy == 0: continue
+
+        # Optionally ignore diagonals
+        if not diagonals and (dx != 0 and dy != 0): continue
 
         # If this location is in bounds, add the tile to our list
         currTile = self.getTile(tile.x + dx, tile.y + dy)
@@ -222,18 +246,84 @@ class BasicBoard:
 
 
   """
-  Method: getRoadEnds
+  Method: getUnoccupiedNeighbors
   ---------------------------
   Parameters:
-    road: the road to return the endpoints for
-  Returns: a list of all the endpoints for this road
+    tile: the tile to return the neighbors for
+  Returns: a list of all the unoccupied neighbors for this tile
 
-  Returns a list of all of the endpoints that this road connects.
-  Note that this road can connect up to 4 endpoints (because the
-  road is just a square on the board).
+  Returns a list of all of the unoccupied tiles adjacent to this tile
   ---------------------------
   """
-  def getRoadEnds(self, road):
-    return self.getNeighborTiles(road)
+  def getUnoccupiedNeighbors(self, tile, diagonals=True):
+    neighbors = self.getNeighborTiles(tile, diagonals=diagonals)
 
-   
+    unoccupied = []
+    for neighbor in neighbors:
+      if not neighbor.isOccupied():
+        unoccupied.append(neighbor)
+
+    return unoccupied
+
+
+  """
+  Method: getOccupiedNeighbors
+  ---------------------------
+  Parameters:
+    tile: the tile to return the neighbors for
+  Returns: a list of all the occupied neighbors for this tile
+
+  Returns a list of all of the occupied tiles adjacent to this tile
+  ---------------------------
+  """
+  def getOccupiedNeighbors(self, tile, diagonals=True):
+    neighbors = self.getNeighborTiles(tile, diagonals=diagonals)
+
+    occupied = []
+    for neighbor in neighbors:
+      if neighbor.isOccupied():
+        occupied.append(neighbor)
+
+    return occupied
+
+
+  """
+  Method: isValidSettlementLocation
+  ---------------------------
+  Parameters:
+    tile: the tile to check
+  Returns: True/False depending on whether or not that tile is a valid settlement location
+
+  Returns whether or not a settlement can validly be built on the given tile
+  ---------------------------
+  """
+  def isValidSettlementLocation(self, tile):
+
+    # It's a valid settlement location if there are no other settlements
+    # within 1 space of this one
+    occupiedNeighbors = self.getOccupiedNeighbors(tile)
+    for neighbor in occupiedNeighbors:
+      if neighbor.structure == Structure.SETTLEMENT:
+        return False
+
+    return True
+
+
+  """
+  Method: getUnoccupiedRoadEndpoints
+  ---------------------------
+  Parameters:
+    tile: the road to get endpoints for
+  Returns: a list of all the unoccupied endpoints of the given road 
+
+  Returns all the unoccupied endpoints of the given road.  Note
+  that this could be up to 3 endpoints (since roads have no direction)
+  ---------------------------
+  """
+  def getUnoccupiedRoadEndpoints(self, tile):
+    if not tile.isOccupied() or tile.structure != Structure.ROAD:
+      raise Exception("getUnoccupiedRoadEndpoints - not a road!")
+
+    return self.getUnoccupiedNeighbors(tile, diagonals=False)
+
+
