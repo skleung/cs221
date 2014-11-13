@@ -10,6 +10,11 @@ SETTLEMENT_POINTS = 3
 
 # Currently we only use SETTLE and ROAD
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
+
+def evalFn(currentGameState, currentPlayerIndex):
+  currentPlayer = currentGameState.data.agents[currentPlayerIndex]
+  return 3 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+
 """
 This class defines a player agent and allows a user to retrieve possible actions from the agent
 hand = a list of Cards that the agent holds
@@ -17,9 +22,11 @@ victoryPoints = the number of victory points the agent has
 """
 class Agent:
   def __init__(self, name, agentIndex):
+    self.evaluationFunction = evalFn
     self.name = name
     self.agentIndex = agentIndex
     self.victoryPoints = 0
+    self.depth = 2
     
     # List of edges
     self.roads = []
@@ -41,11 +48,60 @@ class Agent:
   (e.g. ('settle', metadata telling where the agent decided to settle - Vertex or Edge))
   """
   def getAction(self, state):
-    #TODO: get the "best" action according to minimax/later expectiminimax
-    legalActions = state.getLegalActions(self.agentIndex)
-    if len(legalActions) < 1:
-      raise Exception("Game has ended")
-    return legalActions[0]
+    # legalActions = state.getLegalActions(self.agentIndex)
+    # 
+    # return legalActions[0]
+
+    # A function that recursively calculates and returns a tuple
+    # containing the best action/value (in the format (value, action))
+    # for the current player at the current state with the current depth.
+    def recurse(state, currDepth, playerIndex):
+      # TERMINAL CASES
+      # ---------------------
+
+      # won, lost
+      if state.gameOver() == playerIndex:
+        return (50000, None)
+      elif state.gameOver() > -1:
+        return (-50000, None)
+
+      # max depth reached
+      if currDepth is 0:
+        return (self.evaluationFunction(state), None)
+
+      # no possible actions
+      possibleActions = state.getLegalActions(playerIndex)
+      if len(possibleActions) == 0:
+        raise Exception("Game has ended")
+
+      # RECURSIVE CASE
+      # ---------------------
+
+      # Parallel lists of values and their corresponding actions
+      vals = []
+      actions = []
+
+      # New depth (depth - 1 for last ghost, otherwise depth)
+      # New player goes through 0, 1,...numAgents - 1 (looping around)
+      newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
+      newPlayerIndex = playerIndex + 1 if playerIndex != state.getNumAgents() - 1 else 0
+
+      # Iterate over each possible action, recording action and value
+      for currAction in possibleActions:
+        value, action = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
+        vals.append(value)
+        actions.append(currAction)
+
+      # Find max or value (depending on pacman or not), and return action that corresponds to that value
+      # Thanks to StackOverflow question 2474015 for the .index method
+      if playerIndex == 0:
+        return (max(vals), actions[vals.index(max(vals))])
+
+      return (min(vals), actions[vals.index(min(vals))])
+
+    value, action = recurse(state, self.depth, self.agentIndex)
+    return action
+    
 
   def applyAction(self, action):
     if action[0] == Actions.SETTLE:
