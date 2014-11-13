@@ -7,6 +7,7 @@ VICTORY_POINTS_TO_WIN = 10
 STARTING_NUM_OF_CARDS = 7
 SETTLEMENT_POINTS = 3
 
+# Currently we only use SETTLE and ROAD
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
 """
 This class defines a player agent and allows a user to retrieve possible actions from the agent
@@ -18,7 +19,7 @@ class Agent:
     self.name = name
     self.agentIndex = agentIndex
     self.victoryPoints = 0
-    # TODO(sierrakn): Make this a dict
+    # TODO(sierrakn): Make this a Counter of resource type -> number of that resource in hand
     self.resources = ([ResourceTypes.WOOL, ResourceTypes.BRICK, 
       ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER])
     # List of edges
@@ -31,10 +32,10 @@ class Agent:
   
   """
   The Agent will receive a GameState and returns a tuple containing string and its metadata
-  (e.g. ('settle', metadata telling where the agent decided to settle))
+  (e.g. ('settle', metadata telling where the agent decided to settle - Vertex or Edge))
   """
   def getAction(self, state):
-    #TODO: get the "best" action according to minimax?
+    #TODO: get the "best" action according to minimax/later expectiminimax
     legalActions = state.getLegalActions(self.agentIndex)
     if len(legalActions) < 1:
       raise Exception("Game has ended")
@@ -74,7 +75,7 @@ class Agent:
 
   #An agent wins if they get more than 10 victory points
   def won(self):
-    return self.victoryPoints > VICTORY_POINTS_TO_WIN
+    return self.victoryPoints >= VICTORY_POINTS_TO_WIN
 
 # class AgentRules:
 #   #edits the state to be updated with the action taken
