@@ -7,9 +7,10 @@ import pdb
 VICTORY_POINTS_TO_WIN = 10
 STARTING_NUM_OF_CARDS = 7
 SETTLEMENT_POINTS = 3
+ROAD_POINTS = 1
 
-# Currently we only use SETTLE and ROAD
-Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
+# Currently we only use SETTLE and ROAD (no draw, because you actually always draw if you have < 7 cards)
+Actions = Enum(["SETTLE", "CITY", "ROAD", "TRADE"])
 
 def evalFn(currentGameState, currentPlayerIndex):
   currentPlayer = currentGameState.data.agents[currentPlayerIndex]
@@ -69,13 +70,13 @@ class Agent:
       # ---------------------
       # won, lost
       if state.gameOver() == playerIndex:
-        return (50000, None)
+        return (float('inf'), None)
       elif state.gameOver() > -1:
-        return (-50000, None)
+        return (float('-inf'), None)
 
       # max depth reached
       if currDepth is 0:
-        return (self.evaluationFunction(state), None)
+        return (self.evaluationFunction(state, playerIndex), None)
 
       # no possible actions
       possibleActions = state.getLegalActions(playerIndex)
@@ -118,7 +119,9 @@ class Agent:
       for i in range(4): self.resources.pop()
     if action[0] == Actions.ROAD:
       self.roads.append(action[1])
+      self.victoryPoints = self.victoryPoints + ROAD_POINTS
       for i in range(3): self.resources.pop()
+    #TODO: need to refresh the amount of resources ....
 
   # TODO(sierrakn): Actually roll dice and distribute resources accordingly
   def updateResources(self, state):
@@ -155,16 +158,17 @@ class Agent:
 #       agentState.
 
 class GameStateData:
-  def __init__( self, prevState = None ):
+  def __init__( self, prevData = None ):
       """
       Generates a new data packet by copying information from its predecessor.
       """
-      if prevState != None:
-        #self.deck = prevState.deck.shallowCopy()
-        self.agents = self.copyagents( prevState.agents )
-      self.deck = None
-      self.agents = []
-      self.board = None
+      if prevData != None:
+        self.board = prevData.board
+        self.agents = self.copyagents( prevData.agents)
+      else:
+        self.agents = [] 
+        self.deck = None
+        self.board = None
 
   #allows for deep copy of the agent states as used in the init() method above
   def copyagents( self, agents ):
