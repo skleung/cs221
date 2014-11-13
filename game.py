@@ -42,6 +42,15 @@ class Agent:
   # to string method will print the agent's name
   def __str__(self):
     return self.name
+
+  def copy(self):
+    newCopy = Agent(self.name, self.agentIndex)
+    newCopy.victoryPoints = self.victoryPoints
+    newCopy.depth = self.depth
+    newCopy.roads = self.roads
+    newCopy.settlements = self.settlements
+    newCopy.resources = self.resources
+    return newCopy
   
   """
   The Agent will receive a GameState and returns a tuple containing string and its metadata
@@ -58,7 +67,6 @@ class Agent:
     def recurse(state, currDepth, playerIndex):
       # TERMINAL CASES
       # ---------------------
-
       # won, lost
       if state.gameOver() == playerIndex:
         return (50000, None)
@@ -101,7 +109,7 @@ class Agent:
 
     value, action = recurse(state, self.depth, self.agentIndex)
     return action
-    
+
 
   def applyAction(self, action):
     if action[0] == Actions.SETTLE:
@@ -152,7 +160,7 @@ class GameStateData:
       Generates a new data packet by copying information from its predecessor.
       """
       if prevState != None:
-        self.deck = prevState.deck.shallowCopy()
+        #self.deck = prevState.deck.shallowCopy()
         self.agents = self.copyagents( prevState.agents )
       self.deck = None
       self.agents = []
@@ -291,7 +299,7 @@ class GameState:
 
   def generateSuccessor(self, playerIndex, action):
     # Check that successors exist
-    if self.gameOver(): raise Exception('Can\'t generate a successor of a terminal state.')
+    #if self.gameOver(): raise Exception('Can\'t generate a successor of a terminal state.')
     # Copy current state
     state = GameState(self)
     state.data.agents[playerIndex].applyAction(action)
