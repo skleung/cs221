@@ -2,13 +2,17 @@ from gameUtil import *
 import random
 
 VICTORY_POINTS_TO_WIN = 2
+STARTING_NUM_OF_CARDS = 7
 """
 This class defines a player agent and allows a user to retrieve possible actions from the agent
+hand = a list of Cards that the agent holds
+victoryPoints = the number of victory points the agent has
 """
 class Agent:
   def __init__(self, name):
     self.name = name
     self.victoryPoints = 0
+    self.hand = []
   # to string method will print the agent's name
   def __str__(self):
     return self.name
@@ -17,8 +21,11 @@ class Agent:
   The Agent will receive a GameState and returns a tuple containing string and its metadata
   (e.g. ('settle', metadata telling where the agent decided to settle))
   """
-  # def getActions(self, state):
-    #TODO: get possible actions from the current state
+  def getActions(self, state):
+    # TODO: get possible actions from the current state
+    # I think these should be tuples because we may need addiitonal info for some of these actions
+    # e.g. settle should need some metadata that describes the best place to settle.
+    return [("draw", None), ("settle", None)]
 
   #TODO: get the "best" action according to minimax?
   def getAction(self, state):
@@ -26,9 +33,20 @@ class Agent:
 
   def updateAgent(self, state, action):
     if action == "draw":
-      card = state.data.deck.drawCard()
-      if card.value == "Victory":
-        self.victoryPoints += 1
+      self.drawCard(state)
+
+  def drawCard(self, state):
+    card = state.data.deck.drawCard()
+    if card.value == "Victory":
+      self.victoryPoints += 1
+    self.hand.append(card)
+
+  """
+  Kicks off the game, decides where to settle and build a road in the very first move of the game
+  """
+  def initialize(self, state):
+    for i in range(STARTING_NUM_OF_CARDS):
+      self.drawCard(state)
 
   #An agent wins if they get more than 10 victory points
   def won(self):
@@ -110,6 +128,8 @@ class GameState:
     # TODO: initialize the board
     #initializes the game state's data with the number of agents and the player agents
     self.data.initialize(agents)
+    for agent in self.data.agents:
+      agent.initialize(self)
 
   def getNumAgents(self):
     return len(self.data.agents)
