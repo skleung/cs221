@@ -3,7 +3,7 @@ import random
 from board import *
 from enum import Enum
 
-VICTORY_POINTS_TO_WIN = 2
+VICTORY_POINTS_TO_WIN = 10
 STARTING_NUM_OF_CARDS = 7
 SETTLEMENT_POINTS = 3
 
@@ -14,9 +14,11 @@ hand = a list of Cards that the agent holds
 victoryPoints = the number of victory points the agent has
 """
 class Agent:
-  def __init__(self, name):
+  def __init__(self, name, agentIndex):
     self.name = name
+    self.agentIndex = agentIndex
     self.victoryPoints = 0
+    # TODO(sierrakn): Make this a dict
     self.resources = ([ResourceTypes.WOOL, ResourceTypes.BRICK, 
       ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER])
     # List of edges
@@ -33,7 +35,10 @@ class Agent:
   """
   def getAction(self, state):
     #TODO: get the "best" action according to minimax?
-    return state 
+    legalActions = state.getLegalActions(self.agentIndex)
+    if len(legalActions) < 1:
+      raise Exception("Game has ended")
+    return legalActions[0]
 
   def applyAction(self, action):
     if action[0] == Actions.SETTLE:
@@ -47,9 +52,9 @@ class Agent:
     totalHexes = Set()
     for vertex in self.settlements:
       hexes = state.data.board.getHexes(vertex)
-      totalHexes.add(hexes) # avoid duplicates
+      for hex in hexes: totalHexes.add(hex) # avoid duplicates
     for hex in totalHexes:
-      resources.append(ResourceTypes.WOOL)
+      self.resources.append(ResourceTypes.WOOL)
 
   def drawCard(self, state):
     card = state.data.deck.drawCard()
@@ -61,8 +66,9 @@ class Agent:
   Kicks off the game, decides where to settle and build a road in the very first move of the game
   """
   def initialize(self, state):
-    for i in range(STARTING_NUM_OF_CARDS):
-      self.drawCard(state)
+    return
+    # for i in range(STARTING_NUM_OF_CARDS):
+    #   self.drawCard(state)
 
   #An agent wins if they get more than 10 victory points
   def won(self):
@@ -85,6 +91,7 @@ class GameStateData:
         self.agents = self.copyagents( prevState.agents )
       self.deck = None
       self.agents = []
+      self.board = None
 
   #allows for deep copy of the agent states as used in the init() method above
   def copyagents( self, agents ):
@@ -135,10 +142,11 @@ class GameState:
   Creates a GameState based on a layout if it exists
   """
   def initialize(self, layout = None):
-    print "Enter the number of player agents:"
-    numAgents = int(raw_input())
+    # print "Enter the number of player agents:"
+    # numAgents = int(raw_input())
+    numAgents = 3
     # creates an array of player agents
-    agents = [Agent("Player"+str(i)) for i in range(numAgents)]
+    agents = [Agent("Player"+str(i), i) for i in range(numAgents)]
     # initialize board
     board = Board(BeginnerLayout)
     # initializes the game state's data with the number of agents and the player agents
@@ -150,11 +158,11 @@ class GameState:
   # An action is a tuple with action and metadata
   # For SETTLE this is the Vertex
   # For ROAD this is the Edge
-  def getLegalActions(self, state, agentIndex=0):
-    if self.gameOver >= -1: return []
+  def getLegalActions(self, agentIndex):
+    if self.gameOver() >= 0: return []
     legalActions = []
-    agent = state.data.agents[agentIndex]
-    board = state.data.board
+    agent = self.data.agents[agentIndex]
+    board = self.data.board
     # TODO(sierrakn): change to actual resources
     if len(agent.resources) > 3:
       for edge in agent.roads:
@@ -165,7 +173,7 @@ class GameState:
           if vertex.isSettlement: canSettle = False; continue
           for neighborVertex in board.getNeighborVertices(vertex):
             if neighborVertex.isSettlement: canSettle = False; break
-            for secondNeighbor in board.getNeighborVertices(neighborVertex)
+            for secondNeighbor in board.getNeighborVertices(neighborVertex):
               if secondNeighbor.isSettlement: canSettle = False; break
           if canSettle: 
             legalActions.append((Actions.SETTLE, vertex))
@@ -191,6 +199,7 @@ class GameState:
     # Copy current state
     state = GameState(self)
     state.data.agents[playerIndex].applyAction(action)
+    state.data.board.applyAction(playerIndex, action)
     return state
 
   def getNumAgents(self):
@@ -213,16 +222,27 @@ class Game:
 
   def run(self, state):
     agentIndex = 0
-    numAgents = len(state.data.agents)
+    agents = state.data.agents
+    board = state.data.board
+    numAgents = len(agents)
+    # every player chooses where to put first settlement
+    # for agentIndex in range(numAgents):
+    initialSettlements = [board.vertices[3][1], board.vertices[1][7], board.vertices[4][7]]
+    for i in range(numAgents):
+      agents[i].settlements.append(initialSettlements[i])
+      initialSettlements[i].settle(i)
     while (state.gameOver() < 0):
-      agent = state.data.agents[agentIndex]
+      agent = agents[agentIndex]
       # roll dice
       # TODO(sierrakn): Actually roll dice and distribute resources accordingly
-      for agent in state.data.agents:
-        agent.updateResources(state)
+      for ag in state.data.agents:
+        ag.updateResources(state)
       # get an action from the state
       action = agent.getAction(state)
+      print agentIndex
+      print action
       agent.applyAction(action)
+      board.applyAction(agent.agentIndex, action)
       # store move history
       self.moveHistory.append((agent.name, action))
       agentIndex = (agentIndex+1) % numAgents

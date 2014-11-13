@@ -2,6 +2,16 @@
 from sets import Set
 from enum import Enum
 
+Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
+ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER", "NOTHING"])
+Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
+  ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
+  ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
+  ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN,
+  ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER,
+  ResourceTypes.NOTHING])
+NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
+
 # A hexagon is a tile on the board and has a resource and a dice number
 class Hexagon:
 
@@ -35,20 +45,10 @@ class Vertex:
 
 # An edge is a path betwen Vertices, a valid road location
 class Edge:
-
   def __init__(self, X, Y, player = None):
     self.X = X
     self.Y = Y
     self.player = player
-
-ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER", "NOTHING"])
-Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
-  ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
-  ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
-  ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN,
-  ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER,
-  ResourceTypes.NOTHING])
-NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 
 # Keeps track of resource + numberchit
 class Tile:
@@ -107,7 +107,15 @@ class Board:
         self.vertices[i][j] = Vertex(i, j)
         self.edges[i][j] = Edge(i, j)
 
-  def getNeighborHexes(hex):
+  def applyAction(self, playerIndex, action):
+    if action[0] == Actions.SETTLE:
+      vertex = action[1]
+      vertex.settle(playerIndex)
+    if action[0] == Actions.ROAD:
+      edge = action[1]
+      edge.player = playerIndex
+
+  def getNeighborHexes(self, hex):
     neighbors = []
     x = hex.X
     y = hex.Y
@@ -128,20 +136,24 @@ class Board:
     if hexSix != None: neighbors.append(hexSix)
     return neighbors
 
-  def getNeighborVertices(vertex):
+  def getNeighborVertices(self, vertex):
     neighbors = []
     x = vertex.X
     y = vertex.Y
     # Logic from thinking that this is saying getEdgesOfVertex
     # and then for each edge getVertexEnds, taking out the three that are ==vertex
-    vertexOne = self.vertices[x][y+1]
-    vertexTwo = self.vertices[x+1][y]
-    vertexThree = self.vertices[x-1][y]
-    if vertexOne != None: neighbors.append(vertexOne)
-    if vertexTwo != None: neighbors.append(vertexTwo)
-    if vertexThree != None: neighbors.append(vertexThree)
+    if y < len(self.vertices[0])-1:
+      vertexOne = self.vertices[x][y+1]
+      if vertexOne != None: neighbors.append(vertexOne)
+    if x < len(self.vertices)-1:
+      vertexTwo = self.vertices[x+1][y]
+      if vertexTwo != None: neighbors.append(vertexTwo)
+    if x > 0:
+      vertexThree = self.vertices[x-1][y]
+      if vertexThree != None: neighbors.append(vertexThree)
+    return neighbors
 
-  def getVertices(hex):
+  def getVertices(self, hex):
     hexVertices = []
     x = hex.X
     y = hex.Y
@@ -154,7 +166,7 @@ class Board:
     hexVertices.append(self.vertices[x+1][2*y+2+offset])
     return hexVertices
 
-  def getEdges(hex):
+  def getEdges(self, hex):
     hexEdges = []
     x = hex.X
     y = hex.Y
@@ -167,7 +179,7 @@ class Board:
     hexEdges.append(self.edges[2*x+2][2*y+1+offset])
     return hexEdges
 
-  def getVertexEnds(edge):
+  def getVertexEnds(self, edge):
     edgeVertices = []
     x = edge.X
     y = edge.Y
@@ -180,10 +192,10 @@ class Board:
     if vertexTwo != None: edgeVertices.append(vertexTwo)
     return edgeVertices
 
-  def getEdgesOfVertex(vertex):
+  def getEdgesOfVertex(self, vertex):
     vertexEdges = []
-    x = edge.X
-    y = edge.Y
+    x = vertex.X
+    y = vertex.Y
     edgeOne = self.edges[x*2][y]
     edgeTwo = self.edges[x*2+1][y]
     edgeThree = self.edges[x*2-1][y]
@@ -192,18 +204,21 @@ class Board:
     if edgeThree != None: vertexEdges.append(edgeThree)
     return vertexEdges
 
-  def getHexes(vertex):
+  def getHexes(self, vertex):
     vertexHexes = []
-    x = edge.X
-    y = edge.Y
+    x = vertex.X
+    y = vertex.Y
     xOffset = x % 2
     yOffset = y % 2
-    hexOne = self.hexagons[x-1][(y+xOffset)/2-1]
-    hexTwo = self.hexagons[x-(1-yOffset)*xOffset][(y-1)/2]
-    hexThree = self.hexagons[x][(y-xOffset)/2]
-    if hexOne != None: vertexHexes.append(hexOne)
-    if hexTwo != None: vertexHexes.append(hexTwo)
-    if hexThree != None: vertexHexes.append(hexThree)
+    if x > 0 and (y+xOffset) > 0:
+      hexOne = self.hexagons[x-1][(y+xOffset)/2-1]
+      if hexOne != None: vertexHexes.append(hexOne)
+    if y > 0 and x-(1-yOffset) > 0:
+      hexTwo = self.hexagons[x-(1-yOffset)*xOffset][(y-1)/2]
+      if hexTwo != None: vertexHexes.append(hexTwo)
+    if (y-xOffset) > 0 and (y-xOffset)/2 < len(self.hexagons[0]):
+      hexThree = self.hexagons[x][(y-xOffset)/2]
+      if hexThree != None: vertexHexes.append(hexThree)
     return vertexHexes
    
 
