@@ -44,8 +44,10 @@ class Agent:
     if action[0] == Actions.SETTLE:
       self.settlements.append(action[1])
       self.victoryPoints = self.victoryPoints + SETTLEMENT_POINTS
+      for i in range(4): self.resources.pop()
     if action[0] == Actions.ROAD:
       self.roads.append(action[1])
+      for i in range(3): self.resources.pop()
 
   # TODO(sierrakn): Actually roll dice and distribute resources accordingly
   def updateResources(self, state):
