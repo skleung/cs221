@@ -307,7 +307,8 @@ class GameState:
       for settlement in agent.settlements:
         unoccupiedNeighbors = board.getUnoccupiedNeighbors(settlement, diagonals=False)
         for neighbor in unoccupiedNeighbors:
-          if (Actions.ROAD, neighbor) not in legalActions:
+          if (Actions.ROAD, neighbor) not in legalActions and (Actions.SETTLE, neighbor) not in legalActions:
+            # import pdb; pdb.set_trace()
             legalActions.append((Actions.ROAD, neighbor))
             # if not neighbor.isOccupied():
             #   legalActions.append((Actions.ROAD, neighbor))
@@ -319,7 +320,7 @@ class GameState:
       for road in agent.roads:
         unoccupiedEndpoints = board.getUnoccupiedNeighbors(road)
         for unoccupiedEndpoint in unoccupiedEndpoints:
-          if (Actions.ROAD, unoccupiedEndpoint) not in legalActions:
+          if (Actions.ROAD, unoccupiedEndpoint) not in legalActions and (Actions.SETTLE, unoccupiedEndpoint) not in legalActions:
             legalActions.append((Actions.ROAD, unoccupiedEndpoint))
             # if not unoccupiedEndpoint.isOccupied():
             #   legalActions.append((Actions.ROAD, unoccupiedEndpoint))
