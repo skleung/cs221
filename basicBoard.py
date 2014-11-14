@@ -60,7 +60,7 @@ class Tile:
   """
   def settle(self, playerIndex):
 
-    if self.isOccupied(): 
+    if self.isOccupied() and self.player != playerIndex: 
       raise Exception("This tile is already used!")
     self.player = playerIndex
     self.structure = Structure.SETTLEMENT
@@ -79,8 +79,8 @@ class Tile:
   ---------------------------
   """
   def buildRoad(self, playerIndex):
-    if self.isOccupied(): 
-      raise Exception("This tile is already used!")
+    if self.isOccupied() and self.player != playerIndex: 
+      raise Exception("Tile " + str(self) + " is already used!")
 
     self.player = playerIndex
     self.structure = Structure.ROAD
@@ -209,13 +209,13 @@ class BasicBoard:
     if action[0] == Actions.SETTLE:
       tile = action[1]
       tile.settle(playerIndex)
-      self.settlements.append(tile)
+      if tile not in self.settlements: self.settlements.append(tile)
 
     # Or mark the tile as a road
     elif action[0] == Actions.ROAD:
       tile = action[1]
       tile.buildRoad(playerIndex)
-      self.roads.append(tile)
+      if tile not in self.roads: self.roads.append(tile)
 
 
   """

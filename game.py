@@ -3,6 +3,7 @@ import random
 from basicBoard import *
 from enum import Enum
 import pdb
+import copy
 
 VICTORY_POINTS_TO_WIN = 10
 STARTING_NUM_OF_CARDS = 7
@@ -12,6 +13,18 @@ SETTLEMENT_COST = 4
 ROAD_COST = 3
 
 DEBUG = False
+
+def printActions(actions):
+  print "----- Possible Actions ------"
+  s = ""
+  for action in actions:
+    if action[0] == Actions.ROAD:
+      s += "Road at "
+    else:
+      s += "Settlement at "
+    s += str(action[1]) + ", "
+  print s
+
 
 # Currently we only use SETTLE and ROAD (no draw, because you actually always draw if you have < 7 cards)
 Actions = Enum(["SETTLE", "CITY", "ROAD", "TRADE"])
@@ -51,23 +64,23 @@ class Agent:
   def __repr__(self):
     return self.name
 
-  def copy(self):
-    newCopy = Agent(self.name, self.agentIndex)
-    newCopy.victoryPoints = self.victoryPoints
-    newCopy.depth = self.depth
-    newCopy.roads = self.roads
-    newCopy.settlements = self.settlements
-    newCopy.resources = self.resources
-    return newCopy
+  # def copy(self):
+  #   newCopy = Agent(self.name, self.agentIndex)
+  #   newCopy.victoryPoints = self.victoryPoints
+  #   newCopy.depth = self.depth
+  #   newCopy.roads = self.roads
+  #   newCopy.settlements = self.settlements
+  #   newCopy.resources = self.resources
+  #   return newCopy
   
   """
   The Agent will receive a GameState anyd returns a tuple containing string and its metadata
   (e.g. ('settle', metadata telling where the agent decided to settle - Vertex or Edge))
   """
   def getAction(self, state):
-    legalActions = state.getLegalActions(self.agentIndex)
-    if len(legalActions) == 0: return None
-    return legalActions[0]
+    # legalActions = state.getLegalActions(self.agentIndex)
+    # if len(legalActions) == 0: return None
+    # return legalActions[0]
 
     # A function that recursively calculates and returns a tuple
     # containing the best action/value (in the format (value, action))
@@ -179,8 +192,8 @@ class GameStateData:
       Generates a new data packet by copying information from its predecessor.
       """
       if prevData != None:
-        self.board = prevData.board
-        self.agents = self.copyagents( prevData.agents)
+        self.board = copy.deepcopy(prevData.board)
+        self.agents = copy.deepcopy(prevData.agents)
       else:
         self.agents = [] 
         self.deck = None
