@@ -16,9 +16,12 @@ DEBUG = False
 # Currently we only use SETTLE and ROAD (no draw, because you actually always draw if you have < 7 cards)
 Actions = Enum(["SETTLE", "CITY", "ROAD", "TRADE"])
 
+"""
+This evaluation function describes the current score of a particular state given a player index.
+"""
 def evalFn(currentGameState, currentPlayerIndex):
   currentPlayer = currentGameState.data.agents[currentPlayerIndex]
-  return 3 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+  return 5 * len(currentPlayer.settlements) + len(currentPlayer.roads)
 
 """
 This class defines a player agent and allows a user to retrieve possible actions from the agent
@@ -31,7 +34,7 @@ class Agent:
     self.name = name
     self.agentIndex = agentIndex
     self.victoryPoints = 0
-    self.depth = 2
+    self.depth = 1
     
     # List of Tiles
     self.roads = []
@@ -45,7 +48,7 @@ class Agent:
     
 
   # to string method will print the agent's name
-  def __str__(self):
+  def __repr__(self):
     return self.name
 
   def copy(self):
@@ -58,61 +61,60 @@ class Agent:
     return newCopy
   
   """
-  The Agent will receive a GameState and returns a tuple containing string and its metadata
+  The Agent will receive a GameState anyd returns a tuple containing string and its metadata
   (e.g. ('settle', metadata telling where the agent decided to settle - Vertex or Edge))
   """
   def getAction(self, state):
-    legalActions = state.getLegalActions(self.agentIndex)
-    if len(legalActions) == 0: return None
-    return legalActions[0]
+    # legalActions = state.getLegalActions(self.agentIndex)
+    # if len(legalActions) == 0: return None
+    # return legalActions[0]
 
-    # # A function that recursively calculates and returns a tuple
-    # # containing the best action/value (in the format (value, action))
-    # # for the current player at the current state with the current depth.
-    # def recurse(state, currDepth, playerIndex):
-    #   # TERMINAL CASES
-    #   # ---------------------
-    #   # won, lost
-    #   if state.gameOver() == playerIndex:
-    #     return (float('inf'), None)
-    #   elif state.gameOver() > -1:
-    #     return (float('-inf'), None)
+    # A function that recursively calculates and returns a tuple
+    # containing the best action/value (in the format (value, action))
+    # for the current player at the current state with the current depth.
+    def recurse(state, currDepth, playerIndex):
+      # TERMINAL CASES
+      # ---------------------
+      # won, lost
+      if state.gameOver() == playerIndex:
+        return (float('inf'), None)
+      elif state.gameOver() > -1:
+        return (float('-inf'), None)
 
-    #   # max depth reached
-    #   if currDepth is 0:
-    #     return (self.evaluationFunction(state, playerIndex), None)
+      # max depth reached
+      if currDepth is 0:
+        return (self.evaluationFunction(state, playerIndex), None)
 
-    #   # no possible actions (must pass)
-    #   possibleActions = state.getLegalActions(playerIndex)
-    #   if len(possibleActions) == 0:
-    #     return (0, None)
+      # no possible actions (must pass)
+      possibleActions = state.getLegalActions(playerIndex)
+      if len(possibleActions) == 0:
+        return (0, None)
 
-    #   # RECURSIVE CASE
-    #   # ---------------------
+      # RECURSIVE CASE
+      # ---------------------
 
-    #   # Parallel lists of values and their corresponding actions
-    #   vals = []
-    #   actions = []
+      # Parallel lists of values and their corresponding actions
+      vals = []
+      actions = []
 
-    #   # New depth (depth - 1 for last ghost, otherwise depth)
-    #   # New player goes through 0, 1,...numAgents - 1 (looping around)
-    #   newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
-    #   newPlayerIndex = playerIndex + 1 if playerIndex != state.getNumAgents() - 1 else 0
+      # New depth (depth - 1 for last ghost, otherwise depth)
+      # New player goes through 0, 1,...numAgents - 1 (looping around)
+      newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
+      newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
 
-    #   # Iterate over each possible action, recording action and value
-    #   for currAction in possibleActions:
-    #     value, action = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
-    #     vals.append(value)
-    #     actions.append(currAction)
+      # Iterate over each possible action, recording action and value
+      for currAction in possibleActions:
+        value, action = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
+        vals.append(value)
+        actions.append(currAction)
 
-    #   # Should all players maximize, or just our player (player 0)?
-    #   if playerIndex == 0:
-    #     return (max(vals), actions[vals.index(max(vals))])
+      # Should all players maximize, or just our player (player 0)?
+      if playerIndex == 0:
+        return (max(vals), actions[vals.index(max(vals))])
+      return (min(vals), actions[vals.index(min(vals))])
 
-    #   return (min(vals), actions[vals.index(min(vals))])
-
-    # value, action = recurse(state, self.depth, self.agentIndex)
-    # return action
+    value, action = recurse(state, self.depth, self.agentIndex)
+    return action
 
 
   def applyAction(self, action):
@@ -121,12 +123,25 @@ class Agent:
     if action[0] == Actions.SETTLE:
       self.settlements.append(action[1])
       self.victoryPoints = self.victoryPoints + SETTLEMENT_POINTS
-      for i in range(4): self.resources.pop()
+      if len(self.resources) >= SETTLEMENT_COST:
+        for i in range(SETTLEMENT_COST): self.resources.pop()
+      else:
+        raise Exception("not enough resources to settle!")
     if action[0] == Actions.ROAD:
       self.roads.append(action[1])
       self.victoryPoints = self.victoryPoints + ROAD_POINTS
-      for i in range(3): self.resources.pop()
-    #TODO: need to refresh the amount of resources ....
+      if len(self.resources) >= ROAD_COST:
+        for i in range(ROAD_COST): self.resources.pop()
+      else:
+        raise Exception("not enough resources to build a road!")
+
+    #refresh the cards in the hand!
+    self.reloadHand()
+
+  # TODO: will need to draw from the deck, and thus pass in the state later...
+  def reloadHand(self):
+    while (len(self.resources) < STARTING_NUM_OF_CARDS):
+      self.resources.append(ResourceTypes.WOOL)
 
   # TODO(sierrakn): Actually roll dice and distribute resources accordingly
   def updateResources(self, state):
@@ -294,14 +309,23 @@ class GameState:
         for neighbor in unoccupiedNeighbors:
           if (Actions.ROAD, neighbor) not in legalActions:
             legalActions.append((Actions.ROAD, neighbor))
+            # if not neighbor.isOccupied():
+            #   legalActions.append((Actions.ROAD, neighbor))
+            # else:
+            #   pdb.set_trace()
+            #   raise Exception("why?")
 
       # Look at every unoccupied road endpoint of every road
       for road in agent.roads:
-        unoccupiedEndpoints = board.getUnoccupiedRoadEndpoints(road)
+        unoccupiedEndpoints = board.getUnoccupiedNeighbors(road)
         for unoccupiedEndpoint in unoccupiedEndpoints:
           if (Actions.ROAD, unoccupiedEndpoint) not in legalActions:
             legalActions.append((Actions.ROAD, unoccupiedEndpoint))
-
+            # if not unoccupiedEndpoint.isOccupied():
+            #   legalActions.append((Actions.ROAD, unoccupiedEndpoint))
+            # else:
+            #   pdb.set_trace()
+            #   raise Exception("why?")
     return legalActions
 
   def generateSuccessor(self, playerIndex, action):
@@ -359,10 +383,10 @@ class Game:
 
       # distribute resources
       # TODO(sierrakn): Actually roll dice and distribute resources accordingly
-      for ag in state.data.agents:
-        oldResourceNum = len(ag.resources)
-        ag.updateResources(state)
-        if DEBUG: print "Agent " + str(ag.agentIndex) + " gained " + str(len(ag.resources) - oldResourceNum) + " resources.  Total: " + str(len(ag.resources))
+      for agent in state.data.agents:
+        oldResourceNum = len(agent.resources)
+        agent.updateResources(state)
+        if DEBUG: print "Agent " + str(agent.agentIndex) + " gained " + str(len(agent.resources) - oldResourceNum) + " resources.  Total: " + str(len(agent.resources))
       if DEBUG: print "\n"
 
       # get an action from the state

@@ -59,7 +59,9 @@ class Tile:
   ---------------------------
   """
   def settle(self, playerIndex):
-    if self.isOccupied(): raise Exception("This tile is already used!")
+
+    if self.isOccupied(): 
+      raise Exception("This tile is already used!")
     self.player = playerIndex
     self.structure = Structure.SETTLEMENT
 
@@ -77,14 +79,15 @@ class Tile:
   ---------------------------
   """
   def buildRoad(self, playerIndex):
-    if self.isOccupied(): raise Exception("This tile is already used!")
+    if self.isOccupied(): 
+      raise Exception("This tile is already used!")
 
     self.player = playerIndex
     self.structure = Structure.ROAD
 
 
   """
-  Method: toString
+  Method: __str__ method
   ---------------------------
   Parameters: NA
   Returns: NA
@@ -92,12 +95,13 @@ class Tile:
   Prints out a description of this tile
   ---------------------------
   """
-  def toString(self):
-    print "--------------TILE INFO AT (" + str(self.x) + ", " + str(self.y) + ")---------------"
-    print "Owned by player: " + str(self.player)
-    print "Structure: " + str(self.structure)
-    print "Resource Type: " + str(self.resource)
-    print "Tile number: " + str(self.number)
+  def __repr__(self):
+    val = "--------------TILE INFO AT (" + str(self.x) + ", " + str(self.y) + ")---------------\n"
+    val += "Owned by player: " + str(self.player) +"\n"
+    val += "Structure: " + str(self.structure) +"\n"
+    val += "Resource Type: " + str(self.resource) +"\n"
+    val += "Tile number: " + str(self.number) +"\n"
+    return val
 
 
   """
@@ -262,7 +266,6 @@ class BasicBoard:
     for neighbor in neighbors:
       if not neighbor.isOccupied():
         unoccupied.append(neighbor)
-
     return unoccupied
 
 
