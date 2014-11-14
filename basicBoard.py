@@ -60,7 +60,7 @@ class Tile:
   """
   def settle(self, playerIndex):
 
-    if self.isOccupied() and self.player != playerIndex: 
+    if self.isOccupied():# and self.player != playerIndex: 
       raise Exception("This tile is already used!")
     self.player = playerIndex
     self.structure = Structure.SETTLEMENT
@@ -79,7 +79,7 @@ class Tile:
   ---------------------------
   """
   def buildRoad(self, playerIndex):
-    if self.isOccupied() and self.player != playerIndex: 
+    if self.isOccupied():# and self.player != playerIndex: 
       raise Exception("Tile " + str(self) + " is already used!")
 
     self.player = playerIndex
