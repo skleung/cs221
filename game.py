@@ -65,9 +65,9 @@ class Agent:
   (e.g. ('settle', metadata telling where the agent decided to settle - Vertex or Edge))
   """
   def getAction(self, state):
-    # legalActions = state.getLegalActions(self.agentIndex)
-    # if len(legalActions) == 0: return None
-    # return legalActions[0]
+    legalActions = state.getLegalActions(self.agentIndex)
+    if len(legalActions) == 0: return None
+    return legalActions[0]
 
     # A function that recursively calculates and returns a tuple
     # containing the best action/value (in the format (value, action))
@@ -307,7 +307,7 @@ class GameState:
       for settlement in agent.settlements:
         unoccupiedNeighbors = board.getUnoccupiedNeighbors(settlement, diagonals=False)
         for neighbor in unoccupiedNeighbors:
-          if (Actions.ROAD, neighbor) not in legalActions and (Actions.SETTLE, neighbor) not in legalActions:
+          if (Actions.ROAD, neighbor) not in legalActions:
             # import pdb; pdb.set_trace()
             legalActions.append((Actions.ROAD, neighbor))
             # if not neighbor.isOccupied():
@@ -318,9 +318,9 @@ class GameState:
 
       # Look at every unoccupied road endpoint of every road
       for road in agent.roads:
-        unoccupiedEndpoints = board.getUnoccupiedNeighbors(road)
+        unoccupiedEndpoints = board.getUnoccupiedRoadEndpoints(road)
         for unoccupiedEndpoint in unoccupiedEndpoints:
-          if (Actions.ROAD, unoccupiedEndpoint) not in legalActions and (Actions.SETTLE, unoccupiedEndpoint) not in legalActions:
+          if (Actions.ROAD, unoccupiedEndpoint) not in legalActions:
             legalActions.append((Actions.ROAD, unoccupiedEndpoint))
             # if not unoccupiedEndpoint.isOccupied():
             #   legalActions.append((Actions.ROAD, unoccupiedEndpoint))
@@ -384,10 +384,10 @@ class Game:
 
       # distribute resources
       # TODO(sierrakn): Actually roll dice and distribute resources accordingly
-      for agent in state.data.agents:
-        oldResourceNum = len(agent.resources)
-        agent.updateResources(state)
-        if DEBUG: print "Agent " + str(agent.agentIndex) + " gained " + str(len(agent.resources) - oldResourceNum) + " resources.  Total: " + str(len(agent.resources))
+      for currAgent in state.data.agents:
+        oldResourceNum = len(currAgent.resources)
+        currAgent.updateResources(state)
+        if DEBUG: print "Agent " + str(currAgent.agentIndex) + " gained " + str(len(agent.resources) - oldResourceNum) + " resources.  Total: " + str(len(agent.resources))
       if DEBUG: print "\n"
 
       # get an action from the state
