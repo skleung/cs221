@@ -48,12 +48,11 @@ class Agent:
     self.agentIndex = agentIndex
     self.victoryPoints = 0
     self.depth = 1
-    
-    # List of Tiles
+    # List of Edges
     self.roads = []
-    
-    # List of Tiles
+    # List of Vertices
     self.settlements = []
+    self.cities = []
 
     # TODO(sierrakn): Make this a Counter of resource type -> number of that resource in hand
     self.resources = ([ResourceTypes.WOOL, ResourceTypes.BRICK, 
@@ -64,14 +63,18 @@ class Agent:
   def __repr__(self):
     return self.name
 
-  # def copy(self):
-  #   newCopy = Agent(self.name, self.agentIndex)
-  #   newCopy.victoryPoints = self.victoryPoints
-  #   newCopy.depth = self.depth
-  #   newCopy.roads = self.roads
-  #   newCopy.settlements = self.settlements
-  #   newCopy.resources = self.resources
-  #   return newCopy
+  def deepCopy(self, board):
+    newCopy = Agent(self.name, self.agentIndex)
+    newCopy.victoryPoints = self.victoryPoints
+    newCopy.depth = self.depth
+    newCopy.roads = []
+    for road in self.roads:
+      newCopy.roads.append(board.getEdge(road.X, road.Y))
+    newCopy.settlements = []
+    for settlement in self.settlements:
+      newCopy.settlements.append(board.getVertex(settlement.X, settlement.Y))
+    newCopy.resources = self.resources
+    return newCopy
   
   """
   The Agent will receive a GameState anyd returns a tuple containing string and its metadata
@@ -187,24 +190,36 @@ class Agent:
 #       agentState.
 
 class GameStateData:
-  def __init__( self, prevData = None ):
+  def __init__(self, prevData = None):
       """
       Generates a new data packet by copying information from its predecessor.
       """
       if prevData != None:
-        self.board = copy.deepcopy(prevData.board)
-        self.agents = copy.deepcopy(prevData.agents)
+        self.board = self.copyBoard(prevData.board)
+        self.agents = self.copyAgents(prevData.agents, self.board)
+        self.deck = self.copyDeck(prevData.deck)
       else:
+        self.board = None
         self.agents = [] 
         self.deck = None
-        self.board = None
+        
+  # Deep copy of the agents as used in the init() method above
+  def copyAgents(self, agents, board):
+    copiedAgents = []
+    for agent in agents:
+      copiedAgents.append(agent.deepCopy(board))
+    return copiedAgents;
 
-  #allows for deep copy of the agent states as used in the init() method above
-  def copyagents( self, agents ):
-    copiedStates = []
-    for agentState in agents:
-      copiedStates.append( agentState.copy() )
-    return copiedStates
+  # Deep copy of the agents as used in the init() method above
+  def copyDeck(self, deck):
+    # TODO(skleung): change this when using deck
+    copiedDeck = None
+    return copiedDeck;
+
+  # Deep copy of the agents as used in the init() method above
+  def copyBoard(self, board):
+    copiedBoard = Board(board)
+    return copiedBoard;
 
   """
   This method should be called to start or initialize the GameStateData
@@ -269,82 +284,42 @@ class GameState:
     legalActions = []
     agent = self.data.agents[agentIndex]
     board = self.data.board
-
-    # TODO(sierrakn): change to actual resources
+    # TODO(sierrakn): check actual resources
     # If they can build a settlement...
+    # Must be connected to road and all adjacent vertices must be empty
     if len(agent.resources) >= SETTLEMENT_COST:
-      # for edge in agent.roads:
-      #   # TODO(sierrakn): smarter way to check if two away from settlement?
-      #   vertices = board.getVertexEnds(edge)
-      #   for vertex in vertices:
-      #     print "Starting looking from settlement " + str((vertex.X, vertex.Y))
-      #     canSettle = True
-      #     if vertex.isSettlement: canSettle = False; continue
-      #     for neighborVertex in board.getNeighborVertices(vertex):
-      #       if neighborVertex.isSettlement: canSettle = False; break
-      #       print "Jumped to neighbor at " + str((neighborVertex.X, neighborVertex.Y))
-      #       for secondNeighbor in board.getNeighborVertices(neighborVertex):
-      #         if secondNeighbor.isSettlement: canSettle = False; break
-      #         print "Looking at neighbor " + str((secondNeighbor.X, secondNeighbor.Y))
-      #     if canSettle: 
-      #       print "Can settle!"
-      #       legalActions.append((Actions.SETTLE, vertex))
-
-      # Check each road for possible settlement locations (at ends of roads)
-      for road in agent.roads:
-        roadEnds = board.getUnoccupiedRoadEndpoints(road)
-
-        # Look at the unoccupied endpoints (up to 3) of this road to see
-        # if we can put a settlement here
-        for roadEnd in roadEnds:
-            if board.isValidSettlementLocation(roadEnd):
-              if (Actions.SETTLE, roadEnd) not in legalActions:
-                legalActions.append((Actions.SETTLE, roadEnd))
-
-
+      for edge in agent.roads:
+        vertices = board.getVertexEnds(edge)
+        for vertex in vertices:
+          # Vertex keeps track of whether all adjacent vertices are empty (through board)
+          if vertex.canSettle:
+            legalActions.append((Actions.SETTLE, vertex))
     # If they can build a road...
+    # Must be connected to road, settlement, or city and not have a road there already
     if len(agent.resources) >= ROAD_COST:
-      # for vertex in agent.settlements:
-      #   vertexEdges = board.getEdgesOfVertex(vertex)
-      #   for roadEdge in vertexEdges:
-      #     if roadEdge.player == None: legalActions.append((Actions.ROAD, roadEdge))
-      # for edge in agent.roads:
-      #   vertices = board.getVertexEnds(edge)
-      #   for vertex in vertices:
-      #     if vertex.isSettlement: continue
-      #     roadEdges = board.getEdgesOfVertex(vertex)
-      #     for roadEdge in roadEdges: 
-      #       if roadEdge.player == None: legalActions.append((Actions.ROAD, roadEdge))
-
-      # Look at every space adjacent to all settlements
       for settlement in agent.settlements:
-        unoccupiedNeighbors = board.getUnoccupiedNeighbors(settlement, diagonals=False)
-        for neighbor in unoccupiedNeighbors:
-          if (Actions.ROAD, neighbor) not in legalActions:
-            # import pdb; pdb.set_trace()
-            legalActions.append((Actions.ROAD, neighbor))
-            # if not neighbor.isOccupied():
-            #   legalActions.append((Actions.ROAD, neighbor))
-            # else:
-            #   pdb.set_trace()
-            #   raise Exception("why?")
-
-      # Look at every unoccupied road endpoint of every road
-      for road in agent.roads:
-        unoccupiedEndpoints = board.getUnoccupiedRoadEndpoints(road)
-        for unoccupiedEndpoint in unoccupiedEndpoints:
-          if (Actions.ROAD, unoccupiedEndpoint) not in legalActions:
-            legalActions.append((Actions.ROAD, unoccupiedEndpoint))
-            # if not unoccupiedEndpoint.isOccupied():
-            #   legalActions.append((Actions.ROAD, unoccupiedEndpoint))
-            # else:
-            #   pdb.set_trace()
-            #   raise Exception("why?")
+        vertexEdges = board.getEdgesOfVertex(settlement)
+        for roadEdge in vertexEdges:
+          if roadEdge.player == None: legalActions.append((Actions.ROAD, roadEdge))
+      for city in agent.cities:
+        vertexEdges = board.getEdgesOfVertex(city)
+        for roadEdge in vertexEdges:
+          if roadEdge.player == None: legalActions.append((Actions.ROAD, roadEdge))
+      for edge in agent.roads:
+        vertices = board.getVertexEnds(edge)
+        for vertex in vertices:
+          if vertex.isSettlement or vertex.isCity: continue
+          roadEdges = board.getEdgesOfVertex(vertex)
+          for roadEdge in roadEdges: 
+            if roadEdge.player == None: legalActions.append((Actions.ROAD, roadEdge))
     return legalActions
 
+  """
+  Returns the successor state after the specified agent takes the action.
+  """
   def generateSuccessor(self, playerIndex, action):
     # Check that successors exist
-    #if self.gameOver(): raise Exception('Can\'t generate a successor of a terminal state.')
+    if self.gameOver() >= 0: raise Exception('Can\'t generate a successor of a terminal state.')
     # Copy current state
     state = GameState(self)
     state.data.agents[playerIndex].applyAction(action)

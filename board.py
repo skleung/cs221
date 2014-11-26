@@ -21,6 +21,9 @@ class Hexagon:
     self.resource = resource
     self.diceValue = diceValue
 
+  def deepCopy(self):
+    return Hexagon(self.X, self.Y, self.resource, self.diceValue)
+
 # Previously "Node"
 # A vertex is an intersection between hexagons, a valid settlement location
 class Vertex:
@@ -29,12 +32,24 @@ class Vertex:
     self.X = X
     self.Y = Y
     self.player = None
+    self.canSettle = True
     self.isSettlement = False
     self.isCity = False
-    self.roads = []
+
+  def __init__(self, other):
+    self.X = other.X
+    self.Y = other.Y
+    self.player = other.player
+    self.canSettle = other.canSettle
+    self.isSettlement = other.isSettlement
+    self.isCity = other.isCity
+
+  def deepCopy(self):
+    return Vertex(self)
 
   def settle(self, player):
     self.isSettlement = True
+    self.canSettle = False
     self.player = player
 
   def upgrade(self):
@@ -50,13 +65,12 @@ class Edge:
     self.X = X
     self.Y = Y
     self.player = player
+
+  def deepCopy(self):
+    return Edge(self.X, self.Y, self.player)
     
-  def build(self, player, startVertex, endVertex):
+  def build(self, player):
     self.player = player
-    self.start = startVertex
-    self.end = endVertex
-    startVertex.roads.append(self)
-    endVertex.roads.append(self)
 
 # Keeps track of resource + numberchit
 class Tile:
@@ -103,6 +117,7 @@ class Board:
     self.hexagons = [[0 for x in xrange(numCols)] for x in xrange(numRows)] 
     self.edges = [[0 for x in xrange(numCols*2+2)] for x in xrange(numRows*2+2)] 
     self.vertices = [[0 for x in xrange(numCols*2+2)] for x in xrange(numRows*2+2)] 
+    self.allSettlements = []
     for i in range(numRows):
       for j in range(numCols):
         tile = layout[i][j]
@@ -114,12 +129,37 @@ class Board:
       for j in range(numCols*2+2):
         self.vertices[i][j] = Vertex(i, j)
         self.edges[i][j] = Edge(i, j)
+
+  def __init__(self, other):
+    self.hexagons = []
+    for hexagon in other.hexagons:
+      self.hexagons.append(hexagon.deepCopy())
+    self.edges = []
+    for edge in other.edges:
+      self.edges.append(edge.deepCopy())
+    self.vertices = []
+    for vertex in other.vertices:
+      self.vertices.append(vertex.deepCopy())
     self.allSettlements = []
+    for settlement in other.allSettlements:
+      self.allSettlements.append(settlement.deepCopy())
+
+  def getEdge(self, x, y):
+    return self.edges[x][y]
+
+  def getVertex(self, x, y):
+    return self.vertices[x][y]
+
+  def getHex(self, x, y):
+    return self.hexagons[x][y]
 
   def applyAction(self, playerIndex, action):
     if action[0] == Actions.SETTLE:
       vertex = action[1]
       vertex.settle(playerIndex)
+      # All vertices one away are now unsettleable
+      for neighborVertex in getNeighborVertices(vertex):
+        neighborVertex.canSettle = False
       self.allSettlements.append(vertex)
     if action[0] == Actions.ROAD:
       edge = action[1]
@@ -147,13 +187,14 @@ class Board:
     if hexSix != None: neighbors.append(hexSix)
     return neighbors
 
-  def getNeighborVerticesViaRoad(self, vertex):
-    neighbors = []
-    for road in vertex.roads:
-      node = road.start if road.start != vertex else road.end
-      if road is None: continue
-      neighbors.append(node)
-    return neighbors
+# TODO(sierrakn): Add functionality to board to replace this
+  # def getNeighborVerticesViaRoad(self, vertex):
+  #   neighbors = []
+  #   for road in vertex.roads:
+  #     node = road.start if road.start != vertex else road.end
+  #     if road is None: continue
+  #     neighbors.append(node)
+  #   return neighbors
 
   def getNeighborVertices(self, vertex):
     neighbors = []
