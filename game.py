@@ -1,6 +1,6 @@
 from gameUtil import *
 import random
-from basicBoard import *
+from board import *
 from enum import Enum
 import pdb
 import copy
@@ -218,7 +218,7 @@ class GameStateData:
 
   # Deep copy of the agents as used in the init() method above
   def copyBoard(self, board):
-    copiedBoard = Board(board)
+    copiedBoard = board.deepCopy()
     return copiedBoard;
 
   """
@@ -231,6 +231,8 @@ class GameStateData:
     #creates a new deck by calling the deck's constructor
     #self.deck = Deck()
     self.agents = agents
+    for agent in self.agents:
+      agent.initialize(self) # This currently does nothing
     self.board = board
 
 
@@ -262,18 +264,16 @@ class GameState:
   """
   Creates a GameState based on a layout if it exists
   """
-  def initialize(self, layout = None):
+  def initialize(self, layout):
     # print "Enter the number of player agents:"
     # numAgents = int(raw_input())
     numAgents = 3
     # creates an array of player agents
     agents = [Agent("Player"+str(i), i) for i in range(numAgents)]
     # initialize board
-    board = BasicBoard(6)
+    board = Board(layout)
     # initializes the game state's data with the number of agents and the player agents
     self.data.initialize(agents, board)
-    for agent in self.data.agents:
-      agent.initialize(self) # This currently does nothing
 
   # Get possible actions from the current state
   # An action is a tuple with action and metadata
@@ -350,7 +350,7 @@ class Game:
     numAgents = len(agents)
     
     # Each player starts with 1 settlement (but no victory points for it)
-    initialSettlements = [board.getTile(2,2), board.getTile(4,4), board.getTile(4,0)]
+    initialSettlements = [board.getVertex(2,2), board.getVertex(4,4), board.getVertex(4,0)]
     for i in range(numAgents):
       agents[i].settlements.append(initialSettlements[i])
       board.applyAction(i, (Actions.SETTLE, initialSettlements[i]))
@@ -413,6 +413,6 @@ def printGameActionForAgent(action, agent, board):
 
 gState = GameState() 
 #initializes the game state
-gState.initialize()
+gState.initialize(BeginnerLayout)
 game = Game()
 game.run(gState)
