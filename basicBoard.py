@@ -5,12 +5,6 @@ from enum import Enum
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
 ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER", "NOTHING"])
 Structure = Enum(["ROAD", "SETTLEMENT", "NONE"])
-Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
-  ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
-  ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
-  ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN,
-  ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER,
-  ResourceTypes.NOTHING])
 NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 
 
@@ -59,7 +53,6 @@ class Tile:
   ---------------------------
   """
   def settle(self, playerIndex):
-
     if self.isOccupied():# and self.player != playerIndex: 
       raise Exception("This tile is already used!")
     self.player = playerIndex
@@ -213,9 +206,10 @@ class BasicBoard:
 
     # Or mark the tile as a road
     elif action[0] == Actions.ROAD:
-      tile = action[1]
-      tile.buildRoad(playerIndex)
-      if tile not in self.roads: self.roads.append(tile)
+      tiles = action[1]
+      for tile in tiles:
+        tile.buildRoad(playerIndex)
+        if tile not in self.roads: self.roads.append(tile)
 
 
   """

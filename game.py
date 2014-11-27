@@ -1,7 +1,9 @@
 from gameUtil import *
-import random
 from basicBoard import *
 from enum import Enum
+import random
+import collections
+import itertools
 import pdb
 import copy
 
@@ -55,9 +57,10 @@ class Agent:
     # List of Tiles
     self.settlements = []
 
-    # TODO(sierrakn): Make this a Counter of resource type -> number of that resource in hand
-    self.resources = ([ResourceTypes.WOOL, ResourceTypes.BRICK, 
-      ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER])
+    # Counter of resources
+    self.resources = collections.Counter()
+    for resource in [ResourceTypes.WOOL, ResourceTypes.BRICK, ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER]:
+      self.resources[resource] = 0
     
 
   # to string method will print the agent's name
@@ -72,100 +75,137 @@ class Agent:
   #   newCopy.settlements = self.settlements
   #   newCopy.resources = self.resources
   #   return newCopy
+  """
+  This method determines whether the Agent has the resources to settle. It will return
+  the number of possible settlements given the agent's resources.
+  """
+  def canSettle(self):
+    wool = self.resources[ResourceTypes.WOOL] 
+    brick = self.resources[ResourceTypes.BRICK] 
+    grain = self.resources[ResourceTypes.GRAIN] 
+    lumber = self.resources[ResourceTypes.LUMBER] 
+    numSettlements = 0
+    while (wool > 0 and brick > 0 and grain > 0 and lumber > 0):
+      wool-=1
+      brick-=1
+      grain-=1
+      lumber-=1
+      numSettlements+=1  
+    return numSettlements
+
+  """
+  This method determines whether the Agent has the resources to build a city. It will return
+  the number of possible settlements given the agent's resources.
+  """
+  def canBuildCity(self):
+    ore = self.resources[ResourceTypes.ORE] 
+    grain = self.resources[ResourceTypes.GRAIN] 
+    numCity = 0
+    while (ore > 2 and grain > 1):
+      ore-=3
+      grain-=2
+      numCity+=1
+    return numCity
+
+  """
+  This method determines whether the Agent has the resources to build a city. It will return
+  the number of possible roads given the agent's resources.
+  """
+  def canBuildRoad(self):
+    brick = self.resources[ResourceTypes.BRICK] 
+    lumber = self.resources[ResourceTypes.LUMBER] 
+    numCity = 0
+    while (brick > 0 and lumber > 0):
+      brick-=1
+      lumber-=1
+      numCity+=1
+    return numCity
   
   """
   The Agent will receive a GameState anyd returns a tuple containing string and its metadata
   (e.g. ('settle', metadata telling where the agent decided to settle - Vertex or Edge))
   """
   def getAction(self, state):
-    # legalActions = state.getLegalActions(self.agentIndex)
-    # if len(legalActions) == 0: return None
-    # return legalActions[0]
+    legalActions = state.getLegalActions(self.agentIndex)
+    if len(legalActions) == 0: return None
+    return legalActions[0]
 
-    # A function that recursively calculates and returns a tuple
-    # containing the best action/value (in the format (value, action))
-    # for the current player at the current state with the current depth.
-    def recurse(state, currDepth, playerIndex):
-      # TERMINAL CASES
-      # ---------------------
-      # won, lost
-      if state.gameOver() == playerIndex:
-        return (float('inf'), None)
-      elif state.gameOver() > -1:
-        return (float('-inf'), None)
+    # # A function that recursively calculates and returns a tuple
+    # # containing the best action/value (in the format (value, action))
+    # # for the current player at the current state with the current depth.
+    # def recurse(state, currDepth, playerIndex):
+    #   # TERMINAL CASES
+    #   # ---------------------
+    #   # won, lost
+    #   if state.gameOver() == playerIndex:
+    #     return (float('inf'), None)
+    #   elif state.gameOver() > -1:
+    #     return (float('-inf'), None)
 
-      # max depth reached
-      if currDepth is 0:
-        return (self.evaluationFunction(state, playerIndex), None)
+    #   # max depth reached
+    #   if currDepth is 0:
+    #     return (self.evaluationFunction(state, playerIndex), None)
 
-      # no possible actions (must pass)
-      possibleActions = state.getLegalActions(playerIndex)
-      if len(possibleActions) == 0:
-        return (0, None)
+    #   # no possible actions (must pass)
+    #   possibleActions = state.getLegalActions(playerIndex)
+    #   if len(possibleActions) == 0:
+    #     return (0, None)
 
-      # RECURSIVE CASE
-      # ---------------------
+    #   # RECURSIVE CASE
+    #   # ---------------------
 
-      # Parallel lists of values and their corresponding actions
-      vals = []
-      actions = []
+    #   # Parallel lists of values and their corresponding actions
+    #   vals = []
+    #   actions = []
 
-      # New depth (depth - 1 for last ghost, otherwise depth)
-      # New player goes through 0, 1,...numAgents - 1 (looping around)
-      newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
-      newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
+    #   # New depth (depth - 1 for last ghost, otherwise depth)
+    #   # New player goes through 0, 1,...numAgents - 1 (looping around)
+    #   newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
+    #   newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
 
-      # Iterate over each possible action, recording action and value
-      for currAction in possibleActions:
-        value, action = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
-        vals.append(value)
-        actions.append(currAction)
+    #   # Iterate over each possible action, recording action and value
+    #   for currAction in possibleActions:
+    #     value, action = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
+    #     vals.append(value)
+    #     actions.append(currAction)
 
-      # Should all players maximize, or just our player (player 0)?
-      if playerIndex == 0:
-        return (max(vals), actions[vals.index(max(vals))])
-      return (min(vals), actions[vals.index(min(vals))])
+    #   # Should all players maximize, or just our player (player 0)?
+    #   if playerIndex == 0:
+    #     return (max(vals), actions[vals.index(max(vals))])
+    #   return (min(vals), actions[vals.index(min(vals))])
 
-    value, action = recurse(state, self.depth, self.agentIndex)
-    return action
+    # value, action = recurse(state, self.depth, self.agentIndex)
+    # return action
 
 
   def applyAction(self, action):
     if action == None: return
 
     if action[0] == Actions.SETTLE:
-      self.settlements.append(action[1])
+      numSettlements = len(action[1])
+      self.settlements += action[1]
       self.victoryPoints = self.victoryPoints + SETTLEMENT_POINTS
       if len(self.resources) >= SETTLEMENT_COST:
         for i in range(SETTLEMENT_COST): self.resources.pop()
       else:
         raise Exception("not enough resources to settle!")
     if action[0] == Actions.ROAD:
-      self.roads.append(action[1])
-      self.victoryPoints = self.victoryPoints + ROAD_POINTS
-      if len(self.resources) >= ROAD_COST:
-        for i in range(ROAD_COST): self.resources.pop()
+      self.roads += action[1]
+      numRoads = len(action[1])
+      import pdb; pdb.set_trace()
+      if self.resources[ResourceTypes.LUMBER] >= numRoads and self.resources[ResourceTypes.BRICK] >= numRoads:
+        self.resources[ResourceTypes.LUMBER] -= numRoads
+        self.resources[ResourceTypes.BRICK] -= numRoads
       else:
         raise Exception("not enough resources to build a road!")
 
     #refresh the cards in the hand!
-    self.reloadHand()
+    # self.reloadHand()
 
-  # TODO: will need to draw from the deck, and thus pass in the state later...
-  def reloadHand(self):
-    while (len(self.resources) < STARTING_NUM_OF_CARDS):
-      self.resources.append(ResourceTypes.WOOL)
-
-  # TODO(sierrakn): Actually roll dice and distribute resources accordingly
   def updateResources(self, state):
-    for i in xrange(len(self.settlements)):
-      self.resources.append(ResourceTypes.WOOL)
-
-  # def drawCard(self, state):
-  #   card = state.data.deck.drawCard()
-  #   if card.value == "Victory":
-  #     self.victoryPoints += 1
-  #   self.hand.append(card)
+    # TODO: Don't hardcode the resources that are rolled
+    resourcesRolled = [ResourceTypes.WOOL, ResourceTypes.BRICK, ResourceTypes.LUMBER, ResourceTypes.GRAIN]
+    self.resources += collections.Counter(resourcesRolled)
 
   """
   Kicks off the game, decides where to settle and build a road in the very first move of the game
@@ -187,23 +227,24 @@ class Agent:
 #       agentState.
 
 class GameStateData:
-  def __init__( self, prevData = None ):
+  def __init__(self, prevData = None):
       """
       Generates a new data packet by copying information from its predecessor.
       """
       if prevData != None:
+        import pdb; pdb.set_trace()
         self.board = copy.deepcopy(prevData.board)
-        self.agents = copy.deepcopy(prevData.agents)
+        self.agents = self.copyagents(self.agents)
       else:
         self.agents = [] 
         self.deck = None
         self.board = None
 
   #allows for deep copy of the agent states as used in the init() method above
-  def copyagents( self, agents ):
+  def copyagents(self, agents):
     copiedStates = []
     for agentState in agents:
-      copiedStates.append( agentState.copy() )
+      copiedStates.append(agentState.copy())
     return copiedStates
 
   """
@@ -272,7 +313,7 @@ class GameState:
 
     # TODO(sierrakn): change to actual resources
     # If they can build a settlement...
-    if len(agent.resources) >= SETTLEMENT_COST:
+    if agent.canSettle() > 0:
       # for edge in agent.roads:
       #   # TODO(sierrakn): smarter way to check if two away from settlement?
       #   vertices = board.getVertexEnds(edge)
@@ -303,7 +344,7 @@ class GameState:
 
 
     # If they can build a road...
-    if len(agent.resources) >= ROAD_COST:
+    if agent.canBuildRoad() > 0:
       # for vertex in agent.settlements:
       #   vertexEdges = board.getEdgesOfVertex(vertex)
       #   for roadEdge in vertexEdges:
@@ -317,29 +358,25 @@ class GameState:
       #       if roadEdge.player == None: legalActions.append((Actions.ROAD, roadEdge))
 
       # Look at every space adjacent to all settlements
+      validRoads = set()
       for settlement in agent.settlements:
         unoccupiedNeighbors = board.getUnoccupiedNeighbors(settlement, diagonals=False)
         for neighbor in unoccupiedNeighbors:
           if (Actions.ROAD, neighbor) not in legalActions:
-            # import pdb; pdb.set_trace()
-            legalActions.append((Actions.ROAD, neighbor))
-            # if not neighbor.isOccupied():
-            #   legalActions.append((Actions.ROAD, neighbor))
-            # else:
-            #   pdb.set_trace()
-            #   raise Exception("why?")
+            validRoads.add(neighbor)
 
       # Look at every unoccupied road endpoint of every road
       for road in agent.roads:
         unoccupiedEndpoints = board.getUnoccupiedRoadEndpoints(road)
         for unoccupiedEndpoint in unoccupiedEndpoints:
           if (Actions.ROAD, unoccupiedEndpoint) not in legalActions:
-            legalActions.append((Actions.ROAD, unoccupiedEndpoint))
-            # if not unoccupiedEndpoint.isOccupied():
-            #   legalActions.append((Actions.ROAD, unoccupiedEndpoint))
-            # else:
-            #   pdb.set_trace()
-            #   raise Exception("why?")
+            validRoads.add(unoccupiedEndpoint)
+            
+      # Get all possible combinations with 1 more roads
+      for numPossibleRoads in range(1, agent.canBuildRoad()+1):
+        # run through combinations using itertools
+        for combination in list(itertools.combinations(validRoads, numPossibleRoads)):
+          legalActions.append((Actions.ROAD, list(combination)))
     return legalActions
 
   def generateSuccessor(self, playerIndex, action):
