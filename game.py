@@ -104,7 +104,7 @@ class Agent:
       # no possible actions (must pass)
       possibleActions = state.getLegalActions(playerIndex)
       if len(possibleActions) == 0:
-        return (0, None)
+        return (float('-inf'), None)
 
       # RECURSIVE CASE
       # ---------------------
@@ -130,6 +130,9 @@ class Agent:
       return (min(vals), actions[vals.index(min(vals))])
 
     value, action = recurse(state, self.depth, self.agentIndex)
+    # if DEBUG: 
+    print "Best Action: " + str(action)
+    print "Best Value: " + str(value)
     return action
 
 
@@ -380,8 +383,9 @@ class Game:
 
       # get an action from the state
       action = agent.getAction(state)
-      agent.applyAction(action)
-      board.applyAction(agent.agentIndex, action)
+      if action != None:
+        agent.applyAction(action)
+        board.applyAction(agent.agentIndex, action)
 
       # Print out the action taken and the new board
       if DEBUG: print "\n"
