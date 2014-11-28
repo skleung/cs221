@@ -227,8 +227,10 @@ class Agent:
 
   def updateResources(self, state):
     # TODO: Don't hardcode the resources that are rolled
-    resourcesRolled = [ResourceTypes.WOOL, ResourceTypes.BRICK, ResourceTypes.LUMBER, ResourceTypes.GRAIN]
-    self.resources += collections.Counter(resourcesRolled)
+
+    resources = [ResourceTypes.WOOL, ResourceTypes.BRICK, ResourceTypes.LUMBER, ResourceTypes.GRAIN, ResourceTypes.ORE ]
+    randomResource = random.choice(resources)
+    self.resources += collections.Counter([randomResource])
 
   """
   Kicks off the game, decides where to settle and build a road in the very first move of the game
@@ -349,18 +351,6 @@ class GameState:
     if agent.canBuildRoad() > 0:
     # Look at every space adjacent to all settlements
       validRoads = []
-      # for settlement in agent.settlements:
-      #   unoccupiedNeighbors = board.getUnoccupiedNeighbors(settlement, diagonals=False)
-      #   for neighbor in unoccupiedNeighbors:
-      #     if (Actions.ROAD, neighbor) not in legalActions:
-      #       validRoads.add(neighbor)
-
-      # # Look at every unoccupied road endpoint of every road
-      # for road in agent.roads:
-      #   unoccupiedEndpoints = board.getUnoccupiedRoadEndpoints(road)
-      #   for unoccupiedEndpoint in unoccupiedEndpoints:
-      #     if (Actions.ROAD, unoccupiedEndpoint) not in legalActions:
-      #       validRoads.add(unoccupiedEndpoint)
 
       for settlement in agent.settlements:
         validRoads+=board.getEdgesOfVertex(settlement)
