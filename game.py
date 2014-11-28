@@ -14,6 +14,9 @@ ROAD_POINTS = 1
 SETTLEMENT_COST = 4
 ROAD_COST = 3
 
+ORE_COST_OF_CITY = 3
+GRAIN_COST_OF_CITY = 2
+
 DEBUG = False
 
 def printActions(actions):
@@ -54,8 +57,11 @@ class Agent:
     # List of Tiles
     self.roads = []
     
-    # List of Tiles
+    # List of Settlements owned
     self.settlements = []
+
+    # List of Cities owned
+    self.cities = []
 
     # Counter of resources
     self.resources = collections.Counter()
@@ -184,20 +190,29 @@ class Agent:
     if action[0] == Actions.SETTLE:
       numSettlements = len(action[1])
       self.settlements += action[1]
-      self.victoryPoints = self.victoryPoints + SETTLEMENT_POINTS
-      if len(self.resources) >= SETTLEMENT_COST:
-        for i in range(SETTLEMENT_COST): self.resources.pop()
+      if self.canSettle() >= numSettlements:
+        self.resources[ResourceTypes.LUMBER] -= numSettlements
+        self.resources[ResourceTypes.BRICK] -= numSettlements
+        self.resources[ResourceTypes.WOOL] -= numSettlements
+        self.resources[ResourceTypes.GRAIN] -= numSettlements
       else:
         raise Exception("not enough resources to settle!")
     if action[0] == Actions.ROAD:
       self.roads += action[1]
       numRoads = len(action[1])
-      import pdb; pdb.set_trace()
-      if self.resources[ResourceTypes.LUMBER] >= numRoads and self.resources[ResourceTypes.BRICK] >= numRoads:
+      if self.canBuildRoad() >= numRoads:
         self.resources[ResourceTypes.LUMBER] -= numRoads
         self.resources[ResourceTypes.BRICK] -= numRoads
       else:
         raise Exception("not enough resources to build a road!")
+    if action[0] == Actions.CITY:
+      self.cities += action[1]
+      numCities = len(action[1])
+      if self.canBuildCity() >= numCities:
+        self.resources[ResourceTypes.ORE] -= numCities*ORE_COST_OF_CITY
+        self.resources[ResourceTypes.GRAIN] -= numCities*GRAIN_COST_OF_CITY
+      else:
+        raise Exception("not enough resources to build a city!")
 
     #refresh the cards in the hand!
     # self.reloadHand()
