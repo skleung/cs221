@@ -21,6 +21,9 @@ class Hexagon:
     self.resource = resource
     self.diceValue = diceValue
 
+  def deepCopy(self):
+    return Hexagon(self.X, self.Y, self.resource, self.diceValue)
+
 # Previously "Node"
 # A vertex is an intersection between hexagons, a valid settlement location
 class Vertex:
@@ -29,12 +32,21 @@ class Vertex:
     self.X = X
     self.Y = Y
     self.player = None
+    self.canSettle = True
     self.isSettlement = False
     self.isCity = False
-    self.roads = []
+
+  def deepCopy(self):
+    copy = Vertex(self.X, self.Y)
+    copy.player = self.player
+    copy.canSettle = self.canSettle
+    copy.isSettlement = self.isSettlement
+    copy.isCity = self.isCity
+    return copy
 
   def settle(self, player):
     self.isSettlement = True
+    self.canSettle = False
     self.player = player
 
   def upgrade(self):
@@ -50,13 +62,12 @@ class Edge:
     self.X = X
     self.Y = Y
     self.player = player
+
+  def deepCopy(self):
+    return Edge(self.X, self.Y, self.player)
     
-  def build(self, player, startVertex, endVertex):
+  def build(self, player):
     self.player = player
-    self.start = startVertex
-    self.end = endVertex
-    startVertex.roads.append(self)
-    endVertex.roads.append(self)
 
 # Keeps track of resource + numberchit
 class Tile:
@@ -69,6 +80,8 @@ BeginnerLayout = ([[None, None, Tile(ResourceTypes.GRAIN, 9), None, None],
   [Tile(ResourceTypes.BRICK, 4), Tile(ResourceTypes.ORE, 6), Tile(ResourceTypes.GRAIN, 11), Tile(ResourceTypes.LUMBER, 4), Tile(ResourceTypes.ORE, 3)],
   [Tile(ResourceTypes.NOTHING, -1), Tile(ResourceTypes.LUMBER, 3), Tile(ResourceTypes.WOOL, 10), Tile(ResourceTypes.WOOL, 9), Tile(ResourceTypes.LUMBER, 6)],
   [None, Tile(ResourceTypes.BRICK, 8), Tile(ResourceTypes.ORE, 5), Tile(ResourceTypes.GRAIN, 2), None]])
+
+ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
 
 
 """
@@ -97,34 +110,130 @@ Which is necessary to know when creating layouts
 """
 class Board:
   # Layout is just a double list of Tiles, some will be None
-  def __init__(self, layout):
-    numRows = len(layout)
-    numCols = len(layout[0])
-    self.hexagons = [[0 for x in xrange(numCols)] for x in xrange(numRows)] 
-    self.edges = [[0 for x in xrange(numCols*2+2)] for x in xrange(numRows*2+2)] 
-    self.vertices = [[0 for x in xrange(numCols*2+2)] for x in xrange(numRows*2+2)] 
-    for i in range(numRows):
-      for j in range(numCols):
+  def __init__(self, layout=None):
+    if layout == None: return
+    
+    self.numRows = len(layout)
+    self.numCols = len(layout[0])
+    self.hexagons = [[None for x in xrange(self.numCols)] for x in xrange(self.numRows)] 
+    self.edges = [[None for x in xrange(self.numCols*2+2)] for x in xrange(self.numRows*2+2)] 
+    self.vertices = [[None for x in xrange(self.numCols*2+2)] for x in xrange(self.numRows*2+2)] 
+    self.allSettlements = []
+    self.allRoads = []
+    for i in range(self.numRows):
+      for j in range(self.numCols):
         tile = layout[i][j]
         if tile == None:
           self.hexagons[i][j] = None
         else:
           self.hexagons[i][j] = Hexagon(i, j, tile.resource, tile.number)
-    for i in range(numRows*2+2):
-      for j in range(numCols*2+2):
+    for i in range(self.numRows*2+2):
+      for j in range(self.numCols*2+2):
         self.vertices[i][j] = Vertex(i, j)
         self.edges[i][j] = Edge(i, j)
-    self.allSettlements = []
+    # brute forcing this because I don't want to debug
+    if self.numRows == 5 and self.numCols == 5:
+      self.visualBoard = [[None for x in xrange(self.numCols)] for x in xrange(self.numRows)] 
+      rowZero = [None, None, self.hexagons[1][0], self.hexagons[1][1], self.hexagons[0][2]]
+      self.visualBoard[0] = rowZero
+      rowOne = [None, self.hexagons[2][0], self.hexagons[2][1], self.hexagons[1][2], self.hexagons[1][3]]
+      self.visualBoard[1] = rowOne
+      rowTwo = [self.hexagons[3][0], self.hexagons[3][1], self.hexagons[2][2], self.hexagons[2][3], self.hexagons[1][4]]
+      self.visualBoard[2] = rowTwo
+      rowThree = [None, self.hexagons[4][1], self.hexagons[3][2], self.hexagons[3][3], self.hexagons[2][4]]
+      self.visualBoard[3] = rowThree
+      rowFour = [None, None, self.hexagons[4][2], self.hexagons[4][3], self.hexagons[3][4]]
+      self.visualBoard[4] = rowFour
+
+    else: self.visualBoard = None
+
+  #TODO(sierrakn): Figure out how to print settlements and cities and roads
+  def printBoard(self):
+    # Print top numbers
+    s = "    "
+    for i in xrange(self.numCols):
+      s += str(i) + "    "
+    print s
+
+    # print visual board if exists for numrows/numcols
+    if self.visualBoard != None:
+      for i, row in enumerate(self.visualBoard):
+        s = str(i)
+        for hexagon in row:
+          if hexagon == None: s += "  "
+          else:
+            s += "  /"+ ResourceDict[hexagon.resource] + "\\"
+        print s
+
+    else:
+      for i, row in enumerate(self.hexagons):
+        s = str(i) + " ["
+        for hexagon in row:
+          if hexagon == None: s += "   "
+          else:
+            s += " /-\\ "
+        print s
+
+  def deepCopy(self):
+    copy = Board()
+    copy.hexagons = []
+    for row in self.hexagons:
+      copyHexRow = []
+      for hexagon in row:
+        if hexagon != None: copyHexRow.append(hexagon.deepCopy())
+        else: copyHexRow.append(None)
+      copy.hexagons.append(copyHexRow)
+    copy.edges = []
+    for row in self.edges:
+      copyEdgeRow = []
+      for edge in row:
+        if edge != None: copyEdgeRow.append(edge.deepCopy())
+        else: copyEdgeRow.append(None)
+      copy.edges.append(copyEdgeRow)
+    copy.vertices = []
+    for row in self.vertices:
+      copyVertexRow = []
+      for vertex in row:
+        if vertex != None: copyVertexRow.append(vertex.deepCopy())
+        else: copyVertexRow.append(None)
+      copy.vertices.append(copyVertexRow)
+    copy.allSettlements = []
+    for settlement in self.allSettlements:
+      copy.allSettlements.append(settlement.deepCopy())
+    copy.allRoads = []
+    for road in self.allRoads:
+      copy.allRoads.append(road.deepCopy())
+    return copy
+
+  def getEdge(self, x, y):
+    return self.edges[x][y]
+
+  def getVertex(self, x, y):
+    return self.vertices[x][y]
+
+  def getHex(self, x, y):
+    return self.hexagons[x][y]
 
   def applyAction(self, playerIndex, action):
     if action[0] == Actions.SETTLE:
-      vertex = action[1]
-      vertex.settle(playerIndex)
-      self.allSettlements.append(vertex)
+      vertices = action[1]
+      for vertex in vertices:
+        vertex.settle(playerIndex)
+        # All vertices one away are now unsettleable
+        for neighborVertex in self.getNeighborVertices(vertex):
+          neighborVertex.canSettle = False
+        self.allSettlements.append(vertex)
+
     if action[0] == Actions.ROAD:
-      edge = action[1]
-      tips = self.getVertexEnds(action[1])
-      edge.build(playerIndex, tips[0], tips[1])
+      edges = action[1]
+      for edge in edges:
+        edge.build(playerIndex)
+        self.allRoads.append(edge)
+
+    if action[0] == Actions.SETTLE:
+      vertices = action[1]
+      for vertex in vertices:
+        vertex.upgrade()
 
   def getNeighborHexes(self, hex):
     neighbors = []
@@ -147,12 +256,15 @@ class Board:
     if hexSix != None: neighbors.append(hexSix)
     return neighbors
 
-  def getNeighborVerticesViaRoad(self, vertex):
+  # Vertices connected to vertex via roads
+  def getNeighborVerticesViaRoad(self, vertex, player):
     neighbors = []
-    for road in vertex.roads:
-      node = road.start if road.start != vertex else road.end
-      if road is None: continue
-      neighbors.append(node)
+    edgesOfVertex = getEdgesOfVertex(vertex)
+    for edge in edgesOfVertex:
+      if edge.player == player:
+        vertexEnds = getVertexEnds(edge)
+        for vertexEnd in vertexEnds:
+          if vertexEnd != vertex: neighbors.append(vertexEnd)
     return neighbors
 
   def getNeighborVertices(self, vertex):
