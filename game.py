@@ -220,7 +220,9 @@ class Agent:
   def updateResources(self, state):
     # TODO: Don't hardcode the resources that are rolled
     resourcesRolled = [ResourceTypes.WOOL, ResourceTypes.BRICK, ResourceTypes.LUMBER, ResourceTypes.GRAIN]
+    print "BEFORE: "+self.name + str(self.resources)
     self.resources += collections.Counter(resourcesRolled)
+    print "UPDATED: "+self.name + str(self.resources)
 
   """
   Kicks off the game, decides where to settle and build a road in the very first move of the game
@@ -450,9 +452,8 @@ class Game:
       # distribute resources
       # TODO(sierrakn): Actually roll dice and distribute resources accordingly
       for currAgent in state.data.agents:
-        oldResourceNum = len(currAgent.resources)
         currAgent.updateResources(state)
-        if DEBUG: print "Agent " + str(currAgent.agentIndex) + " gained " + str(len(agent.resources) - oldResourceNum) + " resources.  Total: " + str(len(agent.resources))
+        if DEBUG: print "Agent " + str(currAgent.agentIndex) + " has " + str(agent.resources)
       if DEBUG: print "\n"
 
       # get an action from the state
@@ -480,7 +481,7 @@ class Game:
 def printGameActionForAgent(action, agent, board):
   print "---------- PLAYER " + str(agent.agentIndex) + "----------"
   print "Victory points: " + str(agent.victoryPoints)
-  print "Resources: " + str(len(agent.resources))
+  print "Resources: " + str(agent.resources)
   print "----------------------------"
 
   print "Took action " + str(action[0])
