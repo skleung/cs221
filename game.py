@@ -129,7 +129,7 @@ class Agent:
     newCopy.settlements = []
     for settlement in self.settlements:
       newCopy.settlements.append(board.getVertex(settlement.X, settlement.Y))
-    newCopy.resources = self.resources
+    newCopy.resources = copy.deepcopy(self.resources)
     return newCopy
   
   """
@@ -228,9 +228,7 @@ class Agent:
   def updateResources(self, state):
     # TODO: Don't hardcode the resources that are rolled
     resourcesRolled = [ResourceTypes.WOOL, ResourceTypes.BRICK, ResourceTypes.LUMBER, ResourceTypes.GRAIN]
-    print "BEFORE: "+self.name + " has "+ str(self.resources)
     self.resources += collections.Counter(resourcesRolled)
-    print "UPDATED: "+self.name + " has " + str(self.resources)
 
   """
   Kicks off the game, decides where to settle and build a road in the very first move of the game
@@ -372,7 +370,6 @@ class GameState:
         # run through combinations using itertools
         for combination in list(itertools.combinations(validRoads, numPossibleRoads)):
           legalActions.append((Actions.ROAD, list(combination)))
-
     return legalActions
 
   """
