@@ -119,6 +119,7 @@ class Board:
     self.edges = [[None for x in xrange(self.numCols*2+2)] for x in xrange(self.numRows*2+2)] 
     self.vertices = [[None for x in xrange(self.numCols*2+2)] for x in xrange(self.numRows*2+2)] 
     self.allSettlements = []
+    self.allRoads = []
     for i in range(self.numRows):
       for j in range(self.numCols):
         tile = layout[i][j]
@@ -199,6 +200,9 @@ class Board:
     copy.allSettlements = []
     for settlement in self.allSettlements:
       copy.allSettlements.append(settlement.deepCopy())
+    copy.allRoads = []
+    for road in self.allRoads:
+      copy.allRoads.append(road.deepCopy())
     return copy
 
   def getEdge(self, x, y):
@@ -212,15 +216,24 @@ class Board:
 
   def applyAction(self, playerIndex, action):
     if action[0] == Actions.SETTLE:
-      vertex = action[1]
-      vertex.settle(playerIndex)
-      # All vertices one away are now unsettleable
-      for neighborVertex in self.getNeighborVertices(vertex):
-        neighborVertex.canSettle = False
-      self.allSettlements.append(vertex)
+      vertices = action[1]
+      for vertex in vertices:
+        vertex.settle(playerIndex)
+        # All vertices one away are now unsettleable
+        for neighborVertex in self.getNeighborVertices(vertex):
+          neighborVertex.canSettle = False
+        self.allSettlements.append(vertex)
+
     if action[0] == Actions.ROAD:
-      edge = action[1]
-      edge.build(playerIndex)
+      edges = action[1]
+      for edge in edges:
+        edge.build(playerIndex)
+        self.allRoads.append(edge)
+
+    if action[0] == Actions.SETTLE:
+      vertices = action[1]
+      for vertex in vertices:
+        vertex.upgrade()
 
   def getNeighborHexes(self, hex):
     neighbors = []
