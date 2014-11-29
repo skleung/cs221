@@ -76,9 +76,9 @@ class VertexTests:
 		"""
 		print "Running testVertexIsOccupied...."
 
-		# Not occupied initially
+		# Test with Vertex at (3,4) settled/upgraded by 2
 		v1 = Vertex(3, 4)
-		assert(not v1.isOccupied())
+		assert(not v1.isOccupied()) # Not occupied initially
 
 		# Settle (now occupied)
 		v1.settle(2)
@@ -86,6 +86,18 @@ class VertexTests:
 
 		# Upgrade (still occupied)
 		v1.upgrade(2);
+		assert(v1.isOccupied())
+
+		# Test with Vertex at (1,2) settled/upgraded by 5
+		v1 = Vertex(1, 2)
+		assert(not v1.isOccupied()) # Not occupied initially
+
+		# Settle (now occupied)
+		v1.settle(5)
+		assert(v1.isOccupied())
+
+		# Upgrade (still occupied)
+		v1.upgrade(5);
 		assert(v1.isOccupied())
 
 	def testVertexCopy(self):
@@ -242,5 +254,9 @@ class VertexTests:
 		self.testVertexUpgrade()
 		print "Success!"
 		self.testVertexPrint()
+		print "Success!"
+		self.testVertexInit()
+		print "Success!"
+		self.testVertexIsOccupied()
 		print "Success!"
 
