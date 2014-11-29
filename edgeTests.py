@@ -37,6 +37,58 @@ class EdgeTests:
 		assert(e1.Y is 4)
 		assert(e1.player is 6)
 
+	def testEdgePrint(self):
+		"""
+		Method: testEdgePrint
+		--------------------------
+		Tests to make sure the stringification of Edge
+		is correct.  Tests for Edge with/without roads.
+		--------------------------
+		"""
+		print "Running testEdgePrint...."
+
+		# Test with Edge at (1,2) with road ultimately built
+		# by Player 5
+		e1 = Edge(1, 2)
+		assert(e1.__repr__() == "--")
+
+		e1.build(5)
+		assert(e1.__repr__() == "R5")
+
+		# Test with Edge at (5, 6) with road ultimately built
+		# by Player 2
+		e1 = Edge(5, 6)
+		assert(e1.__repr__() == "--")
+
+		e1.build(2)
+		assert(e1.__repr__() == "R2")
+
+	def testEdgeIsOccupied(self):
+		"""
+		Method: testEdgeIsOccupied
+		--------------------------
+		Tests to make sure an Edge correctly reports whether or
+		not it is occupied.
+		--------------------------
+		"""
+		print "Running testEdgeIsOccupied...."
+
+		# Test with Edge at (3,4) and road built by Player 2
+		e1 = Edge(3, 4)
+		assert(not e1.isOccupied()) # Not occupied initially
+
+		# Build a road (now occupied)
+		e1.build(2)
+		assert(e1.isOccupied())
+
+		# Test with Edge at (1, 2) and road built by player 5
+		e1 = Edge(1, 2)
+		assert(not e1.isOccupied()) # Not occupied initially
+
+		# Build a road (now occupied)
+		e1.build(5)
+		assert(e1.isOccupied())
+
 	def testEdgeCopy(self):
 		"""
 		Method: testEdgeCopy
@@ -121,5 +173,9 @@ class EdgeTests:
 		self.testEdgeCopy()
 		print "Success!"
 		self.testEdgeBuild()
+		print "Success!"
+		self.testEdgeIsOccupied()
+		print "Success!"
+		self.testEdgePrint()
 		print "Success!"
 

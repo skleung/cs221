@@ -36,6 +36,36 @@ class VertexTests:
 		assert(not v1.isSettlement)
 		assert(not v1.isCity)
 
+	def testVertexPrint(self):
+		"""
+		Method: testVertexPrint
+		--------------------------
+		Tests the stringification of Vertex to make sure it's correct.
+		Tests for Vertexes with settlements, cities, and nothing.
+		--------------------------
+		"""
+		print "Running testVertexPrint...."
+
+		# Test with vertex at (1,2) settled/upgraded by 4
+		v1 = Vertex(1, 2)
+		assert(v1.__repr__() == "--")
+
+		v1.settle(4)
+		assert(v1.__repr__() == "S4")
+
+		v1.upgrade(4)
+		assert(v1.__repr__() == "C4")
+
+		# Test with vertex at (3,5) settled/upgraded by 2
+		v1 = Vertex(3, 5)
+		assert(v1.__repr__() == "--")
+
+		v1.settle(2)
+		assert(v1.__repr__() == "S2")
+
+		v1.upgrade(2)
+		assert(v1.__repr__() == "C2")
+
 	def testVertexIsOccupied(self):
 		"""
 		Method: testVertexIsOccupied
@@ -210,5 +240,7 @@ class VertexTests:
 		self.testVertexSettle()
 		print "Success!"
 		self.testVertexUpgrade()
+		print "Success!"
+		self.testVertexPrint()
 		print "Success!"
 

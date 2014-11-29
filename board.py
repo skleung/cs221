@@ -164,6 +164,29 @@ class Vertex:
     self.isCity = True
     self.isSettlement = False
 
+  def __repr__(self):
+    """
+    Method: __repr__
+    --------------------------
+    Parameters: NA
+    Returns: a string representation of self including
+      whether or not there is a settlement or city here
+      and if so, which player controls the settlement/city.
+      E.g. 'S3' means a settlement owned by player 3.  'C5' means
+      a city owned by player 5. '--' means this vertex is unoccupied.
+    --------------------------
+    """
+    s = ""
+    if self.isOccupied():
+      if self.isSettlement:
+        s = "S"
+      elif self.isCity:
+        s = "C"
+
+      return s + str(self.player)
+
+    else:
+      return "--"
 
 class Edge:
   """
@@ -182,6 +205,17 @@ class Edge:
     self.X = X
     self.Y = Y
     self.player = playerIndex
+
+  def isOccupied(self):
+    """
+    Method: isOccupied
+    --------------------------
+    Parameters: NA
+    Returns: whether or not a road has been built
+      on this Edge.
+    --------------------------
+    """
+    return self.player != None
 
   def deepCopy(self):
     """
@@ -210,6 +244,22 @@ class Edge:
     if(self.player):
       raise Exception("Player " + self.player + " already has a road here!")
     self.player = playerIndex
+
+  def __repr__(self):
+    """
+    Method: __repr__
+    --------------------------
+    Parameters: NA
+    Returns: a string representation of self including
+      whether or not a road was built on this edge, and if so,
+      what player owns it.  E.g. 'R5' means a road owned by player 5,
+      '--' means nothing is built on this edge.
+    --------------------------
+    """
+    if self.isOccupied():
+      return "R" + str(self.player)
+    else:
+      return "--"
 
 
 # -------------- DELETE? --------------- #
