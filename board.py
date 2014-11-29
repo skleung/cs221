@@ -1,19 +1,39 @@
+# CHANGES - Vertex canSettle -> occupied(), Hexagon tostring
 
 from sets import Set
 from enum import Enum
 
+# Possible actions a player can take
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
-ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER" ,"NOTHING"])
-Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
-  ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
-  ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
-  ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN,
-  ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER,
-  ResourceTypes.NOTHING])
-NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 
-# A hexagon is a tile on the board and has a resource and a dice number
+# Different resource types a tile could have
+ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER" ,"NOTHING"])
+
+# A dictionary from resource type (enum, above) to string representation
+# so we can print out the resource type easily
+ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
+
+# ---------- DELETE? ----------- #
+# Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
+#   ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
+#   ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
+#   ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN,
+#   ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER,
+#   ResourceTypes.NOTHING])
+# NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
+# ---------- DELETE? ----------- #
+
+
 class Hexagon:
+  """
+  Class: Hexagon
+  ---------------------------
+  A Hexagon represents a single resource tile on our gameboard.
+  A Hexagon has a resource type (of type ResourceTypes.__),
+  a roll number (indicating what number marker has been placed on it),
+  and the x and y coordinate of the hexagon in the gameboard.
+  ---------------------------
+  """
 
   def __init__(self, X, Y, resource, diceValue):
     self.X = X
@@ -22,66 +42,189 @@ class Hexagon:
     self.diceValue = diceValue
 
   def deepCopy(self):
+    """
+    Method: deepCopy
+    --------------------------
+    Parameters: NA
+    Returns: a deep copy of self (with all instance variables
+      properly copied)
+    --------------------------
+    """
     return Hexagon(self.X, self.Y, self.resource, self.diceValue)
 
-# Previously "Node"
-# A vertex is an intersection between hexagons, a valid settlement location
+  def __repr__(self):
+    """
+    Method: __repr__
+    --------------------------
+    Parameters: NA
+    Returns: a string representation of self including
+      the resource type (as a string) and the assigned
+      roll value.  E.g. /L4\\ for a lumber hexagon
+      with dice roll number 4.
+    --------------------------
+    """
+    return "/" + ResourceDict[self.resource] + str(self.diceValue) + "\\"
+
+
 class Vertex:
+  """
+  Class: Vertex
+  ---------------------------
+  (Previously the Node class).  A Vertex is an intersection
+  between multiple Hexagons (up to 3, but as few as 1).  A
+  Vertex represents a possible settlement location on the board.
+  It has its x and y coordinate in the game board, And information
+  about what is built on this Vertex including whether or not it
+  it is a settlement or city, and what player (if any) has occupied
+  this Vertex.  A Vertex can later be settled on (only once)
+  by a player, or upgraded (by that player only) from a settlement
+  to a city.
+  ---------------------------
+  """
 
   def __init__(self, X, Y):
     self.X = X
     self.Y = Y
+
+    # Initially this Vertex is unsettled
     self.player = None
-    self.canSettle = True
     self.isSettlement = False
     self.isCity = False
 
+  def isOccupied(self):
+    """
+    Method: isOccupied
+    --------------------------
+    Parameters: NA
+    Returns: Whether or not this Vertex has already been
+      built on (settlement or city) by a player
+    --------------------------
+    """
+    return self.isSettlement or self.isCity
+
   def deepCopy(self):
+    """
+    Method: deepCopy
+    --------------------------
+    Parameters: NA
+    Returns: a deep copy of self (with all instance variables
+      properly copied)
+    --------------------------
+    """
     copy = Vertex(self.X, self.Y)
     copy.player = self.player
-    copy.canSettle = self.canSettle
     copy.isSettlement = self.isSettlement
     copy.isCity = self.isCity
     return copy
 
-  def settle(self, player):
+  def settle(self, playerIndex):
+    """
+    Method: settle
+    --------------------------
+    Parameters:
+      playerIndex: the index of the player that is building a settlement
+    Returns: NA
+
+    Marks this Vertex as settled by the given player index.
+    This "builds" a settlemement on this Vertex owned
+    by the given player index.  Raises an exception if there
+    is already a settlement built on this Vertex.
+    --------------------------
+    """
+    if self.isSettlement:
+      raise Exception("Can't settle here - already settled by player " + self.player + "!")
+
     self.isSettlement = True
-    self.canSettle = False
-    self.player = player
+    self.player = playerIndex
 
-  def upgrade(self):
-    if (self.isSettlement):
-      self.isCity = True
-      self.isSettlement = False
-    else:
-      raise Exception, "Can't upgrade to a city without a settlement!"
+  def upgrade(self, playerIndex):
+    """
+    Method: settle
+    --------------------------
+    Parameters:
+      player: the player that is upgrading to a city
+    Returns: NA
 
-# An edge is a path betwen Vertices, a valid road location
+    Upgrades this Vertex from a settlement to a city.
+    Raises an exception if this Vertex has not yet been
+    settled, if a city already exists here, or if a different
+    player is upgrading to a city than the one that built
+    the original settlement.
+    --------------------------
+    """
+    # Throws exception if this vertex has not been settled, or is being
+    # upgraded by a different player than the one who settled
+    if not self.isSettlement:
+      raise Exception("Player " + playerIndex + " can't upgrade to a city without building a settlement first!")
+    elif self.player != playerIndex:
+      raise Exception("Player " + playerIndex + " is trying to upgrade Player " + self.player + "'s settlement!")
+    elif self.isCity:
+      raise Exception("Player " + self.player + " already built a city here!")
+    # Mark as a city and not a settlement
+    self.isCity = True
+    self.isSettlement = False
+
+
 class Edge:
-  def __init__(self, X, Y, player = None):
+  """
+    Class: Edge
+    --------------------------
+    An Edge represents the edge of a Hexagon, and also connects
+    two Vertexes together (like a graph).  On the board,
+    an Edge represents a possible location to build a road.
+    It stores its X and Y coordinate in the game board, along
+    with (optionally) the index of the player that built
+    a road on this Edge.
+    --------------------------
+    """
+
+  def __init__(self, X, Y, playerIndex = None):
     self.X = X
     self.Y = Y
-    self.player = player
+    self.player = playerIndex
 
   def deepCopy(self):
+    """
+    Method: deepCopy
+    --------------------------
+    Parameters: NA
+    Returns: a deep copy of self (with all instance variables
+      properly copied)
+    --------------------------
+    """
     return Edge(self.X, self.Y, self.player)
     
-  def build(self, player):
-    self.player = player
+  def build(self, playerIndex):
+    """
+    Method: build
+    --------------------------
+    Parameters:
+      playerIndex: the index of the player that is building on this Edge
+    Returns: NA
 
+    Builds a new road on behalf of the given player, and updates
+    this Edge accordingly.  Raises an exception if a road has
+    already been built on this Edge.
+    --------------------------
+    """
+    if(self.player):
+      raise Exception("Player " + self.player + " already has a road here!")
+    self.player = playerIndex
+
+
+# -------------- DELETE? --------------- #
 # Keeps track of resource + numberchit
 class Tile:
   def __init__(self, resource, number):
     self.resource = resource
     self.number = number
+# -------------- DELETE? --------------- #
 
 BeginnerLayout = ([[None, None, Tile(ResourceTypes.GRAIN, 9), None, None],
   [Tile(ResourceTypes.LUMBER, 11), Tile(ResourceTypes.WOOL, 12), Tile(ResourceTypes.BRICK, 5), Tile(ResourceTypes.WOOL, 10), Tile(ResourceTypes.GRAIN, 8)],
   [Tile(ResourceTypes.BRICK, 4), Tile(ResourceTypes.ORE, 6), Tile(ResourceTypes.GRAIN, 11), Tile(ResourceTypes.LUMBER, 4), Tile(ResourceTypes.ORE, 3)],
   [Tile(ResourceTypes.NOTHING, 7), Tile(ResourceTypes.LUMBER, 3), Tile(ResourceTypes.WOOL, 10), Tile(ResourceTypes.WOOL, 9), Tile(ResourceTypes.LUMBER, 6)],
   [None, Tile(ResourceTypes.BRICK, 8), Tile(ResourceTypes.ORE, 5), Tile(ResourceTypes.GRAIN, 2), None]])
-
-ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
 
 
 """
@@ -155,20 +298,15 @@ class Board:
 
   #TODO(sierrakn): Figure out how to print settlements and cities and roads
   def printBoard(self):
-    # Print top numbers
-    s = "    "
-    for i in xrange(self.numCols):
-      s += str(i) + "    "
-    print s
-
     # print visual board if exists for numrows/numcols
     if self.visualBoard != None:
       for i, row in enumerate(self.visualBoard):
-        s = str(i)
+        s = ""
         for hexagon in row:
-          if hexagon == None: s += "  "
+          if hexagon is None:
+            s += "  "
           else:
-            s += "  /"+ ResourceDict[hexagon.resource] + "\\"
+            s += hexagon.__repr__() + "  "
         print s
 
     else:
@@ -239,7 +377,7 @@ class Board:
     if action[0] == Actions.SETTLE:
       vertices = action[1]
       for vertex in vertices:
-        vertex.upgrade()
+        vertex.upgrade(playerIndex)
 
   def getResourcesFromDieRoll(self, playerIndex, dieRoll):
     hexagons = self.dieRollDict[dieRoll] #retrieve the hexagons that correspond to that dice roll
