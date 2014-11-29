@@ -3,7 +3,7 @@ from sets import Set
 from enum import Enum
 
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
-ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER", "NOTHING"])
+ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER"])
 Structure = Enum(["ROAD", "SETTLEMENT", "NONE"])
 NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 

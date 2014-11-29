@@ -2,7 +2,6 @@ from gameUtil import *
 from board import *
 import random
 from enum import Enum
-import random
 import collections
 import itertools
 import pdb
@@ -18,7 +17,7 @@ ROAD_COST = 3
 ORE_COST_OF_CITY = 3
 GRAIN_COST_OF_CITY = 2
 
-DEBUG = False
+DEBUG = True
 
 def printActions(actions):
   print "----- Possible Actions ------"
@@ -227,10 +226,9 @@ class Agent:
 
   def updateResources(self, state):
     # TODO: Don't hardcode the resources that are rolled
-
-    resources = [ResourceTypes.WOOL, ResourceTypes.BRICK, ResourceTypes.LUMBER, ResourceTypes.GRAIN, ResourceTypes.ORE ]
-    randomResource = random.choice(resources)
-    self.resources += collections.Counter([randomResource])
+    dieRoll = random.randint(1,6) + random.randint(1,6)
+    if DEBUG: print "Rolled a:  "+str(dieRoll)
+    return collections.Counter(state.data.board.getResourcesFromDieRoll(self.agentIndex, dieRoll))
 
   """
   Kicks off the game, decides where to settle and build a road in the very first move of the game
@@ -418,11 +416,11 @@ class Game:
       
       agent = agents[agentIndex]
 
-      # distribute resources
-      # TODO(sierrakn): Actually roll dice and distribute resources accordingly
-      for currAgent in state.data.agents:
-        currAgent.updateResources(state)
-        if DEBUG: print "Agent " + str(currAgent.agentIndex) + " has " + str(agent.resources)
+      # distribute resources from the current agent's dice roll, and update everyone's resources
+      resources = agent.updateResources(state) #
+      for agent in state.data.agents:
+        agent.resources += resources
+        if DEBUG: print "Agent " + str(agent.agentIndex) + " has " + str(agent.resources)
       if DEBUG: print "\n"
 
       # get an action from the state

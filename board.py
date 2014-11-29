@@ -3,7 +3,7 @@ from sets import Set
 from enum import Enum
 
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
-ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER", "NOTHING"])
+ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER" ,"NOTHING"])
 Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
   ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
   ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
@@ -78,7 +78,7 @@ class Tile:
 BeginnerLayout = ([[None, None, Tile(ResourceTypes.GRAIN, 9), None, None],
   [Tile(ResourceTypes.LUMBER, 11), Tile(ResourceTypes.WOOL, 12), Tile(ResourceTypes.BRICK, 5), Tile(ResourceTypes.WOOL, 10), Tile(ResourceTypes.GRAIN, 8)],
   [Tile(ResourceTypes.BRICK, 4), Tile(ResourceTypes.ORE, 6), Tile(ResourceTypes.GRAIN, 11), Tile(ResourceTypes.LUMBER, 4), Tile(ResourceTypes.ORE, 3)],
-  [Tile(ResourceTypes.NOTHING, -1), Tile(ResourceTypes.LUMBER, 3), Tile(ResourceTypes.WOOL, 10), Tile(ResourceTypes.WOOL, 9), Tile(ResourceTypes.LUMBER, 6)],
+  [Tile(ResourceTypes.NOTHING, 7), Tile(ResourceTypes.LUMBER, 3), Tile(ResourceTypes.WOOL, 10), Tile(ResourceTypes.WOOL, 9), Tile(ResourceTypes.LUMBER, 6)],
   [None, Tile(ResourceTypes.BRICK, 8), Tile(ResourceTypes.ORE, 5), Tile(ResourceTypes.GRAIN, 2), None]])
 
 ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
@@ -120,6 +120,8 @@ class Board:
     self.vertices = [[None for x in xrange(self.numCols*2+2)] for x in xrange(self.numRows*2+2)] 
     self.allSettlements = []
     self.allRoads = []
+    # This dictionary will map a tile's dice number to a list of tiles that that dice roll corresponds to
+    self.dieRollDict = {}
     for i in range(self.numRows):
       for j in range(self.numCols):
         tile = layout[i][j]
@@ -127,6 +129,10 @@ class Board:
           self.hexagons[i][j] = None
         else:
           self.hexagons[i][j] = Hexagon(i, j, tile.resource, tile.number)
+          if tile.number in self.dieRollDict:
+            self.dieRollDict[tile.number].append(self.hexagons[i][j])
+          else:
+            self.dieRollDict[tile.number] = [self.hexagons[i][j]]
     for i in range(self.numRows*2+2):
       for j in range(self.numCols*2+2):
         self.vertices[i][j] = Vertex(i, j)
@@ -234,6 +240,16 @@ class Board:
       vertices = action[1]
       for vertex in vertices:
         vertex.upgrade()
+
+  def getResourcesFromDieRoll(self, playerIndex, dieRoll):
+    hexagons = self.dieRollDict[dieRoll] #retrieve the hexagons that correspond to that dice roll
+    resources = []
+    for hexagon in hexagons:
+      for vertex in self.getVertices(hexagon):
+        if vertex.player == playerIndex:
+          resources.append(hexagon.resource)
+
+    return resources
 
   def getNeighborHexes(self, hex):
     neighbors = []

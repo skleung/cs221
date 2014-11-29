@@ -1,4 +1,29 @@
-RESOURCE_NAMES = ["Sheep", "Wheat", "Ore", "Brick", "Wood"]
+# from enum import Enum
+
+# ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER"])
+
+# RESOURCE_DISTRIBUTION = [
+#   # 12 case 
+#   [ResourceType.WOOL],
+#   # 11 case
+#   [ResourceType.LUMBER, ResourceType.GRAIN],
+#   [ResourceType.LUMBER, ResourceType.GRAIN],
+#   # 10 case
+#   [ResourceType.WOOL, ResourceType.WOOL],
+#   [ResourceType.WOOL, ResourceType.WOOL],
+#   [ResourceType.WOOL, ResourceType.WOOL],
+#   # 9 case
+#   [ResourceType.WOOL, ResourceType.GRAIN],
+#   [ResourceType.WOOL, ResourceType.GRAIN],
+#   [ResourceType.WOOL, ResourceType.GRAIN],
+#   [ResourceType.WOOL, ResourceType.GRAIN],
+#   # 8 case
+#   [ResourceType.GRAIN, ResourceType.BRICK],
+#   [ResourceType.GRAIN, ResourceType.BRICK],
+#   [ResourceType.GRAIN, ResourceType.BRICK],
+#   [ResourceType.GRAIN, ResourceType.BRICK],
+
+# ]
 import random
 
 class Card:
