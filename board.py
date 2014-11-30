@@ -113,6 +113,7 @@ class Vertex:
     copy.player = self.player
     copy.isSettlement = self.isSettlement
     copy.isCity = self.isCity
+    copy.canSettle = self.canSettle
     return copy
 
   def settle(self, playerIndex):
@@ -130,6 +131,7 @@ class Vertex:
     --------------------------
     """
     if self.isSettlement:
+      import pdb; pdb.set_trace()
       raise Exception("Can't settle here - already settled by player " + str(self.player) + "!")
 
     self.isSettlement = True
@@ -424,7 +426,7 @@ class Board:
       edge.build(playerIndex)
       self.allRoads.append(edge)
 
-    if action[0] == Actions.SETTLE:
+    if action[0] == Actions.CITY:
       vertex = action[1]
       vertex.upgrade(playerIndex)
 

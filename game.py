@@ -402,6 +402,13 @@ class GameState:
         for possibleSettlement in possibleSettlements:
           if possibleSettlement.canSettle:
             legalActions.append((ACTIONS.SETTLE, settlement))
+
+    # If they can build a city...
+    if agent.canBuildCity():
+
+      # Look at all unoccupied endpoints of the player's existing roads
+      for settlement in agent.settlements:
+        legalActions.append((ACTIONS.CITY, settlement))
             
     return legalActions
 
