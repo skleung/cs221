@@ -354,13 +354,7 @@ class GameState:
         currEdges = board.getEdgesOfVertex(settlement)
         for currEdge in currEdges:
           if not currEdge.isOccupied():
-            validRoads.append(currEdge)
-            
-      # Get all possible combinations with 1 more roads
-      for numPossibleRoads in range(1, agent.canBuildRoad()+1):
-        # run through combinations using itertools
-        for combination in list(itertools.combinations(validRoads, numPossibleRoads)):
-          legalActions.append((Actions.ROAD, list(combination)))
+            legalActions.append((Actions.ROAD, currEdge))        
 
     # If they can settle
     if agent.canSettle > 0:
@@ -373,13 +367,8 @@ class GameState:
       for settlement in possibleSettlements:
         # Ensure that the settlement and any neighboring settlements are unoccupied
         if settlement.canSettle:
-          validSettlements.append(settlement)
+          legalActions.append((Actions.SETTLE, settlement))
             
-      # Get all possible combinations with 1 more roads
-      for numSettlements in range(1, agent.canSettle()+1):
-        # run through combinations using itertools
-        for combination in list(itertools.combinations(validSettlements, numSettlements)):
-          legalActions.append((Actions.SETTLE, list(combination)))
     return legalActions
 
   """

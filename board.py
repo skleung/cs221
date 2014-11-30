@@ -1,5 +1,3 @@
-# CHANGES - Vertex canSettle -> occupied(), Hexagon tostring
-
 from sets import Set
 from enum import Enum
 
@@ -9,17 +7,6 @@ Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
 # Different resource types a tile could have
 ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER" ,"NOTHING"])
 
-<<<<<<< HEAD
-Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
-  ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
-  ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
-  ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN,
-  ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER,
-  ResourceTypes.NOTHING])
-NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-
-# A hexagon is a tile on the board and has a resource and a dice number
-=======
 # A dictionary from resource type (enum, above) to string representation
 # so we can print out the resource type easily
 ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
@@ -34,8 +21,6 @@ ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.O
 # NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 # ---------- DELETE? ----------- #
 
-
->>>>>>> deeb76373e44640fc7b0dab4417014f2f5a6d4bb
 class Hexagon:
   """
   Class: Hexagon
@@ -102,6 +87,7 @@ class Vertex:
     self.player = None
     self.isSettlement = False
     self.isCity = False
+    self.canSettle = True
 
   def isOccupied(self):
     """
@@ -148,6 +134,7 @@ class Vertex:
 
     self.isSettlement = True
     self.player = playerIndex
+    self.canSettle = False
 
   def upgrade(self, playerIndex):
     """
