@@ -52,7 +52,7 @@ class Agent:
     self.name = name
     self.agentIndex = agentIndex
     self.victoryPoints = 0
-    self.depth = 1
+    self.depth = 3
     # List of Edges
     self.roads = []
 
@@ -64,6 +64,7 @@ class Agent:
 
     # Counter of resources
     self.resources = collections.Counter()
+    # Initialize the resources to zero here...
     for resource in [ResourceTypes.WOOL, ResourceTypes.BRICK, ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER]:
       self.resources[resource] = 0
     
@@ -159,7 +160,7 @@ class Agent:
       # no possible actions (must pass)
       possibleActions = state.getLegalActions(playerIndex)
       if len(possibleActions) == 0:
-        return (float('-inf'), None)
+        return (self.evaluationFunction(state, playerIndex), None)
 
       # RECURSIVE CASE
       # ---------------------
@@ -228,8 +229,8 @@ class Agent:
     # TODO: Don't hardcode the resources that are rolled
     dieRoll = random.randint(1,6) + random.randint(1,6)
     if DEBUG: print "Rolled a:  "+str(dieRoll)
-    return collections.Counter(state.data.board.getResourcesFromDieRoll(self.agentIndex, dieRoll))
-
+    # return collections.Counter(state.data.board.getResourcesFromDieRoll(self.agentIndex, dieRoll))
+    return collections.Counter([ResourceTypes.BRICK,ResourceTypes.WOOL,ResourceTypes.LUMBER,ResourceTypes.GRAIN])
   """
   Kicks off the game, decides where to settle and build a road in the very first move of the game
   """
@@ -358,6 +359,25 @@ class GameState:
         # run through combinations using itertools
         for combination in list(itertools.combinations(validRoads, numPossibleRoads)):
           legalActions.append((Actions.ROAD, list(combination)))
+
+    # If they can settle
+    if agent.canSettle > 0:
+      validSettlements = []
+      possibleSettlements = []
+
+      for road in agent.roads:
+        possibleSettlements += board.getVertexEnds(road)
+
+      for settlement in possibleSettlements:
+        # Ensure that the settlement and any neighboring settlements are unoccupied
+        if settlement.canSettle:
+          validSettlements.append(settlement)
+            
+      # Get all possible combinations with 1 more roads
+      for numSettlements in range(1, agent.canSettle()+1):
+        # run through combinations using itertools
+        for combination in list(itertools.combinations(validSettlements, numSettlements)):
+          legalActions.append((Actions.SETTLE, list(combination)))
     return legalActions
 
   """
@@ -395,8 +415,14 @@ class Game:
     board = state.data.board
     numAgents = len(agents)
     
-    # Each player starts with 1 settlement (but no victory points for it)
+    # Each player starts with 1 settlement
     initialSettlements = [[board.getVertex(2,2)], [board.getVertex(4,4)], [board.getVertex(4,0)]]
+    for i in range(numAgents):
+      agents[i].settlements += initialSettlements[i]
+      board.applyAction(i, (Actions.SETTLE, initialSettlements[i]))
+
+    # Each player starts with 2 settlements
+    initialSettlements = [[board.getVertex(1,1)], [board.getVertex(3,3)], [board.getVertex(0,0)]]
     for i in range(numAgents):
       agents[i].settlements += initialSettlements[i]
       board.applyAction(i, (Actions.SETTLE, initialSettlements[i]))
@@ -415,9 +441,10 @@ class Game:
       raw_input("Type ENTER to proceed:")
       
       agent = agents[agentIndex]
+      print "Currently: "+str(agent)+"'s turn."
 
       # distribute resources from the current agent's dice roll, and update everyone's resources
-      resources = agent.updateResources(state) #
+      resources = agent.updateResources(state) 
       for agent in state.data.agents:
         agent.resources += resources
         if DEBUG: print "Agent " + str(agent.agentIndex) + " has " + str(agent.resources)

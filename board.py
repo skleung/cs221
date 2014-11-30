@@ -4,6 +4,7 @@ from enum import Enum
 
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
 ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER" ,"NOTHING"])
+
 Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
   ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
   ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
@@ -247,7 +248,8 @@ class Board:
     for hexagon in hexagons:
       for vertex in self.getVertices(hexagon):
         if vertex.player == playerIndex:
-          resources.append(hexagon.resource)
+          if hexagon.resource != ResourceTypes.NOTHING:
+            resources.append(hexagon.resource)
 
     return resources
 
