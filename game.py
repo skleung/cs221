@@ -316,7 +316,8 @@ class Agent:
       # take 1 resource of each of the surrounding tile types
       borderingTiles = board.getHexes(settlement)
       for borderingTile in borderingTiles:
-        self.resources[borderingTile.resource] += 1
+        if borderingTile.resource is not ResourceTypes.NOTHING:
+          self.resources[borderingTile.resource] += 1
 
   def hasWon(self):
     """
@@ -503,7 +504,7 @@ class Game:
     # Each player starts with 2 settlements
     initialSettlements = [self.gameState.board.getVertex(2,2), 
       self.gameState.board.getVertex(4,4), 
-      self.gameState.board.getVertex(4,0)]
+      self.gameState.board.getVertex(3,1)]
 
     # Use % to essentially loop through and assign a settlement to each agent until
     # there are no more settlements to assign
@@ -527,6 +528,9 @@ class Game:
     DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
     print "Here's the gameboard.  Drumroll please....."
     self.gameState.board.printBoard()
+    if DEBUG:
+      for agent in self.gameState.agents:
+        print str(agent) + ": " + str(agent.resources)
 
     # Turn tracking
     turnNumber = 1
@@ -563,13 +567,13 @@ class Game:
         print "Unable to take any actions"
 
       print "The board now looks like this:"
-      self.gameState.printBoard()
+      self.gameState.board.printBoard()
 
       # Track the game's move history
       self.moveHistory.append((currentAgent.name, action))
       
       # Go to the next player/turn
-      currentAgentIndex = (currentAgentIndex+1) % numAgents
+      currentAgentIndex = (currentAgentIndex+1) % self.gameState.getNumAgents()
       turnNumber += 1
 
     print self.gameState.agents[self.gameState.gameOver()], " won the game"
