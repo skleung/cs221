@@ -409,26 +409,23 @@ class Board:
 
   def applyAction(self, playerIndex, action):
     if action[0] == Actions.SETTLE:
-      vertices = action[1]
-      for vertex in vertices:
-        vertex.settle(playerIndex)
-        # All vertices one away are now unsettleable
-        for neighborVertex in self.getNeighborVertices(vertex):
-          neighborVertex.canSettle = False
-        self.allSettlements.append(vertex)
+      vertex = action[1]
+      vertex.settle(playerIndex)
+      # All vertices one away are now unsettleable
+      for neighborVertex in self.getNeighborVertices(vertex):
+        neighborVertex.canSettle = False
+      self.allSettlements.append(vertex)
 
     if action[0] == Actions.ROAD:
-      edges = action[1]
-      for edge in edges:
-        edge.build(playerIndex)
-        self.allRoads.append(edge)
+      edge = action[1]
+      edge.build(playerIndex)
+      self.allRoads.append(edge)
 
     if action[0] == Actions.SETTLE:
-      vertices = action[1]
-      for vertex in vertices:
-        vertex.upgrade(playerIndex)
+      vertex = action[1]
+      vertex.upgrade(playerIndex)
 
-  def getResourcesFromDieRoll(self, playerIndex, dieRoll):
+  def getResourcesFromDieRollForPlayer(self, playerIndex, dieRoll):
     hexagons = self.dieRollDict[dieRoll] #retrieve the hexagons that correspond to that dice roll
     resources = []
     for hexagon in hexagons:

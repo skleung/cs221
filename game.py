@@ -1,45 +1,38 @@
 from gameUtil import *
 from board import *
-import random
+from random import randint
 from enum import Enum
-import collections
-import itertools
-import pdb
+from collections import Counter
 import copy
-
-VICTORY_POINTS_TO_WIN = 10
-STARTING_NUM_OF_CARDS = 7
-SETTLEMENT_POINTS = 3
-ROAD_POINTS = 1
-SETTLEMENT_COST = 4
-ROAD_COST = 3
-
-ORE_COST_OF_CITY = 3
-GRAIN_COST_OF_CITY = 2
 
 DEBUG = True
 
-def printActions(actions):
-  print "----- Possible Actions ------"
-  s = ""
-  for action in actions:
-    if action[0] == Actions.ROAD:
-      s += "Road at "
-    else:
-      s += "Settlement at "
-    s += str(action[1]) + ", "
-  print s
+
+""" GAME CONSTANTS
+---------------------- """
+VICTORY_POINTS_TO_WIN = 10
+STARTING_NUM_OF_CARDS = 7
+SETTLEMENT_POINTS = 3
+ROAD_COST = Counter({ResourceTypes.BRICK: 1, ResourceTypes.LUMBER: 1})
+SETTLEMENT_COST = Counter({ResourceTypes.LUMBER: 1, ResourceTypes.BRICK: 1, ResourceTypes.WOOL: 1, ResourceTypes.GRAIN: 1})
+CITY_COST = Counter({ResourceTypes.GRAIN: 2, ResourceTypes.ORE: 3})
+ACTIONS = Enum(["SETTLE", "CITY", "ROAD"])
+""" ------------------ """
 
 
-# Currently we only use SETTLE and ROAD (no draw, because you actually always draw if you have < 7 cards)
-Actions = Enum(["SETTLE", "CITY", "ROAD", "TRADE"])
+
 
 """
-This evaluation function describes the current score of a particular state given a player index.
+EVALUATION FUNCTIONS
+---------------------
 """
-def evalFn(currentGameState, currentPlayerIndex):
+# EVAL FUNCTION: THE BUILDER
+# --------------------------
+# 5 utility points per settlement, 1 per road
+def builderEvalFn(currentGameState, currentPlayerIndex):
   currentPlayer = currentGameState.data.agents[currentPlayerIndex]
   return 5 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+
 
 """
 This class defines a player agent and allows a user to retrieve possible actions from the agent
@@ -47,12 +40,35 @@ hand = a list of Cards that the agent holds
 victoryPoints = the number of victory points the agent has
 """
 class Agent:
+  """
+  Class: Agent
+  ---------------------
+  Agent defines a player agent in Settlers consisting of a name, player index, max depth, and
+  player stats/game-specific information like number of victory points, lists of
+  all roads, settlements, and cities owned by the player, and a counter of resources
+  that the player has.
+
+  Instance Variables:
+  ---
+  evaluationFunction = the eval function to use in the minimax algorithm
+  name = a string containing the name of the player
+  agentIndex = the player index
+  victoryPoints = the number of victory points the player has
+  depth = the maximum depth to recurse in the minimax tree
+  roads = a list of Edge objects representing the roads a player has
+  settlements = a list of Vertex objects representing the settlements a player has
+  cities = a list of Vertex objects representing the cities a player has
+  resources = a Counter containing the count of each resource type (in ResourceTypes) the player has
+  ---------------------
+  """
+
   def __init__(self, name, agentIndex):
-    self.evaluationFunction = evalFn
+    self.evaluationFunction = builderEvalFn
     self.name = name
     self.agentIndex = agentIndex
     self.victoryPoints = 0
     self.depth = 3
+
     # List of Edges
     self.roads = []
 
@@ -62,104 +78,140 @@ class Agent:
     # List of Cities owned
     self.cities = []
 
-    # Counter of resources
-    self.resources = collections.Counter()
-    # Initialize the resources to zero here...
-    for resource in [ResourceTypes.WOOL, ResourceTypes.BRICK, ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER]:
-      self.resources[resource] = 0
-    
+    # Counter of resources initialized to zero
+    self.resources = Counter({ResourceTypes.WOOL: 0, 
+      ResourceTypes.BRICK: 0, 
+      ResourceTypes.ORE: 0, 
+      ResourceTypes.GRAIN: 0, 
+      ResourceTypes.LUMBER: 0})
 
-  # to string method will print the agent's name
+  def initialize(self, stateData):
+    pass
+    
   def __repr__(self):
+    """
+    Method: __repr__
+    ---------------------
+    Parameters: NA
+    Returns:the player's name
+
+    A string representation of the given Agent.
+    ---------------------
+    """
     return self.name
 
-  """
-  This method determines whether the Agent has the resources to settle. It will return
-  the number of possible settlements given the agent's resources.
-  """
   def canSettle(self):
-    wool = self.resources[ResourceTypes.WOOL] 
-    brick = self.resources[ResourceTypes.BRICK] 
-    grain = self.resources[ResourceTypes.GRAIN] 
-    lumber = self.resources[ResourceTypes.LUMBER] 
-    numSettlements = 0
-    while (wool > 0 and brick > 0 and grain > 0 and lumber > 0):
-      wool-=1
-      brick-=1
-      grain-=1
-      lumber-=1
-      numSettlements+=1  
-    return numSettlements
+    """
+    Method: canSettle
+    ---------------------
+    Parameters: NA
+    Returns: True/False whether or not this Agent has enough
+      resources to build a new settlement (based on the SETTLEMENT_COST constant)
+    ---------------------
+    """
+    modifiedResources = self.resources - SETTLEMENT_COST
 
-  """
-  This method determines whether the Agent has the resources to build a city. It will return
-  the number of possible settlements given the agent's resources.
-  """
+    # If any resource counts dip below 0, we don't have enough
+    for resourceType in modifiedResources:
+      if modifiedResources[resourceType] < 0:
+        return False
+
+    return True
+
   def canBuildCity(self):
-    ore = self.resources[ResourceTypes.ORE] 
-    grain = self.resources[ResourceTypes.GRAIN] 
-    numCity = 0
-    while (ore > 2 and grain > 1):
-      ore-=3
-      grain-=2
-      numCity+=1
-    return numCity
+    """
+    Method: canBuildCity
+    ----------------------
+    Parameters: NA
+    Returns: True/False whether or not this Agent has enough
+      resources to build a new city (based on the CITY_COST constant)
+    ----------------------
+    """
+    modifiedResources = self.resources - CITY_COST
 
-  """
-  This method determines whether the Agent has the resources to build a city. It will return
-  the number of possible roads given the agent's resources.
-  """
+    # If any resource counts dip below 0, we don't have enough
+    for resourceType in modifiedResources:
+      if modifiedResources[resourceType] < 0:
+        return False
+
+    return True
+
   def canBuildRoad(self):
-    brick = self.resources[ResourceTypes.BRICK] 
-    lumber = self.resources[ResourceTypes.LUMBER] 
-    numCity = 0
-    while (brick > 0 and lumber > 0):
-      brick-=1
-      lumber-=1
-      numCity+=1
-    return numCity
+    """
+    Method: canBuildRoad
+    ----------------------
+    Parameters: NA
+    Returns: True/False whether or not this Agent has enough
+      resources to build a new road (based on the ROAD_COST constant)
+    ----------------------
+    """
+    modifiedResources = self.resources - ROAD_COST
+
+    # If any resource counts dip below 0, we don't have enough
+    for resourceType in modifiedResources:
+      if modifiedResources[resourceType] < 0:
+        return False
+
+    return True
 
   def deepCopy(self, board):
+    """
+    Method: deepCopy
+    ----------------------
+    Parameters:
+      board - the current state of the board (an instance of Board)
+    Returns: a deep copy of this instance of Agent, including full
+      copies of all instance Variables
+    ----------------------
+    """
     newCopy = Agent(self.name, self.agentIndex)
     newCopy.victoryPoints = self.victoryPoints
     newCopy.depth = self.depth
-    newCopy.roads = []
-    for road in self.roads:
-      newCopy.roads.append(board.getEdge(road.X, road.Y))
-    newCopy.settlements = []
-    for settlement in self.settlements:
-      newCopy.settlements.append(board.getVertex(settlement.X, settlement.Y))
+    newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
+    newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
     newCopy.resources = copy.deepcopy(self.resources)
     return newCopy
   
-  """
-  The Agent will receive a GameState anyd returns a tuple containing string and its metadata
-  (e.g. ('settle', metadata telling where the agent decided to settle - Vertex or Edge))
-  """
+
   def getAction(self, state):
-    # legalActions = state.getLegalActions(self.agentIndex)
-    # if len(legalActions) == 0: return None
-    # return legalActions[0]
+    """
+    Method: getAction
+    ------------------------
+    Parameters:
+      state - a GameState object containing information about the current state of the game
+    Returns: an action tuple (ACTION, LOCATION) of the action this player should take
+
+    Returns the best possible action that the current player can take.  Implements
+    The expectiminimax algorithm for determining the best possible move based
+    on the policies of the other Agents in the game (including other players, the
+    dice rolls, etc.).  Returns None if no action can be taken, or an action tuple
+    otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
+    ------------------------
+    """
 
     # A function that recursively calculates and returns a tuple
     # containing the best action/value (in the format (value, action))
     # for the current player at the current state with the current depth.
     def recurse(state, currDepth, playerIndex):
+      
       # TERMINAL CASES
       # ---------------------
-      # won, lost
+      
+      # If the player won
       if state.gameOver() == playerIndex:
         return (float('inf'), None)
+
+      # or lost
       elif state.gameOver() > -1:
         return (float('-inf'), None)
 
-      # max depth reached
-      if currDepth is 0:
+      # If the max depth has been reached, call the eval function
+      elif currDepth is 0:
         return (self.evaluationFunction(state, playerIndex), None)
 
-      # no possible actions (must pass)
+      # If there are no possible actions (must pass)
       possibleActions = state.getLegalActions(playerIndex)
-      if len(possibleActions) == 0:
+      if len(possibleActions) is 0:
         return (self.evaluationFunction(state, playerIndex), None)
 
       # RECURSIVE CASE
@@ -169,8 +221,8 @@ class Agent:
       vals = []
       actions = []
 
-      # New depth (depth - 1 for last ghost, otherwise depth)
-      # New player goes through 0, 1,...numAgents - 1 (looping around)
+      # New depth (depth - 1 for last player, otherwise depth)
+      # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
       newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
       newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
 
@@ -180,74 +232,81 @@ class Agent:
         vals.append(value)
         actions.append(currAction)
 
-      # Should all players maximize, or just our player (player 0)?
+      # Maximize/minimize
       if playerIndex == 0:
         return (max(vals), actions[vals.index(max(vals))])
       return (min(vals), actions[vals.index(min(vals))])
 
+    # Call our recursive function
     value, action = recurse(state, self.depth, self.agentIndex)
     if DEBUG: 
       print "Best Action: " + str(action)
       print "Best Value: " + str(value)
     return action
 
-
   def applyAction(self, action):
-    if action == None: return
+    """
+    Method: applyAction
+    -----------------------
+    Parameters:
+      action - the action tuple (ACTION, LOCATION) to applyAction
+    Returns: NA
 
-    if action[0] == Actions.SETTLE:
-      numSettlements = len(action[1])
-      self.settlements += action[1]
-      if self.canSettle() >= numSettlements:
-        self.resources[ResourceTypes.LUMBER] -= numSettlements
-        self.resources[ResourceTypes.BRICK] -= numSettlements
-        self.resources[ResourceTypes.WOOL] -= numSettlements
-        self.resources[ResourceTypes.GRAIN] -= numSettlements
-      else:
-        raise Exception("not enough resources to settle!")
-    if action[0] == Actions.ROAD:
-      self.roads += action[1] # add the road to the roads that agent possesses
-      numRoads = len(action[1])
-      # updates resources
-      if self.canBuildRoad() >= numRoads:
-        self.resources[ResourceTypes.LUMBER] -= numRoads
-        self.resources[ResourceTypes.BRICK] -= numRoads
-      else:
-        raise Exception("not enough resources to build a road!")
-    if action[0] == Actions.CITY:
-      self.cities += action[1]
-      numCities = len(action[1])
-      if self.canBuildCity() >= numCities:
-        self.resources[ResourceTypes.ORE] -= numCities*ORE_COST_OF_CITY
-        self.resources[ResourceTypes.GRAIN] -= numCities*GRAIN_COST_OF_CITY
-      else:
-        raise Exception("not enough resources to build a city!")
+    Applies the given action tuple to the current player.  Does this
+    by deducting resources appropriately and adding to the player's
+    lists of roads, settlements, and cities.
+    -----------------------
+    """
+    if action is None:
+      return
 
-    #refresh the cards in the hand!
-    # self.reloadHand()
+    # Settling
+    if action[0] is ACTIONS.SETTLE:
+      self.settlements.append(action[1])
+      if not self.canSettle():
+        raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a settlement!")
+      self.resources -= SETTLEMENT_COST
 
-  def updateResources(self, dieRoll, state):
-    # TODO: Don't hardcode the resources that are rolled
-    self.resources += collections.Counter(state.data.board.getResourcesFromDieRoll(self.agentIndex, dieRoll))
-    if DEBUG: print "After roll, agent " + str(self.agentIndex) + " has: " + str(self.resources)
-  """
-  Kicks off the game, decides where to settle and build a road in the very first move of the game
-  """
-  def initialize(self, state):
-    return
-    # for i in range(STARTING_NUM_OF_CARDS):
-    #   self.drawCard(state)
+    # Building a road
+    if action[0] is ACTIONS.ROAD:
+      self.roads.append(action[1])
+      if not self.canBuildRoad():
+        raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a road!")
+      self.resources -= ROAD_COST
 
-  #An agent wins if they get more than 10 victory points
-  def won(self):
+    # Building a city
+    if action[0] is ACTIONS.CITY:
+      self.cities.append(action[1])
+      if not self.canBuildCity():
+        raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a city!")
+      self.resources -= CITY_COST
+
+  def updateResources(self, dieRoll, board):
+    """
+    Method: updateResources
+    -----------------------------
+    Parameters:
+      dieRoll - the sum of the two dice Rolled
+      board - a Board object representing the current board state
+    Returns: NA
+
+    Takes the current die roll and board setup, and awards
+    the current player resources depending on built settlements on the board.
+    -----------------------------
+    """
+    self.resources += Counter(board.getResourcesFromDieRollForPlayer(self.agentIndex, dieRoll))
+
+  def hasWon(self):
+    """
+    Method: hasWon
+    -----------------------------
+    Parameters: NA
+    Returns: True/False whether or not the curernt player
+      has won the game (AKA met or exceeded VICTORY_POINTS_TO_WIN)
+    -----------------------------
+    """
     return self.victoryPoints >= VICTORY_POINTS_TO_WIN
 
-# class AgentRules:
-#   #edits the state to be updated with the action taken
-#   def applyAction(state, agentIndex, action):
-#     agentState = state.data.agents[agentIndex]
-#     if action[0] = "Draw":
-#       agentState.
 
 class GameStateData:
   def __init__(self, prevData = None):
@@ -354,7 +413,7 @@ class GameState:
         currEdges = board.getEdgesOfVertex(settlement)
         for currEdge in currEdges:
           if not currEdge.isOccupied():
-            legalActions.append((Actions.ROAD, currEdge))        
+            legalActions.append((ACTIONS.ROAD, currEdge))        
 
     # If they can settle
     if agent.canSettle > 0:
@@ -367,7 +426,7 @@ class GameState:
       for settlement in possibleSettlements:
         # Ensure that the settlement and any neighboring settlements are unoccupied
         if settlement.canSettle:
-          legalActions.append((Actions.SETTLE, settlement))
+          legalActions.append((ACTIONS.SETTLE, settlement))
             
     return legalActions
 
@@ -388,7 +447,7 @@ class GameState:
 
   def gameOver(self):
     for i, agent in enumerate(self.data.agents):
-      if agent.won():
+      if agent.hasWon():
         return i
     return -1
 
@@ -407,16 +466,16 @@ class Game:
     numAgents = len(agents)
     
     # Each player starts with 1 settlement
-    initialSettlements = [[board.getVertex(2,2)], [board.getVertex(4,4)], [board.getVertex(4,0)]]
+    initialSettlements = [board.getVertex(2,2), board.getVertex(4,4), board.getVertex(4,0)]
     for i in range(numAgents):
-      agents[i].settlements += initialSettlements[i]
-      board.applyAction(i, (Actions.SETTLE, initialSettlements[i]))
+      agents[i].settlements.append(initialSettlements[i])
+      board.applyAction(i, (ACTIONS.SETTLE, initialSettlements[i]))
 
     # Each player starts with 2 settlements
-    initialSettlements = [[board.getVertex(1,1)], [board.getVertex(3,3)], [board.getVertex(0,0)]]
+    initialSettlements = [board.getVertex(1,1), board.getVertex(3,3), board.getVertex(0,0)]
     for i in range(numAgents):
-      agents[i].settlements += initialSettlements[i]
-      board.applyAction(i, (Actions.SETTLE, initialSettlements[i]))
+      agents[i].settlements.append(initialSettlements[i])
+      board.applyAction(i, (ACTIONS.SETTLE, initialSettlements[i]))
 
     # Welcome message
     print "WELCOME TO SETTLERS OF CATAN!"
@@ -436,10 +495,10 @@ class Game:
       print "Currently: "+str(agent)+"'s turn."
 
       # distribute resources from the current agent's dice roll, and update everyone's resources
-      dieRoll = random.randint(1,6) + random.randint(1,6)
+      dieRoll = randint(1,6) + randint(1,6)
       if DEBUG: print "Rolled a " + str(dieRoll)
       for a in agents:
-        a.updateResources(dieRoll, state)
+        a.updateResources(dieRoll, board)
       if DEBUG: print "\n"
 
       # get an action from the state
