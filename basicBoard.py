@@ -1,9 +1,10 @@
 import random
 from sets import Set
 from enum import Enum
+import copy
 
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
-ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER"])
+ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER", "NOTHING"])
 Structure = Enum(["ROAD", "SETTLEMENT", "CITY", "NONE"])
 NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 RESOURCES = [ResourceTypes.BRICK, ResourceTypes.WOOL, ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER]
@@ -26,7 +27,12 @@ class Tile:
     self.number = number
     self.player = None
     self.structure = Structure.NONE # Settlement, vertical road, or horizontal road
-
+  
+  def deepCopy(self):
+    newCopy = Tile(self.resource, self.number, self.x, self.y)
+    newCopy.player = self.player
+    newCopy.structure = self.structure # Settlement, vertical road, or horizontal road
+    return newCopy
 
   """
   Method: isOccupied
@@ -107,7 +113,7 @@ class Tile:
   ---------------------------
   """
   def __repr__(self):
-    val = "--------------TILE INFO AT (" + str(self.x) + ", " + str(self.y) + ")---------------\n"
+    val = "--------------TILE INFO AT (x=" + str(self.x) + ", y=" + str(self.y) + ")---------------\n"
     val += "Owned by player: " + str(self.player) +"\n"
     val += "Structure: " + str(self.structure) +"\n"
     val += "Resource Type: " + str(self.resource) +"\n"
@@ -156,12 +162,24 @@ class BasicBoard:
     for i in range(size):
       boardRow = []
       for j in xrange(size):
+        # Do not randomize, this will happen every time you copy.
         boardRow.append(Tile(possibleResources.pop(), ((i+j)%11)+2, i, j))
       self.board.append(boardRow)
     self.settlements = []
     self.roads = []
     self.size = size
 
+
+  def deepCopy(self):
+    newCopy = BasicBoard(self.size)
+    for i in range(newCopy.size):
+      for j in range(newCopy.size):
+        newCopy.board[j][i] = (self.getTile(i,j).deepCopy())
+    import pdb; pdb.set_trace()
+
+    newCopy.settlements = copy.deepcopy(self.settlements)
+    newCopy.roads = copy.deepcopy(self.roads)
+    return newCopy
 
   """
   Method: getTile
@@ -301,7 +319,7 @@ class BasicBoard:
   Returns a list of all of the unoccupied tiles adjacent to this tile
   ---------------------------
   """
-  def getResourcesFromDieRoll(self, playerIndex, dieRoll):
+  def getResourcesFromDieRollForPlayer(self, playerIndex, dieRoll):
     resources = []
     for settlement in self.settlements:
       if settlement.number == dieRoll and settlement.player == playerIndex:
