@@ -1,5 +1,5 @@
 from gameUtil import *
-from board import *
+from basicBoard import *
 import random
 from enum import Enum
 import collections
@@ -95,7 +95,7 @@ class Agent:
   This method determines whether the Agent has the resources to build a city. It will return
   the number of possible settlements given the agent's resources.
   """
-  def canBuildCity(self):
+  def canUpgrade(self):
     ore = self.resources[ResourceTypes.ORE] 
     grain = self.resources[ResourceTypes.GRAIN] 
     numCity = 0
@@ -324,14 +324,14 @@ class GameState:
   """
   Creates a GameState based on a layout if it exists
   """
-  def initialize(self, layout):
+  def initialize(self, layout=None):
     # print "Enter the number of player agents:"
     # numAgents = int(raw_input())
     numAgents = 3
     # creates an array of player agents
     agents = [Agent("Player"+str(i), i) for i in range(numAgents)]
     # initialize board
-    board = Board(layout)
+    board = BasicBoard(5)
     # initializes the game state's data with the number of agents and the player agents
     self.data.initialize(agents, board)
 
@@ -347,39 +347,37 @@ class GameState:
 
     # If they can build a road...
     if agent.canBuildRoad() > 0:
-    # Look at every space adjacent to all settlements
-      validRoads = []
-
+      # To avoid any duplicate roads
+      validRoads = set()
+      # for all roads adjacent to settlements
       for settlement in agent.settlements:
-        currEdges = board.getEdgesOfVertex(settlement)
-        for currEdge in currEdges:
-          if not currEdge.isOccupied():
-            validRoads.append(currEdge)
+        for road in board.getEdgesOfVertex(settlement):
+          validRoads.add(road)
             
-      # Get all possible combinations with 1 more roads
-      for numPossibleRoads in range(1, agent.canBuildRoad()+1):
-        # run through combinations using itertools
-        for combination in list(itertools.combinations(validRoads, numPossibleRoads)):
-          legalActions.append((Actions.ROAD, list(combination)))
+      # Get all possible combinations that are road extensions
+      for agentRoad in agent.roads:
+        for road in board.getUnoccupiedRoadEndpoints(agentRoad):
+          validRoads.add(road)
+
+      for road in validRoads:
+        legalActions.append(Actions.ROAD, road)
 
     # If they can settle
-    if agent.canSettle > 0:
-      validSettlements = []
-      possibleSettlements = []
+    if agent.canSettle() > 0:
+      validSettlements = set()
 
-      for road in agent.roads:
-        possibleSettlements += board.getVertexEnds(road)
+      for agentRoad in agent.roads:
+        for settlement in board.getUnoccupiedRoadEndpoints(agentRoad):
+          validSettlements.add(settlement)
 
-      for settlement in possibleSettlements:
-        # Ensure that the settlement and any neighboring settlements are unoccupied
-        if settlement.canSettle:
-          validSettlements.append(settlement)
-            
-      # Get all possible combinations with 1 more roads
-      for numSettlements in range(1, agent.canSettle()+1):
-        # run through combinations using itertools
-        for combination in list(itertools.combinations(validSettlements, numSettlements)):
-          legalActions.append((Actions.SETTLE, list(combination)))
+      for settlement in validSettlements:
+        legalActions.append((Actions.SETTLE, settlement))
+
+    # If they can upgrade
+    if agent.canUpgrade() > 0:
+      for settlement in agent.settlements:
+        legalActions.append((Actions.UPGRADE, settlement))
+
     return legalActions
 
   """
@@ -418,15 +416,9 @@ class Game:
     numAgents = len(agents)
     
     # Each player starts with 1 settlement
-    initialSettlements = [[board.getVertex(2,2)], [board.getVertex(4,4)], [board.getVertex(4,0)]]
+    initialSettlements = [board.getTile(2,2), board.getTile(4,4), board.getTile(4,0)]
     for i in range(numAgents):
-      agents[i].settlements += initialSettlements[i]
-      board.applyAction(i, (Actions.SETTLE, initialSettlements[i]))
-
-    # Each player starts with 2 settlements
-    initialSettlements = [[board.getVertex(1,1)], [board.getVertex(3,3)], [board.getVertex(0,0)]]
-    for i in range(numAgents):
-      agents[i].settlements += initialSettlements[i]
+      agents[i].settlements.append(initialSettlements[i])
       board.applyAction(i, (Actions.SETTLE, initialSettlements[i]))
 
     # Welcome message
@@ -489,6 +481,6 @@ def printGameActionForAgent(action, agent, board):
 
 gState = GameState() 
 #initializes the game state
-gState.initialize(BeginnerLayout)
+gState.initialize()
 game = Game()
 game.run(gState)

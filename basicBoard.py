@@ -1,12 +1,12 @@
-
+import random
 from sets import Set
 from enum import Enum
 
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
 ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER"])
-Structure = Enum(["ROAD", "SETTLEMENT", "NONE"])
+Structure = Enum(["ROAD", "SETTLEMENT", "CITY", "NONE"])
 NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-
+RESOURCES = [ResourceTypes.BRICK, ResourceTypes.WOOL, ResourceTypes.ORE, ResourceTypes.GRAIN, ResourceTypes.LUMBER]
 
 class Tile:
   """
@@ -57,6 +57,25 @@ class Tile:
       raise Exception("This tile is already used!")
     self.player = playerIndex
     self.structure = Structure.SETTLEMENT
+  """
+  Method: upgrade
+  ---------------------------
+  Parameters:
+    playerIndex: the index of the player that is settling on this tile
+  Returns: NA
+
+  Marks this tile as upgraded to a city by the given player.  Throws an exception if
+  this tile is not settled by the proper player or doesn't have a settlement yet.
+  Note that the tile is still within the settlements array so that all the adjacency
+  methods work fine.
+  ---------------------------
+  """
+  def upgrade(self, playerIndex):
+    if not self.structure != Structure.SETTLEMENT:# and self.player != playerIndex: 
+      raise Exception("This tile is not settled yet!")
+    if self.player != playerIndex:
+      raise Exception(str(self.player)+" has already settled here!")
+    self.structure = Structure.CITY
 
 
   """
@@ -74,7 +93,6 @@ class Tile:
   def buildRoad(self, playerIndex):
     if self.isOccupied():# and self.player != playerIndex: 
       raise Exception("Tile " + str(self) + " is already used!")
-
     self.player = playerIndex
     self.structure = Structure.ROAD
 
@@ -130,8 +148,16 @@ class BasicBoard:
   ---------------------------
   """
 
-  def __init__(self, size):
-    self.board = [[Tile(ResourceTypes.BRICK, 5, i, j) for i in xrange(size)] for j in xrange(size)]
+  def __init__(self, size=5):
+    self.board = []
+    possibleResources = [] 
+    for i in range(5):
+      possibleResources += size*size/5*[RESOURCES[i]]
+    for i in range(size):
+      boardRow = []
+      for j in xrange(size):
+        boardRow.append(Tile(possibleResources.pop(), ((i+j)%11)+2, i, j))
+      self.board.append(boardRow)
     self.settlements = []
     self.roads = []
     self.size = size
@@ -202,14 +228,18 @@ class BasicBoard:
     if action[0] == Actions.SETTLE:
       tile = action[1]
       tile.settle(playerIndex)
-      if tile not in self.settlements: self.settlements.append(tile)
+      self.settlements.append(tile)
 
     # Or mark the tile as a road
     elif action[0] == Actions.ROAD:
-      tiles = action[1]
-      for tile in tiles:
-        tile.buildRoad(playerIndex)
-        if tile not in self.roads: self.roads.append(tile)
+      tile = action[1]
+      tile.buildRoad(playerIndex)
+      self.roads.append(tile)
+
+    # Or mark the tile as a city
+    elif action[0] == Actions.UPGRADE:
+      tile = action[1]
+      tile.upgrade(playerIndex)
 
 
   """
@@ -225,7 +255,6 @@ class BasicBoard:
   """
   def getNeighborTiles(self, tile, diagonals=False):
     neighbors = []
-
     for dx in range(-1, 2):
       for dy in range(-1, 2):
 
@@ -261,6 +290,26 @@ class BasicBoard:
       if not neighbor.isOccupied():
         unoccupied.append(neighbor)
     return unoccupied
+
+  """
+  Method: getResourcesFromDieRoll
+  ---------------------------
+  Parameters:
+    tile: the tile to return the neighbors for
+  Returns: a list of all the unoccupied neighbors for this tile
+
+  Returns a list of all of the unoccupied tiles adjacent to this tile
+  ---------------------------
+  """
+  def getResourcesFromDieRoll(self, playerIndex, dieRoll):
+    resources = []
+    for settlement in self.settlements:
+      if settlement.number == dieRoll and settlement.player == playerIndex:
+        resources.append(settlement.resource)
+        # add another resource if there's a city there
+        if settlement.structure == Structure.CITY:
+          resources.append(settlement.resource)
+    return resources
 
 
   """
