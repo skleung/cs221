@@ -205,8 +205,9 @@ class Agent:
       else:
         raise Exception("not enough resources to settle!")
     if action[0] == Actions.ROAD:
-      self.roads += action[1]
+      self.roads += action[1] # add the road to the roads that agent possesses
       numRoads = len(action[1])
+      # updates resources
       if self.canBuildRoad() >= numRoads:
         self.resources[ResourceTypes.LUMBER] -= numRoads
         self.resources[ResourceTypes.BRICK] -= numRoads
@@ -224,11 +225,10 @@ class Agent:
     #refresh the cards in the hand!
     # self.reloadHand()
 
-  def updateResources(self, state):
+  def updateResources(self, dieRoll, state):
     # TODO: Don't hardcode the resources that are rolled
-    dieRoll = random.randint(1,6) + random.randint(1,6)
-    if DEBUG: print "Rolled a:  "+str(dieRoll)
-    return collections.Counter(state.data.board.getResourcesFromDieRoll(self.agentIndex, dieRoll))
+    self.resources += collections.Counter(state.data.board.getResourcesFromDieRoll(self.agentIndex, dieRoll))
+    if DEBUG: print "After roll, agent " + str(self.agentIndex) + " has: " + str(self.resources)
 
   """
   Kicks off the game, decides where to settle and build a road in the very first move of the game
@@ -351,7 +351,10 @@ class GameState:
       validRoads = []
 
       for settlement in agent.settlements:
-        validRoads+=board.getEdgesOfVertex(settlement)
+        currEdges = board.getEdgesOfVertex(settlement)
+        for currEdge in currEdges:
+          if not currEdge.isOccupied():
+            validRoads.append(currEdge)
             
       # Get all possible combinations with 1 more roads
       for numPossibleRoads in range(1, agent.canBuildRoad()+1):
@@ -412,15 +415,16 @@ class Game:
     agentIndex = 0
     while (state.gameOver() < 0):
       print "---------- TURN " + str(turnNum) + " --------------"
+      print "It's Player " + str(agentIndex) + "'s turn!"
       raw_input("Type ENTER to proceed:")
       
       agent = agents[agentIndex]
 
       # distribute resources from the current agent's dice roll, and update everyone's resources
-      resources = agent.updateResources(state) #
-      for agent in state.data.agents:
-        agent.resources += resources
-        if DEBUG: print "Agent " + str(agent.agentIndex) + " has " + str(agent.resources)
+      dieRoll = random.randint(1,6) + random.randint(1,6)
+      if DEBUG: print "Rolled a " + str(dieRoll)
+      for a in agents:
+        a.updateResources(dieRoll, state)
       if DEBUG: print "\n"
 
       # get an action from the state

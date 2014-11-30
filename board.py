@@ -132,7 +132,7 @@ class Vertex:
     --------------------------
     """
     if self.isSettlement:
-      raise Exception("Can't settle here - already settled by player " + self.player + "!")
+      raise Exception("Can't settle here - already settled by player " + str(self.player) + "!")
 
     self.isSettlement = True
     self.player = playerIndex
@@ -155,11 +155,11 @@ class Vertex:
     # Throws exception if this vertex has not been settled, or is being
     # upgraded by a different player than the one who settled
     if not self.isSettlement:
-      raise Exception("Player " + playerIndex + " can't upgrade to a city without building a settlement first!")
+      raise Exception("Player " + str(playerIndex) + " can't upgrade to a city without building a settlement first!")
     elif self.player != playerIndex:
-      raise Exception("Player " + playerIndex + " is trying to upgrade Player " + self.player + "'s settlement!")
+      raise Exception("Player " + str(playerIndex) + " is trying to upgrade Player " + str(self.player) + "'s settlement!")
     elif self.isCity:
-      raise Exception("Player " + self.player + " already built a city here!")
+      raise Exception("Player " + str(self.player) + " already built a city here!")
     # Mark as a city and not a settlement
     self.isCity = True
     self.isSettlement = False
@@ -241,8 +241,8 @@ class Edge:
     already been built on this Edge.
     --------------------------
     """
-    if(self.player):
-      raise Exception("Player " + self.player + " already has a road here!")
+    if self.player:
+      raise Exception("Player " + str(self.player) + " already has a road here!")
     self.player = playerIndex
 
   def __repr__(self):
