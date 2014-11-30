@@ -408,6 +408,9 @@ class Board:
     return self.hexagons[x][y]
 
   def applyAction(self, playerIndex, action):
+    if action is None:
+      return
+      
     if action[0] == Actions.SETTLE:
       vertex = action[1]
       vertex.settle(playerIndex)
