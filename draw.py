@@ -1,6 +1,14 @@
 from board import *
 from Tkinter import *
 
+def getColorForPlayer(player):
+    return {
+      0: "red",
+      1: "blue",
+      2: "black",
+      3: "brown"
+    }.get(player, None)
+
 class Draw:
 	# Takes a list of 19 tiles
   def __init__(self, tiles):
@@ -83,7 +91,7 @@ class Draw:
 
   def drawSettlements(self, vertices):
     for vertex in vertices:
-      color = self.getColorForPlayer(vertex.player)
+      color = getColorForPlayer(vertex.player)
       image = self.findSImage(color, vertex.isSettlement, vertex.isCity)
       xPos, yPos = self.calculateVertexPosition(vertex)
       self.canvas.create_image(xPos, yPos, image = image)
@@ -106,10 +114,7 @@ class Draw:
       start, end = board.getVertexEnds(road)
       ox, oy = self.calculateVertexPosition(start)   #origin x, y
       ex, ey = self.calculateVertexPosition(end)  #end x, y
-      color = self.getColorForPlayer(road.player)
-      print start
-      print end
-      print color
+      color = getColorForPlayer(road.player)
       self.canvas.create_line(ox, oy, ex, ey, width=5, fill=color)
 
   def drawTitle(self):
@@ -124,14 +129,6 @@ class Draw:
 			ResourceTypes.BRICK: self.hill, 
 			ResourceTypes.NOTHING: self.desert
 		}.get(resource, None)
-
-  def getColorForPlayer(self, player):
-    return {
-      0: "red",
-      1: "blue",
-      2: "black",
-      3: "brown"
-    }.get(player, None)
 
   # get image associated with city and player
   def findSImage(self, color, settlement, city):
