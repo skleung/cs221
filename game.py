@@ -61,12 +61,20 @@ class GameState:
     # If they can build a road...
     if agent.canBuildRoad():
 
-      # Look at all unoccupied roads coming from the player's existing settlements
-      for settlement in agent.settlements:
+      # Look at all unoccupied edges coming from the player's existing settlements and cities
+      allSettlements = []; allSettlements.extend(agent.settlements); allSettlements.extend(agent.cities)
+      for settlement in allSettlements:
         currEdges = self.board.getEdgesOfVertex(settlement)
         for currEdge in currEdges:
           if not currEdge.isOccupied():
-            legalActions.append((ACTIONS.ROAD, currEdge))        
+            legalActions.append((ACTIONS.ROAD, currEdge))  
+      # Look at all unoccupied edges coming from the player's existing roads
+      for road in agent.roads:
+        currVertices = self.board.getVertexEnds(road)
+        for vertex in currVertices:
+          currEdges = self.board.getEdgesOfVertex(vertex)
+          for currEdge in currEdges:
+            if not currEdge.isOccupied(): legalActions.append((ACTIONS.ROAD, currEdge)) 
 
     # If they can settle...
     if agent.canSettle():
@@ -85,7 +93,6 @@ class GameState:
       for settlement in agent.settlements:
         legalActions.append((ACTIONS.CITY, settlement))
             
-    print legalActions
     return legalActions
 
   def generateSuccessor(self, playerIndex, action):
