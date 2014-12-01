@@ -337,7 +337,11 @@ class Game:
       
 
       # The current player performs 1 action
-      action = currentAgent.getAction(self.gameState)
+      value, action = currentAgent.getAction(self.gameState)
+      if DEBUG: 
+        print "Best Action: " + str(action)
+        print "Best Value: " + str(value)
+      
       currentAgent.applyAction(action)
       self.gameState.board.applyAction(currentAgent.agentIndex, action)
 

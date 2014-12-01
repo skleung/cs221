@@ -368,75 +368,107 @@ class PlayerAgentExpectiminimax(PlayerAgent):
     otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
     ------------------------
     """
+    # A function that recursively calculates and returns the utility for self
+    # of the given game state with the given depth on the given player's turn
     def recurse(state, currDepth, playerIndex):
-      agent = state.allAgents[playerIndex]
-      
-      # Dice agent
-      if agent.agentType == AGENT.DICE_AGENT:
-        rollProbabilities = agent.getRollDistribution()
-
-        newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
-
-        for probabilityTuple in rollProbabilities:
-          roll, probability = probabilityTuple
-          newState = GameState(state)
-          newState.updatePlayerResourcesForDiceRoll(roll)
-
-
-    # A function that recursively calculates and returns a tuple
-    # containing the best action/value (in the format (value, action))
-    # for the current player at the current state with the current depth.
-    def recurse(state, currDepth, playerIndex):
-      
       # TERMINAL CASES
       # ---------------------
       
       # If the player won
       if state.gameOver() == playerIndex:
-        return (float('inf'), None)
+        return float('inf')
 
       # or lost
       elif state.gameOver() > -1:
-        return (float('-inf'), None)
+        return float('-inf')
 
       # If the max depth has been reached, call the eval function
       elif currDepth is 0:
-        return (self.evaluationFunction(state, playerIndex), None)
+        return self.evaluationFunction(state, self.agentIndex)
+
+      possibleActions = state.getLegalActions(playerIndex)
 
       # If there are no possible actions (must pass)
-      possibleActions = state.getLegalActions(playerIndex)
       if len(possibleActions) is 0:
-        return (self.evaluationFunction(state, playerIndex), None)
+        return self.evaluationFunction(state, self.agentIndex)
 
       # RECURSIVE CASE
-      # ---------------------
+      # ----------------------
+
+      # Get dice roll probabilities to calculate expected utility
+      rollProbabilities = agent.getRollDistribution()
+
+      # New depth (depth - 1 for last player, otherwise depth)
+      # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
+      newDepth = currDepth - 1 if playerIndex is not self.agentIndex else currDepth
+      newPlayerIndex = (playerIndex + 1) % state.getNumPlayerAgents()
 
       # Parallel lists of values and their corresponding actions
       vals = []
       actions = []
 
-      # New depth (depth - 1 for last player, otherwise depth)
-      # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
-      newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
-      newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
-
-      # Iterate over each possible action, recording action and value
+      # Try all possible actions
       for currAction in possibleActions:
-        value, action = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
-        vals.append(value)
+        currVal = 0
+
+        # For each action, the utility is the sum of the weighted
+        # utilities for all possible dice rolls (we need to add all weighted
+        # utilities together to get the expected utility)
+        for probabilityTuple in rollProbabilities:
+          roll, probability = probabilityTuple
+          state = GameState(state)
+          state.updatePlayerResourcesForDiceRoll(roll)
+          value = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
+
+          currVal += probability * value
+
+        vals.append(currVal)
         actions.append(currAction)
 
       # Maximize/minimize
-      if playerIndex == 0:
+      if playerIndex is self.agentIndex:
         return (max(vals), actions[vals.index(max(vals))])
-      return (min(vals), actions[vals.index(min(vals))])
+      return (min(vals), actions[vals.index(min(vals))])      
 
     # Call our recursive function
-    value, action = recurse(state, self.depth, self.agentIndex)
-    if DEBUG: 
-      print "Best Action: " + str(action)
-      print "Best Value: " + str(value)
-    return action
+
+    # TERMINAL CASES
+    # ---------------------
+    
+    # If the player won
+    if state.gameOver() is self.agentIndex:
+      return (float('inf'), None)
+
+    # or lost
+    elif state.gameOver() > -1:
+      return (float('-inf'), None)
+
+    # If the max depth has been reached, call the eval function
+    elif self.depth is 0:
+      return (self.evaluationFunction(state, self.agentIndex), None)
+
+    possibleActions = state.getLegalActions(self.agentIndex)
+
+    # If there are no possible actions (must pass)
+    if len(possibleActions) is 0:
+      return (self.evaluationFunction(state, self.agentIndex), None)
+
+    # RECURSIVE CASE
+    # ----------------------
+
+    # Parallel lists of values and their corresponding actions
+    vals = []
+    actions = []
+
+    newPlayerIndex = (self.agentIndex + 1) % state.getNumPlayerAgents()
+
+    # Try all possible actions
+    for currAction in possibleActions:
+      value = recurse(state.generateSuccessor(newPlayerIndex, currAction), self.depth, newPlayerIndex)
+      vals.append(value)
+      actions.append(currAction)
+
+    return (max(vals), actions[vals.index(max(vals))])
 
 
 class PlayerAgentRandom(PlayerAgent):
@@ -489,20 +521,19 @@ class PlayerAgentExpectimax(PlayerAgent):
     PlayerAgent.__init__(self, name, agentIndex, evalFn)
 
   def getAction(self, state):
-  """
-  Method: getAction
-  ------------------------
-  Parameters:
-    state - a GameState object containing information about the current state of the game
-  Returns: an action tuple (ACTION, LOCATION) of the action this player should take
-
-  Returns the best possible action that the current player can take.  Implements
-  The expectimax algorithm for determining the best possible move based
-  on the random policies of the other PlayerAgents in the game and the random policy of
-  the dice roll.  Returns None if no action can be taken, or an action tuple
-  otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
-  ------------------------
-  """
-  def getAction(self, state):
+    """
+    Method: getAction
+    ------------------------
+    Parameters:
+      state - a GameState object containing information about the current state of the game
+    Returns: an action tuple (ACTION, LOCATION) of the action this player should take
+    
+    Returns the best possible action that the current player can take.  Implements
+    The expectimax algorithm for determining the best possible move based
+    on the random policies of the other PlayerAgents in the game and the random policy of
+    the dice roll.  Returns None if no action can be taken, or an action tuple
+    otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
+    ------------------------
+    """
     raise Exception("Not implemented yet")
     
