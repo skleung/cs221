@@ -2,6 +2,7 @@ from collections import Counter
 import copy
 from gameConstants import *
 from random import choice, randint
+import draw
 
 
 """
@@ -118,6 +119,7 @@ class PlayerAgent:
     self.evaluationFunction = evalFn
     self.name = name
     self.agentIndex = agentIndex
+    self.color = draw.getColorForPlayer(agentIndex)
     self.victoryPoints = 0
     self.depth = 3
 
@@ -147,7 +149,7 @@ class PlayerAgent:
     A string representation of the given PlayerAgent.
     ---------------------
     """
-    s = "---------- " + self.name + " ----------\n"
+    s = "---------- " + self.name + " : " + self.color + " ----------\n"
     s += "Victory points: " + str(self.victoryPoints) + "\n"
     s += "Resources: " + str(self.resources) + "\n"
     s += "Settlements: " + str(self.settlements) + "\n"

@@ -85,6 +85,7 @@ class GameState:
       for settlement in agent.settlements:
         legalActions.append((ACTIONS.CITY, settlement))
             
+    print legalActions
     return legalActions
 
   def generateSuccessor(self, playerIndex, action):
