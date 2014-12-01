@@ -1,5 +1,4 @@
 from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentRandom
-from agent import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from collections import Counter
 from draw import *
@@ -39,7 +38,7 @@ class GameState:
 
     else:
       self.board = Board(layout)
-      self.playerAgents = [Agent(x, "Player: " + str(x)) for x in range(NUM_PLAYERS)]
+      self.playerAgents = [None] * NUM_PLAYERS
 
     # Make the dice agent
     self.diceAgent = DiceAgent()
