@@ -1,25 +1,7 @@
-from sets import Set
-from enum import Enum
+from collections import Counter
+from gameConstants import *
 
-# Possible actions a player can take
-Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
 
-# Different resource types a tile could have
-ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER" ,"NOTHING"])
-
-# A dictionary from resource type (enum, above) to string representation
-# so we can print out the resource type easily
-ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
-
-# ---------- DELETE? ----------- #
-# Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
-#   ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
-#   ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
-#   ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN,
-#   ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER,
-#   ResourceTypes.NOTHING])
-# NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-# ---------- DELETE? ----------- #
 
 class Hexagon:
   """
@@ -113,6 +95,7 @@ class Vertex:
     copy.player = self.player
     copy.isSettlement = self.isSettlement
     copy.isCity = self.isCity
+    copy.canSettle = self.canSettle
     return copy
 
   def settle(self, playerIndex):
@@ -261,13 +244,11 @@ class Edge:
       return "--"
 
 
-# -------------- DELETE? --------------- #
-# Keeps track of resource + numberchit
 class Tile:
   def __init__(self, resource, number):
     self.resource = resource
     self.number = number
-# -------------- DELETE? --------------- #
+
 
 BeginnerLayout = ([[None, None, Tile(ResourceTypes.GRAIN, 9), None, None],
   [Tile(ResourceTypes.LUMBER, 11), Tile(ResourceTypes.WOOL, 12), Tile(ResourceTypes.BRICK, 5), Tile(ResourceTypes.WOOL, 10), Tile(ResourceTypes.GRAIN, 8)],
@@ -411,27 +392,27 @@ class Board:
     return self.hexagons[x][y]
 
   def applyAction(self, playerIndex, action):
-    if action[0] == Actions.SETTLE:
-      vertices = action[1]
-      for vertex in vertices:
-        vertex.settle(playerIndex)
-        # All vertices one away are now unsettleable
-        for neighborVertex in self.getNeighborVertices(vertex):
-          neighborVertex.canSettle = False
-        self.allSettlements.append(vertex)
+    if action is None:
+      return
+      
+    if action[0] == ACTIONS.SETTLE:
+      vertex = action[1]
+      vertex.settle(playerIndex)
+      # All vertices one away are now unsettleable
+      for neighborVertex in self.getNeighborVertices(vertex):
+        neighborVertex.canSettle = False
+      self.allSettlements.append(vertex)
 
-    if action[0] == Actions.ROAD:
-      edges = action[1]
-      for edge in edges:
-        edge.build(playerIndex)
-        self.allRoads.append(edge)
+    if action[0] == ACTIONS.ROAD:
+      edge = action[1]
+      edge.build(playerIndex)
+      self.allRoads.append(edge)
 
-    if action[0] == Actions.SETTLE:
-      vertices = action[1]
-      for vertex in vertices:
-        vertex.upgrade(playerIndex)
+    if action[0] == ACTIONS.CITY:
+      vertex = action[1]
+      vertex.upgrade(playerIndex)
 
-  def getResourcesFromDieRoll(self, playerIndex, dieRoll):
+  def getResourcesFromDieRollForPlayer(self, playerIndex, dieRoll):
     hexagons = self.dieRollDict[dieRoll] #retrieve the hexagons that correspond to that dice roll
     resources = []
     for hexagon in hexagons:
