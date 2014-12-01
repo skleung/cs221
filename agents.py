@@ -268,7 +268,10 @@ class PlayerAgent:
     # Building a city
     if action[0] is ACTIONS.CITY:
       self.cities.append(action[1])
-      self.settlements.remove(action[1])
+      for settlement in self.settlements:
+        if settlement.X == action[1].X and settlement.Y == action[1].Y:
+          self.settlements.remove(settlement)
+          break
       if not self.canBuildCity():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a city!")
       self.resources.subtract(CITY_COST)
