@@ -1,6 +1,7 @@
 from collections import Counter
 from copy import deepcopy
 from gameConstants import *
+from random import randint
 
 
 """
@@ -16,21 +17,39 @@ def builderEvalFn(currentGameState, currentPlayerIndex):
 
 
 """
-This class defines a player agent and allows a user to retrieve possible actions from the agent
-hand = a list of Cards that the agent holds
-victoryPoints = the number of victory points the agent has
+GAME AGENTS
+---------------------
 """
-class Agent:
+class DiceAgent:
   """
-  Class: Agent
+  Class: DiceAgent
   ---------------------
-  Agent defines a player agent in Settlers consisting of a name, player index, max depth, and
+  DiceAgent represents the random agent responsible for the
+  roll of the dice for resources each turn.  It generates a
+  number from 1-12 with the correct probability distribution
+  corresponding to rolling 2 dice.
+  ---------------------
+  """
+
+  def __init__(self):
+    self.agentType = AGENT.DICE_AGENT
+
+  def rollDice(self):
+    return randint(1,6) + randint(1,6)
+
+
+class PlayerAgent:
+  """
+  Class: PlayerAgent
+  ---------------------
+  PlayerAgent defines a player agent in Settlers consisting of a name, player index, max depth, and
   player stats/game-specific information like number of victory points, lists of
   all roads, settlements, and cities owned by the player, and a counter of resources
   that the player has.
 
   Instance Variables:
   ---
+  agentType = the type of game agent (PLAYER_AGENT)
   evaluationFunction = the eval function to use in the minimax algorithm
   name = a string containing the name of the player
   agentIndex = the player index
@@ -44,6 +63,7 @@ class Agent:
   """
 
   def __init__(self, name, agentIndex):
+    self.agentType = AGENT.PLAYER_AGENT
     self.evaluationFunction = builderEvalFn
     self.name = name
     self.agentIndex = agentIndex
@@ -73,7 +93,7 @@ class Agent:
     Parameters: NA
     Returns:the player's name
 
-    A string representation of the given Agent.
+    A string representation of the given PlayerAgent.
     ---------------------
     """
     s = "---------- " + self.name + " ----------\n"
@@ -91,7 +111,7 @@ class Agent:
     Method: canSettle
     ---------------------
     Parameters: NA
-    Returns: True/False whether or not this Agent has enough
+    Returns: True/False whether or not this PlayerAgent has enough
       resources to build a new settlement (based on the SETTLEMENT_COST constant)
     ---------------------
     """
@@ -109,7 +129,7 @@ class Agent:
     Method: canBuildCity
     ----------------------
     Parameters: NA
-    Returns: True/False whether or not this Agent has enough
+    Returns: True/False whether or not this PlayerAgent has enough
       resources to build a new city (based on the CITY_COST constant)
     ----------------------
     """
@@ -127,7 +147,7 @@ class Agent:
     Method: canBuildRoad
     ----------------------
     Parameters: NA
-    Returns: True/False whether or not this Agent has enough
+    Returns: True/False whether or not this PlayerAgent has enough
       resources to build a new road (based on the ROAD_COST constant)
     ----------------------
     """
@@ -146,11 +166,11 @@ class Agent:
     ----------------------
     Parameters:
       board - the current state of the board (an instance of Board)
-    Returns: a deep copy of this instance of Agent, including full
+    Returns: a deep copy of this instance of PlayerAgent, including full
       copies of all instance Variables
     ----------------------
     """
-    newCopy = Agent(self.name, self.agentIndex)
+    newCopy = PlayerAgent(self.name, self.agentIndex)
     newCopy.victoryPoints = self.victoryPoints
     newCopy.depth = self.depth
     newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
