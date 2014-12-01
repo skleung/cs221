@@ -76,7 +76,15 @@ class Agent:
     A string representation of the given Agent.
     ---------------------
     """
-    return self.name
+    s = "---------- " + self.name + " ----------\n"
+    s += "Victory points: " + str(self.victoryPoints) + "\n"
+    s += "Resources: " + str(self.resources) + "\n"
+    s += "Settlements: " + str(self.settlements) + "\n"
+    s += "Roads: " + str(self.roads) + "\n"
+    s += "Cities: " + str(self.cities) + "\n"
+    s += "--------------------------------------------\n"
+    return s
+
 
   def canSettle(self):
     """
@@ -147,7 +155,7 @@ class Agent:
     newCopy.depth = self.depth
     newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
     newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
-    newCopy.resources = copy.deepcopy(self.resources)
+    newCopy.resources = deepcopy(self.resources)
     return newCopy
   
 

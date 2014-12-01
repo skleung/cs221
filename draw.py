@@ -4,7 +4,6 @@ from Tkinter import *
 class Draw:
 	# Takes a list of 19 tiles
   def __init__(self, tiles):
-    print tiles
     self.root = Tk()
     self.root.resizable(0,0)
     self.tiles = tiles
@@ -39,7 +38,6 @@ class Draw:
 
   def drawRow(self, numTiles, index, xOffset, yOffset):
     for tile in range(numTiles):
-      print index
       xOffset += self.d * 1.4
       hexagon = self.tiles[index]
       image = self.getImageForResource(hexagon.resource)

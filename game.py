@@ -167,6 +167,16 @@ class Game:
     self.draw = Draw(self.gameState.board.tiles)
 
   def drawGame(self):
+    """
+    Method: drawGame
+    ----------------------
+    Parameters: NA
+    Returns: NA
+
+    Draws the graphics for displaying the board
+    tiles.
+    ----------------------
+    """
     self.draw.drawBG()
     # draw.drawTitle()  
     self.draw.drawBoard()
@@ -222,8 +232,7 @@ class Game:
     print "WELCOME TO SETTLERS OF CATAN!"
     print "-----------------------------"
     DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
-    print "Here's the gameboard.  Drumroll please....."
-    self.gameState.board.printBoard()
+
     if DEBUG:
       for agent in self.gameState.agents:
         print str(agent) + ": " + str(agent.resources)
@@ -264,9 +273,6 @@ class Game:
         printGameActionForAgent(action, currentAgent, self.gameState.board)
       elif action is None:
         print "Unable to take any actions"
-
-      print "The board now looks like this:"
-      self.gameState.board.printBoard()
 
       # Track the game's move history
       self.moveHistory.append((currentAgent.name, action))
