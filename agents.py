@@ -115,7 +115,8 @@ class PlayerAgent:
       resources to build a new settlement (based on the SETTLEMENT_COST constant)
     ---------------------
     """
-    modifiedResources = self.resources - SETTLEMENT_COST
+    modifiedResources = copy.deepcopy(self.resources)
+    modifiedResources.subtract(SETTLEMENT_COST)
 
     # If any resource counts dip below 0, we don't have enough
     for resourceType in modifiedResources:
@@ -133,7 +134,8 @@ class PlayerAgent:
       resources to build a new city (based on the CITY_COST constant)
     ----------------------
     """
-    modifiedResources = self.resources - CITY_COST
+    modifiedResources = copy.deepcopy(self.resources)
+    modifiedResources.subtract(CITY_COST)
 
     # If any resource counts dip below 0, we don't have enough
     for resourceType in modifiedResources:
@@ -151,7 +153,8 @@ class PlayerAgent:
       resources to build a new road (based on the ROAD_COST constant)
     ----------------------
     """
-    modifiedResources = self.resources - ROAD_COST
+    modifiedResources = copy.deepcopy(self.resources)
+    modifiedResources.subtract(ROAD_COST)
 
     # If any resource counts dip below 0, we don't have enough
     for resourceType in modifiedResources:
@@ -271,21 +274,21 @@ class PlayerAgent:
       self.settlements.append(action[1])
       if not self.canSettle():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a settlement!")
-      self.resources -= SETTLEMENT_COST
+      self.resources.subtract(SETTLEMENT_COST)
 
     # Building a road
     if action[0] is ACTIONS.ROAD:
       self.roads.append(action[1])
       if not self.canBuildRoad():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a road!")
-      self.resources -= ROAD_COST
+      self.resources.subtract(ROAD_COST)
 
     # Building a city
     if action[0] is ACTIONS.CITY:
       self.cities.append(action[1])
       if not self.canBuildCity():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a city!")
-      self.resources -= CITY_COST
+      self.resources.subtract(CITY_COST)
 
   def updateResources(self, dieRoll, board):
     """
