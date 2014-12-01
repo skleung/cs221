@@ -494,7 +494,7 @@ class PlayerAgentRandom(PlayerAgent):
     """
     # If the game is over...
     if state.gameOver() > -1:
-      return None
+      return (0, None)
 
     possibleActions = state.getLegalActions(self.agentIndex)
 

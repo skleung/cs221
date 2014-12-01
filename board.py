@@ -164,12 +164,13 @@ class Vertex:
     """
     # Throws exception if this vertex has not been settled, or is being
     # upgraded by a different player than the one who settled
-    if not self.isSettlement:
+    if self.isCity:
+      raise Exception("Player " + str(self.player) + " already built a city here!")
+    elif not self.isSettlement:
       raise Exception("Player " + str(playerIndex) + " can't upgrade to a city without building a settlement first!")
     elif self.player != playerIndex:
       raise Exception("Player " + str(playerIndex) + " is trying to upgrade Player " + str(self.player) + "'s settlement!")
-    elif self.isCity:
-      raise Exception("Player " + str(self.player) + " already built a city here!")
+      
     # Mark as a city and not a settlement
     self.isCity = True
     self.isSettlement = False
