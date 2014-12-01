@@ -95,6 +95,10 @@ class Vertex:
     self.isCity = False
     self.canSettle = True
 
+  def equivLocation(self, other):
+    if other.X == self.X and other.Y == self.Y: return True
+    return False
+
   def isOccupied(self):
     """
     Method: isOccupied
@@ -216,6 +220,10 @@ class Edge:
     self.Y = Y
     self.player = playerIndex
 
+  def equivLocation(self, other):
+    if other.X == self.X and other.Y == self.Y: return True
+    return False
+
   def isOccupied(self):
     """
     Method: isOccupied
@@ -335,10 +343,17 @@ class Board:
             self.dieRollDict[tile.number].append(self.hexagons[i][j])
           else:
             self.dieRollDict[tile.number] = [self.hexagons[i][j]]
-    for i in range(self.numRows*2+2):
-      for j in range(self.numCols*2+2):
-        self.vertices[i][j] = Vertex(i, j)
-        self.edges[i][j] = Edge(i, j)
+    for row in self.hexagons:
+      for hexagon in row:
+        if hexagon == None: continue
+        edgeLocations = self.getEdgeLocations(hexagon)
+        vertexLocations = self.getVertexLocations(hexagon)
+        for xLoc,yLoc in edgeLocations:
+          if self.edges[xLoc][yLoc] == None:
+            self.edges[xLoc][yLoc] = Edge(xLoc,yLoc)
+        for xLoc,yLoc in vertexLocations:
+          if self.vertices[xLoc][yLoc] == None:
+            self.vertices[xLoc][yLoc] = Vertex(xLoc,yLoc)
     # brute forcing this because I don't want to debug
     if self.numRows == 5 and self.numCols == 5:
       self.visualBoard = [[None for x in xrange(self.numCols)] for x in xrange(self.numRows)] 
@@ -462,18 +477,26 @@ class Board:
     offset = 1
     if x % 2 != 0:
       offset = -1
-    hexOne = self.hexagons[x][y+1]
-    hexTwo = self.hexagons[x][y-1]
-    hexThree = self.hexagons[x+1][y]
-    hexFour = self.hexagons[x-1][y]
-    hexFive = self.hexagons[x+1][y+offset]
-    hexSix = self.hexagons[x-1][y+offset]
-    if hexOne != None: neighbors.append(hexOne)
-    if hexTwo != None: neighbors.append(hexTwo)
-    if hexThree != None: neighbors.append(hexThree)
-    if hexFour != None: neighbors.append(hexFour)
-    if hexFive != None: neighbors.append(hexFive)
-    if hexSix != None: neighbors.append(hexSix)
+
+    if (y+1) < len(self.hexagons[x]):
+      hexOne = self.hexagons[x][y+1]
+      if hexOne != None: neighbors.append(hexOne)
+    if y > 0:
+      hexTwo = self.hexagons[x][y-1]
+      if hexTwo != None: neighbors.append(hexTwo)
+    if (x+1) < len(self.hexagons):
+      hexThree = self.hexagons[x+1][y]
+      if hexThree != None: neighbors.append(hexThree)
+    if x > 0:
+      hexFour = self.hexagons[x-1][y]
+      if hexFour != None: neighbors.append(hexFour)
+    if (y+offset) >= 0 and (y+offset) < len(self.hexagons[x]):
+      if (x+1) < len(self.hexagons):
+        hexFive = self.hexagons[x+1][y+offset]
+        if hexFive != None: neighbors.append(hexFive)
+      if x > 0:
+        hexSix = self.hexagons[x-1][y+offset]
+        if hexSix != None: neighbors.append(hexSix)
     return neighbors
 
   # Vertices connected to vertex via roads
@@ -491,18 +514,50 @@ class Board:
     neighbors = []
     x = vertex.X
     y = vertex.Y
+    offset = -1
+    if x % 2 == y % 2: offset = 1
     # Logic from thinking that this is saying getEdgesOfVertex
     # and then for each edge getVertexEnds, taking out the three that are ==vertex
-    if y < len(self.vertices[0])-1:
+    if (y+1) < len(self.vertices[0]):
       vertexOne = self.vertices[x][y+1]
       if vertexOne != None: neighbors.append(vertexOne)
-    if x < len(self.vertices)-1:
-      vertexTwo = self.vertices[x+1][y]
+    if y > 0:
+      vertexTwo = self.vertices[x][y-1]
       if vertexTwo != None: neighbors.append(vertexTwo)
-    if x > 0:
-      vertexThree = self.vertices[x-1][y]
+    if (x+offset) >= 0 and (x+offset) < len(self.vertices):
+      vertexThree = self.vertices[x+offset][y]
       if vertexThree != None: neighbors.append(vertexThree)
     return neighbors
+
+  # used to initially create vertices
+  def getVertexLocations(self, hex):
+    vertexLocations = []
+    x = hex.X
+    y = hex.Y
+    offset = x % 2
+    offset = 0-offset
+    vertexLocations.append((x, 2*y+offset))
+    vertexLocations.append((x, 2*y+1+offset))
+    vertexLocations.append((x, 2*y+2+offset))
+    vertexLocations.append((x+1, 2*y+offset))
+    vertexLocations.append((x+1, 2*y+1+offset))
+    vertexLocations.append((x+1, 2*y+2+offset))
+    return vertexLocations
+
+  # used to initially create edges
+  def getEdgeLocations(self, hex):
+    edgeLocations = []
+    x = hex.X
+    y = hex.Y
+    offset = x % 2
+    offset = 0-offset
+    edgeLocations.append((2*x,2*y+offset))
+    edgeLocations.append((2*x,2*y+1+offset))
+    edgeLocations.append((2*x+1,2*y+offset))
+    edgeLocations.append((2*x+1,2*y+2+offset))
+    edgeLocations.append((2*x+2,2*y+offset))
+    edgeLocations.append((2*x+2,2*y+1+offset))
+    return edgeLocations
 
   # tested
   def getVertices(self, hex):
@@ -548,9 +603,11 @@ class Board:
     vertexEdges = []
     x = vertex.X
     y = vertex.Y
-    edgeOne = self.edges[x*2][y]
-    edgeTwo = self.edges[x*2+1][y]
-    edgeThree = self.edges[x*2-1][y]
+    offset = -1
+    if x % 2 == y % 2: offset = 1
+    edgeOne = self.edges[x*2][y-1]
+    edgeTwo = self.edges[x*2][y]
+    edgeThree = self.edges[x*2+offset][y]
     if edgeOne != None: vertexEdges.append(edgeOne)
     if edgeTwo != None: vertexEdges.append(edgeTwo)
     if edgeThree != None: vertexEdges.append(edgeThree)
@@ -573,7 +630,7 @@ class Board:
     weirdY = y/2 
     if yOffset == 1: weirdY += 1
     else: weirdY -= 1
-    if weirdX > 0 and weirdX < len(self.hexagons):
+    if weirdX >= 0 and weirdX < len(self.hexagons):
       hexTwo = self.hexagons[weirdX][weirdY]
       if hexTwo != None: vertexHexes.append(hexTwo)
 

@@ -4,12 +4,31 @@ class BoardTests:
   def __init__(self):
     self.board = Board(BeginnerLayout)
     self.hexDict = {}
-    self.reverseDict = {}
+    self.reverseHexDict = {}
     for i, tile in enumerate(self.board.tiles):
       self.hexDict[tile] = i+1
-      self.reverseDict[i+1] = tile
+      self.reverseHexDict[i+1] = tile
     for i in range (19):
-      print str(i+1) + " : " + str(self.reverseDict[i+1])
+      print str(i+1) + " : " + str(self.reverseHexDict[i+1])
+
+
+  def testGetNeighborHexes(self):
+    print "Testing getNeighborHexes... "
+    testHexes = ([
+      (5, [1,2,6,10,9,4]), # testing odd
+      (14, [9,10,15,18,17,13]), # testing even
+      (1, [2,5,4]), # testing edge with three
+      (7, [3,6,11,12]), # testing edge with four
+      (18, [17,14,15,19]) # testing edge with four
+      ])
+
+    for hexNum, hexNumbers in testHexes:
+      hexagon = self.reverseHexDict[hexNum]
+      outputHexes = self.board.getNeighborHexes(hexagon)
+      outputHexNums = [self.hexDict[x] for x in outputHexes]
+      if set(hexNumbers) != set(outputHexNums):
+        raise Exception("getNeighborHexes was wrong for hex " + str(hexNum) + "\n"
+          + "Should have returned hexes " + str(hexNumbers) + " but instead returned hexes " + str(outputHexNums))
 
   def testGetNeighborVertices(self):
     print "Testing getNeighborVertices... "
@@ -41,12 +60,55 @@ class BoardTests:
 
   def testGetVertices(self):
     print "Testing getVertices... "
+    testHexes = ([ # tuples of hex with expected vertices
+      (1, [Vertex(0,2), Vertex(0,3), Vertex(0,4), Vertex(1,4), Vertex(1,3), Vertex(1,2)]), # testing odd
+      (3, [Vertex(2,0), Vertex(2,1), Vertex(2,2), Vertex(3,2), Vertex(3,1), Vertex(3,0)]), # testing edge
+      (10, [Vertex(2,4), Vertex(2,5), Vertex(2,6), Vertex(3,6), Vertex(3,5), Vertex(3,4)]), # testing even, middle
+      (19, [Vertex(4,6), Vertex(4,7), Vertex(4,8), Vertex(5,8), Vertex(5,7), Vertex(5,6)]), # testing edge
+      ])
+
+    def equivalent(vertexList, otherVertexList):
+      if len(vertexList) != len(otherVertexList):
+        return False
+      for vertex in vertexList:
+        exists = False
+        for i in range(len(otherVertexList)):
+          if vertex.equivLocation(otherVertexList[i]): exists = True
+        if not exists: return False
+      return True
+
+    for hexNum, vertices in testHexes:
+      hexagon = self.reverseHexDict[hexNum]
+      outputVertices = self.board.getVertices(hexagon)
+      if not equivalent(vertices, outputVertices):
+        raise Exception("getVertices was wrong for hex " + str(hexNum) + "\n"
+          + "Should have returned vertices " + str(vertices) + " but instead returned vertices " + str(outputVertices))
 
   def testGetEdges(self):
     print "Testing getEdges... "
-    testHexes = ([ # tuples of hex with expected edges
-
+    testHexes = ([ # tuples of hex with expected vertices
+      (1, [Edge(0,2), Edge(0,3), Edge(1,4), Edge(2,3), Edge(2,2), Edge(1,2)]), # testing odd
+      (3, [Edge(4,0), Edge(4,1), Edge(5,2), Edge(6,1), Edge(6,0), Edge(5,0)]), # testing edge
+      (10, [Edge(4,4), Edge(4,5), Edge(5,6), Edge(6,5), Edge(6,4), Edge(5,4)]), # testing even, middle
+      (19, [Edge(8,6), Edge(8,7), Edge(9,8), Edge(10,7), Edge(10,6), Edge(9,6)]), # testing edge
       ])
+
+    def equivalent(edgeList, otherEdgeList):
+      if len(edgeList) != len(otherEdgeList):
+        return False
+      for edge in edgeList:
+        exists = False
+        for i in range(len(otherEdgeList)):
+          if edge.equivLocation(otherEdgeList[i]): exists = True
+        if not exists: return False
+      return True
+
+    for hexNum, edges in testHexes:
+      hexagon = self.reverseHexDict[hexNum]
+      outputEdges = self.board.getEdges(hexagon)
+      if not equivalent(edges, outputEdges):
+        raise Exception("getEdges was wrong for hex " + str(hexNum) + "\n"
+          + "Should have returned edges " + str(edges) + " but instead returned edges " + str(outputEdges))
 
   def testGetVertexEnds(self):
     print "Testing getVertexEnds... "
@@ -120,6 +182,8 @@ class BoardTests:
           + "Should have returned hexes " + str(hexes) + " but instead returned hexes " + str(outputHexList))
 
   def runAllTests(self):
+    self.testGetNeighborHexes()
+    print "Success!"
     self.testGetNeighborVertices()
     print "Success!"
     self.testGetVertices()
