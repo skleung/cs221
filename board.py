@@ -321,6 +321,7 @@ class Board:
     self.edges = [[None for x in xrange(self.numCols*2+2)] for x in xrange(self.numRows*2+2)] 
     self.vertices = [[None for x in xrange(self.numCols*2+2)] for x in xrange(self.numRows*2+2)] 
     self.allSettlements = []
+    self.allCities = []
     self.allRoads = []
     # This dictionary will map a tile's dice number to a list of tiles that that dice roll corresponds to
     self.dieRollDict = {}
@@ -431,6 +432,8 @@ class Board:
     if action[0] == ACTIONS.CITY:
       vertex = action[1]
       vertex.upgrade(playerIndex)
+      self.allCities.append(vertex)
+      self.allSettlements.remove(vertex)
 
   def getResourcesFromDieRollForPlayer(self, playerIndex, dieRoll):
     hexagons = self.dieRollDict[dieRoll] #retrieve the hexagons that correspond to that dice roll
@@ -440,6 +443,7 @@ class Board:
         if vertex.player == playerIndex:
           if hexagon.resource != ResourceTypes.NOTHING:
             resources.append(hexagon.resource)
+            if vertex.isCity: resources.append(hexagon.resource)
 
     return resources
 

@@ -88,6 +88,9 @@ class Draw:
       xPos, yPos = self.calculateVertexPosition(vertex)
       self.canvas.create_image(xPos, yPos, image = image)
 
+  def drawCities(self, vertices):
+    self.drawSettlements(vertices)
+
   def calculateVertexPosition(self, vertex):
     xOffset, yOffset = self.vertexOffsets[vertex.X][vertex.Y]
     # think of diagonal

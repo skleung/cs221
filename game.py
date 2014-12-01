@@ -67,9 +67,7 @@ class GameState:
     ------------------------------
     """
     legalActions = []
-
     if self.gameOver() >= 0: return legalActions
-
     agent = self.playerAgents[agentIndex]
 
     # If they can build a road...
@@ -228,6 +226,7 @@ class Game:
     #draw.drawKey(self)
     self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
     self.draw.drawSettlements(self.gameState.board.allSettlements)
+    self.draw.drawCities(self.gameState.board.allCities)
     # else: #gameOver is true
     #     draw.drawWinner(self) #draw winning screen
     #     self.hideButtons()          #hide all buttons 
