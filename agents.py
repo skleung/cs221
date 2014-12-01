@@ -471,7 +471,6 @@ class PlayerAgentExpectimax(PlayerAgent):
   """
   def __init__(self, name, agentIndex, evalFn = defaultEvalFn):
     PlayerAgent.__init__(self, name, agentIndex, evalFn)
-    self.agentType = AGENT.DICE_AGENT
 
   def getAction(self, state):
   """
