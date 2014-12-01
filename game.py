@@ -1,4 +1,4 @@
-from agents import PlayerAgent, DiceAgent
+from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentRandom
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from collections import Counter
 from draw import *
@@ -40,7 +40,7 @@ class GameState:
 
     else:
       self.board = Board(layout)
-      self.playerAgents = [PlayerAgent("Player " + str(i), i) for i in xrange(NUM_PLAYERS)]
+      self.playerAgents = [None]*NUM_PLAYERS
       self.otherAgents = [DiceAgent()]
       self.DICE_AGENT_INDEX = 0 # index in otherAgents
 
@@ -226,7 +226,46 @@ class Game:
     VICTORY_POINTS_TO_WIN victory points.
     ----------------------
     """
+
+    # --- GAME START --- #
+
+    # Welcome message
+    print "WELCOME TO SETTLERS OF CATAN!"
+    print "-----------------------------"
+    DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
+
     # --- PLAYER INITIALIZATION --- #
+    print "Player Agent Specifications:"
+    print "-----------------------------"
+    print "0: ExpectiMiniMax Agent - with default heuristic"
+    print "1: Random Agent"
+    print "2: ExpectiMiniMax Agent - with builder Heuristic"
+    print "3: ExpectiMiniMax Agent - with resource Heuristic"
+
+    playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1 1'):").strip()
+    if playerAgentStr == "":
+      playerAgentStr = '0 1 1'
+    playerAgents = [int(num) for num in playerAgentStr.split(" ")]
+    
+
+    # Helper method to create a player given an index
+    def createPlayer(playerCode, index):
+      if playerCode == 0:
+        return PlayerAgentExpectiminimax("Player "+str(index), index)
+      elif playerCode == 1:
+        return PlayerAgentRandom("Player "+str(index), index)
+      elif playerCode == 2:
+        return PlayerAgentExpectiminimax("Player "+str(index), index, builderEvalFn)
+      elif playerCode == 3:
+        return PlayerAgentExpectiminimax("Player "+str(index), index, resourceEvalFn)
+
+    for i in range(NUM_PLAYERS):
+      self.gameState.playerAgents[i] = createPlayer(playerAgents[i], i)
+
+    # --- END PLAYER INITIALIZATION --- #
+
+    # --- START RESOURCE/SETTLEMENT INITIALIZATION --- #
+
 
     # Each player starts with 2 settlements
     initialSettlements = [self.gameState.board.getVertex(2,2), 
@@ -245,14 +284,11 @@ class Game:
     for agent in self.gameState.playerAgents:
       agent.collectInitialResources(self.gameState.board)
 
-    # --- END PLAYER INITIALIZATION --- #
 
-    # --- GAME START --- #
+    # --- END RESOURCE/SETTLEMENT INITIALIZATION --- #
 
-    # Welcome message
-    print "WELCOME TO SETTLERS OF CATAN!"
-    print "-----------------------------"
-    DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
+
+    
 
     # Turn tracking
     turnNumber = 1

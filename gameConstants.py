@@ -20,7 +20,7 @@ ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.O
 NUM_PLAYERS = 3
 
 # Types of Agents
-AGENT = Enum(["PLAYER_AGENT", "DICE_AGENT"])
+AGENT = Enum(["PLAYER_AGENT", "MINIMAX_AGENT", "DICE_AGENT"])
 
 # Set debug mode on or off
 DEBUG = True

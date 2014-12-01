@@ -1,5 +1,5 @@
 from collections import Counter
-from copy import deepcopy
+import copy
 from gameConstants import *
 from random import randint
 
@@ -12,8 +12,22 @@ EVALUATION FUNCTIONS
 # --------------------------
 # 5 utility points per settlement, 1 per road
 def builderEvalFn(currentGameState, currentPlayerIndex):
-  currentPlayer = currentGameState.agents[currentPlayerIndex]
+  currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
   return 5 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+
+# EVAL FUNCTION: DEFAULT AGENT
+# --------------------------
+# 3 utility points per settlement, 1 per road
+def defaultEvalFn(currentGameState, currentPlayerIndex):
+  currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
+  return 5 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+
+# EVAL FUNCTION: RESOURCE AGENT
+# --------------------------
+# 1 utility points per resource
+def resourceEvalFn(currentGameState, currentPlayerIndex):
+  currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
+  return sum(currentPlayer.resources.values())
 
 
 """
@@ -36,6 +50,9 @@ class DiceAgent:
 
   def rollDice(self):
     return randint(1,6) + randint(1,6)
+
+  def deepCopy(self):
+    return DiceAgent()
 
 
 class PlayerAgent:
@@ -62,7 +79,7 @@ class PlayerAgent:
   ---------------------
   """
 
-  def __init__(self, name, agentIndex, evalFn = builderEvalFn):
+  def __init__(self, name, agentIndex, evalFn = defaultEvalFn):
     self.agentType = AGENT.PLAYER_AGENT
     self.evaluationFunction = evalFn
     self.name = name
@@ -178,7 +195,7 @@ class PlayerAgent:
     newCopy.depth = self.depth
     newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
     newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
-    newCopy.resources = deepcopy(self.resources)
+    newCopy.resources = copy.deepcopy(self.resources)
     return newCopy
 
   def applyAction(self, action):
@@ -286,7 +303,11 @@ class PlayerAgent:
     raise Exception("Cannot get action for superclass - must implement getAction in PlayerAgent subclass!")
 
 
-class PlayerAgentExpectiminimax:
+class PlayerAgentExpectiminimax(PlayerAgent):
+
+  def __init__(self, name, agentIndex, evalFn = defaultEvalFn):
+    PlayerAgent.__init__(self, name, agentIndex, evalFn)
+    self.agentType = AGENT.MINIMAX_AGENT
 
   def getAction(self, state):
     """
@@ -360,7 +381,13 @@ class PlayerAgentExpectiminimax:
     return action
 
 
-class PlayerAgentRandom:
+class PlayerAgentRandom(PlayerAgent):
+
+  def __init__(self, name, agentIndex, evalFn = defaultEvalFn):
+    PlayerAgent.__init__(self, name, agentIndex, evalFn)
+    self.agentType = AGENT.DICE_AGENT
 
   def getAction(self, state):
+    raise Exception("Not implemented yet")
+
     
