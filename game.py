@@ -1,6 +1,7 @@
 from agent import Agent
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from collections import Counter
+from draw import *
 from random import randint
 
 
@@ -163,6 +164,21 @@ class Game:
     """
     self.moveHistory = []
     self.gameState = gameState
+    self.draw = Draw(self.gameState.board.tiles)
+
+  def drawGame(self):
+    self.draw.drawBG()
+    # draw.drawTitle()  
+    self.draw.drawBoard()
+    # draw.drawDiceRoll()
+    # draw.drawPlayer(self.curPlayer)
+    #draw.drawKey(self)
+    # draw.drawRoads(self.roads, self.vertices)
+    # draw.drawSettlements(self.vertices)
+    # else: #gameOver is true
+    #     draw.drawWinner(self) #draw winning screen
+    #     self.hideButtons()          #hide all buttons 
+    #     self.f.place(x=20, y=565)   #except for New Game button
 
   def run(self):    
     """
@@ -218,6 +234,9 @@ class Game:
 
     # Main game loop
     while (self.gameState.gameOver() < 0):
+
+      # Draw the gameboard
+      self.drawGame()
 
       # Initial information
       currentAgent = self.gameState.agents[currentAgentIndex]
