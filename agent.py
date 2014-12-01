@@ -95,7 +95,7 @@ class Agent:
       resources to build a new settlement (based on the SETTLEMENT_COST constant)
     ---------------------
     """
-    modifiedResources = copy.deepcopy(self.resources)
+    modifiedResources = deepcopy(self.resources)
     modifiedResources.subtract(SETTLEMENT_COST)
 
     # If any resource counts dip below 0, we don't have enough
@@ -114,7 +114,7 @@ class Agent:
       resources to build a new city (based on the CITY_COST constant)
     ----------------------
     """
-    modifiedResources = copy.deepcopy(self.resources)
+    modifiedResources = deepcopy(self.resources)
     modifiedResources.subtract(CITY_COST)
 
     # If any resource counts dip below 0, we don't have enough
@@ -133,7 +133,7 @@ class Agent:
       resources to build a new road (based on the ROAD_COST constant)
     ----------------------
     """
-    modifiedResources = copy.deepcopy(self.resources)
+    modifiedResources = deepcopy(self.resources)
     modifiedResources.subtract(ROAD_COST)
 
     # If any resource counts dip below 0, we don't have enough

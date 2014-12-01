@@ -1,8 +1,11 @@
-<<<<<<< HEAD
+
 # CHANGES - Vertex canSettle -> occupied(), Hexagon tostring
 
 from sets import Set
 from enum import Enum
+from collections import Counter
+from gameConstants import *
+import math
 
 # Possible actions a player can take
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
@@ -22,12 +25,6 @@ ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.O
 #   ResourceTypes.NOTHING])
 # NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 # ---------- DELETE? ----------- #
-=======
-from collections import Counter
-from gameConstants import *
-
-
->>>>>>> 8139e77e34407968f1311027ca981e69bfee9ff3
 
 class Hexagon:
   """
@@ -414,15 +411,6 @@ class Board:
       copy.allRoads.append(road.deepCopy())
     return copy
 
-  def getEdge(self, x, y):
-    return self.edges[x][y]
-
-  def getVertex(self, x, y):
-    return self.vertices[x][y]
-
-  def getHex(self, x, y):
-    return self.hexagons[x][y]
-
   def applyAction(self, playerIndex, action):
     if action is None:
       return
@@ -454,6 +442,15 @@ class Board:
             resources.append(hexagon.resource)
 
     return resources
+
+  def getEdge(self, x, y):
+    return self.edges[x][y]
+
+  def getVertex(self, x, y):
+    return self.vertices[x][y]
+
+  def getHex(self, x, y):
+    return self.hexagons[x][y]
 
   def getNeighborHexes(self, hex):
     neighbors = []
@@ -504,17 +501,19 @@ class Board:
       if vertexThree != None: neighbors.append(vertexThree)
     return neighbors
 
+  # tested
   def getVertices(self, hex):
     hexVertices = []
     x = hex.X
     y = hex.Y
     offset = x % 2
-    hexVertices.append(self.vertices[x][2*y+offset])
-    hexVertices.append(self.vertices[x][2*y+1+offset])
-    hexVertices.append(self.vertices[x][2*y+2+offset])
-    hexVertices.append(self.vertices[x+1][2*y+offset])
-    hexVertices.append(self.vertices[x+1][2*y+1+offset])
-    hexVertices.append(self.vertices[x+1][2*y+2+offset])
+    offset = 0-offset
+    hexVertices.append(self.vertices[x][2*y+offset]) # top vertex
+    hexVertices.append(self.vertices[x][2*y+1+offset]) # left top vertex
+    hexVertices.append(self.vertices[x][2*y+2+offset]) # left bottom vertex
+    hexVertices.append(self.vertices[x+1][2*y+offset]) # right top vertex
+    hexVertices.append(self.vertices[x+1][2*y+1+offset]) # right bottom vertex
+    hexVertices.append(self.vertices[x+1][2*y+2+offset]) # bottom vertex
     return hexVertices
 
   def getEdges(self, hex):
@@ -522,6 +521,7 @@ class Board:
     x = hex.X
     y = hex.Y
     offset = x % 2
+    offset = 0-offset
     hexEdges.append(self.edges[2*x][2*y+offset])
     hexEdges.append(self.edges[2*x][2*y+1+offset])
     hexEdges.append(self.edges[2*x+1][2*y+offset])
@@ -530,8 +530,8 @@ class Board:
     hexEdges.append(self.edges[2*x+2][2*y+1+offset])
     return hexEdges
 
+  # returns (start, end) tuple
   def getVertexEnds(self, edge):
-    edgeVertices = []
     x = edge.X
     y = edge.Y
     vertexOne = self.vertices[(x-1)/2][y]
@@ -539,9 +539,7 @@ class Board:
     if x%2 == 0:
       vertexOne = self.vertices[x/2][y]
       vertexTwo = self.vertices[x/2][y+1]
-    if vertexOne != None: edgeVertices.append(vertexOne)
-    if vertexTwo != None: edgeVertices.append(vertexTwo)
-    return edgeVertices
+    return (vertexOne, vertexTwo)
 
   def getEdgesOfVertex(self, vertex):
     vertexEdges = []
@@ -555,21 +553,31 @@ class Board:
     if edgeThree != None: vertexEdges.append(edgeThree)
     return vertexEdges
 
+  # tested
   def getHexes(self, vertex):
     vertexHexes = []
     x = vertex.X
     y = vertex.Y
     xOffset = x % 2
     yOffset = y % 2
-    if x > 0 and (y+xOffset) > 0:
-      hexOne = self.hexagons[x-1][(y+xOffset)/2-1]
+
+    if x < len(self.hexagons):
+      hexOne = self.hexagons[x][y/2]
       if hexOne != None: vertexHexes.append(hexOne)
-    if y > 0 and x-(1-yOffset) > 0:
-      hexTwo = self.hexagons[x-(1-yOffset)*xOffset][(y-1)/2]
+
+    weirdX = x
+    if (xOffset+yOffset) == 1: weirdX = x-1
+    weirdY = y/2 
+    if yOffset == 1: weirdY += 1
+    else: weirdY -= 1
+    if weirdX > 0 and weirdX < len(self.hexagons):
+      hexTwo = self.hexagons[weirdX][weirdY]
       if hexTwo != None: vertexHexes.append(hexTwo)
-    if (y-xOffset) > 0 and (y-xOffset)/2 < len(self.hexagons[0]):
-      hexThree = self.hexagons[x][(y-xOffset)/2]
+
+    if x > 0:
+      hexThree = self.hexagons[x-1][y/2]
       if hexThree != None: vertexHexes.append(hexThree)
+      
     return vertexHexes
    
 

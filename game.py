@@ -178,13 +178,13 @@ class Game:
     ----------------------
     """
     self.draw.drawBG()
-    # draw.drawTitle()  
+    self.draw.drawTitle()
     self.draw.drawBoard()
     # draw.drawDiceRoll()
     # draw.drawPlayer(self.curPlayer)
     #draw.drawKey(self)
-    # draw.drawRoads(self.roads, self.vertices)
-    # draw.drawSettlements(self.vertices)
+    self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
+    self.draw.drawSettlements(self.gameState.board.allSettlements)
     # else: #gameOver is true
     #     draw.drawWinner(self) #draw winning screen
     #     self.hideButtons()          #hide all buttons 
@@ -208,17 +208,32 @@ class Game:
     # --- PLAYER INITIALIZATION --- #
 
     # Each player starts with 2 settlements
-    initialSettlements = [self.gameState.board.getVertex(2,2), 
-      self.gameState.board.getVertex(4,4), 
-      self.gameState.board.getVertex(3,1)]
+    # Use beginner board suggested settlements
+    initialSettlements = ([
+      (self.gameState.board.getVertex(2, 4), self.gameState.board.getVertex(3, 5)),
+      (self.gameState.board.getVertex(2, 8), self.gameState.board.getVertex(4, 8)),
+      (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6)),
+      (self.gameState.board.getVertex(3, 1), self.gameState.board.getVertex(4, 3))])
+
+    initialRoads = ([
+      (self.gameState.board.getEdge(4, 3), self.gameState.board.getEdge(6, 4)),
+      (self.gameState.board.getEdge(4, 7), self.gameState.board.getEdge(8, 8)),
+      (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)),
+      (self.gameState.board.getEdge(6, 1), self.gameState.board.getEdge(8, 3))])
 
     # Use % to essentially loop through and assign a settlement to each agent until
     # there are no more settlements to assign
     # ASSUMPTION: len(initialSettlements) is a clean multiple of # agents
     for i, settlement in enumerate(self.gameState.agents):
       agent = self.gameState.agents[i % self.gameState.getNumAgents()]
-      agent.settlements.append(initialSettlements[i])
-      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, initialSettlements[i]))
+      settleOne, settleTwo = initialSettlements[i]
+      roadOne, roadTwo = initialRoads[i]
+      agent.settlements.append(settleOne); agent.settlements.append(settleTwo)
+      agent.roads.append(roadOne); agent.roads.append(roadTwo)
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settleOne))
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settleTwo))
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, roadOne))
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, roadTwo))
 
     # Each player starts with resources for each of their settlements
     for agent in self.gameState.agents:
