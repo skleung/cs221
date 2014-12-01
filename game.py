@@ -36,24 +36,13 @@ class GameState:
     if prevState is not None:
       self.board = prevState.board.deepCopy()
       self.playerAgents = [playerAgent.deepCopy(self.board) for playerAgent in prevState.playerAgents]
-      self.otherAgents = [otherAgent.deepCopy() for otherAgent in prevState.otherAgents]
-      self.allAgents = self.playerAgents
-      self.allAgents.extend(self.otherAgents)
-      self.DICE_AGENT_INDEX = prevState.DICE_AGENT_INDEX
 
     else:
       self.board = Board(layout)
       self.playerAgents = [Agent(x, "Player: " + str(x)) for x in range(NUM_PLAYERS)]
-      self.otherAgents = [DiceAgent()]
-      self.DICE_AGENT_INDEX = 0 # index in otherAgents
 
-    # Make a list of all agents
-    self.allAgents = []
-    for agent in self.playerAgents:
-      self.allAgents.append(agent)
-
-    for agent in self.otherAgents:
-      self.allAgents.append(agent)
+    # Make the dice agent
+    self.diceAgent = DiceAgent()
 
   def getLegalActions(self, agentIndex):
     """
@@ -123,16 +112,6 @@ class GameState:
     state.playerAgents[playerIndex].applyAction(action)
     state.board.applyAction(playerIndex, action)
     return state
-
-  def getNumAgents(self):
-    """
-    Method: getNumAgents
-    ----------------------------
-    Parameters: NA
-    Returns: the number of agents in the current game
-    ----------------------------
-    """
-    return len(self.allAgents)
 
   def getNumPlayerAgents(self):
     """
@@ -306,7 +285,7 @@ class Game:
     # there are no more settlements to assign
     # ASSUMPTION: len(initialSettlements) is a clean multiple of # agents
     for i in range(len(self.gameState.playerAgents)):
-      agent = self.gameState.playerAgents[i % self.gameState.getNumAgents()]
+      agent = self.gameState.playerAgents[i % self.gameState.getNumPlayerAgents()]
       settleOne, settleTwo = initialSettlements[i]
       roadOne, roadTwo = initialRoads[i]
       agent.settlements.append(settleOne); agent.settlements.append(settleTwo)
@@ -350,7 +329,7 @@ class Game:
       raw_input("Press ENTER to proceed:")
       
       # Dice roll + resource distribution
-      diceRoll = self.gameState.otherAgents[self.gameState.DICE_AGENT_INDEX].rollDice()
+      diceRoll = self.gameState.diceAgent.rollDice()
       if DEBUG:
         print "Rolled a " + str(dieRoll)
       self.gameState.updatePlayerResourcesForDiceRoll(diceRoll, verbose = DEBUG)
