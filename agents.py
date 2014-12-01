@@ -152,9 +152,9 @@ class PlayerAgent:
     s = "---------- " + self.name + " : " + self.color + " ----------\n"
     s += "Victory points: " + str(self.victoryPoints) + "\n"
     s += "Resources: " + str(self.resources) + "\n"
-    s += "Settlements: " + str(self.settlements) + "\n"
-    s += "Roads: " + str(self.roads) + "\n"
-    s += "Cities: " + str(self.cities) + "\n"
+    s += "Settlements (" + str(len(self.settlements)) + "): " + str(self.settlements) + "\n"
+    s += "Roads (" + str(len(self.roads)) + "): " + str(self.roads) + "\n"
+    s += "Cities (" + str(len(self.cities)) + "): " + str(self.cities) + "\n"
     s += "--------------------------------------------\n"
     return s
 

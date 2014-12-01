@@ -337,8 +337,7 @@ class Game:
       
       # Dice roll + resource distribution
       diceRoll = self.gameState.diceAgent.rollDice()
-      if DEBUG:
-        print "Rolled a " + str(diceRoll)
+      print "Rolled a " + str(diceRoll)
       self.gameState.updatePlayerResourcesForDiceRoll(diceRoll, verbose = DEBUG)
 
       
@@ -367,7 +366,7 @@ class Game:
       currentAgentIndex = (currentAgentIndex+1) % self.gameState.getNumPlayerAgents()
       turnNumber += 1
 
-    print self.gameState.playerAgents[self.gameState.gameOver()], " won the game"
+    print self.gameState.playerAgents[self.gameState.gameOver()].name + " won the game"
 
 
 game = Game()
