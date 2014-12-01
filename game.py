@@ -72,6 +72,7 @@ class GameState:
       for road in agent.roads:
         currVertices = self.board.getVertexEnds(road)
         for vertex in currVertices:
+          if vertex.player != None and vertex.player != agentIndex: continue
           currEdges = self.board.getEdgesOfVertex(vertex)
           for currEdge in currEdges:
             if not currEdge.isOccupied(): legalActions.append((ACTIONS.ROAD, currEdge)) 

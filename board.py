@@ -448,7 +448,10 @@ class Board:
       vertex = action[1]
       vertex.upgrade(playerIndex)
       self.allCities.append(vertex)
-      self.allSettlements.remove(vertex)
+      for settlement in self.allSettlements:
+        if settlement.X == vertex.X and settlement.Y == vertex.Y:
+          self.allSettlements.remove(settlement)
+          break
 
   def getResourcesFromDieRollForPlayer(self, playerIndex, dieRoll):
     hexagons = self.dieRollDict[dieRoll] #retrieve the hexagons that correspond to that dice roll
