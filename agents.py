@@ -42,10 +42,10 @@ class PlayerAgent:
   """
   Class: PlayerAgent
   ---------------------
-  PlayerAgent defines a player agent in Settlers consisting of a name, player index, max depth, and
-  player stats/game-specific information like number of victory points, lists of
-  all roads, settlements, and cities owned by the player, and a counter of resources
-  that the player has.
+  PlayerAgent defines a generic player agent in Settlers consisting of a name,
+  player index, max depth, and player stats/game-specific information like number
+  of victory points, lists of all roads, settlements, and cities owned by the
+  player, and a counter of resources that the player has.
 
   Instance Variables:
   ---
@@ -62,9 +62,9 @@ class PlayerAgent:
   ---------------------
   """
 
-  def __init__(self, name, agentIndex):
+  def __init__(self, name, agentIndex, evalFn = builderEvalFn):
     self.agentType = AGENT.PLAYER_AGENT
-    self.evaluationFunction = builderEvalFn
+    self.evaluationFunction = evalFn
     self.name = name
     self.agentIndex = agentIndex
     self.victoryPoints = 0
@@ -180,78 +180,6 @@ class PlayerAgent:
     newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
     newCopy.resources = deepcopy(self.resources)
     return newCopy
-  
-
-  def getAction(self, state):
-    """
-    Method: getAction
-    ------------------------
-    Parameters:
-      state - a GameState object containing information about the current state of the game
-    Returns: an action tuple (ACTION, LOCATION) of the action this player should take
-
-    Returns the best possible action that the current player can take.  Implements
-    The expectiminimax algorithm for determining the best possible move based
-    on the policies of the other Agents in the game (including other players, the
-    dice rolls, etc.).  Returns None if no action can be taken, or an action tuple
-    otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
-    ------------------------
-    """
-
-    # A function that recursively calculates and returns a tuple
-    # containing the best action/value (in the format (value, action))
-    # for the current player at the current state with the current depth.
-    def recurse(state, currDepth, playerIndex):
-      
-      # TERMINAL CASES
-      # ---------------------
-      
-      # If the player won
-      if state.gameOver() == playerIndex:
-        return (float('inf'), None)
-
-      # or lost
-      elif state.gameOver() > -1:
-        return (float('-inf'), None)
-
-      # If the max depth has been reached, call the eval function
-      elif currDepth is 0:
-        return (self.evaluationFunction(state, playerIndex), None)
-
-      # If there are no possible actions (must pass)
-      possibleActions = state.getLegalActions(playerIndex)
-      if len(possibleActions) is 0:
-        return (self.evaluationFunction(state, playerIndex), None)
-
-      # RECURSIVE CASE
-      # ---------------------
-
-      # Parallel lists of values and their corresponding actions
-      vals = []
-      actions = []
-
-      # New depth (depth - 1 for last player, otherwise depth)
-      # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
-      newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
-      newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
-
-      # Iterate over each possible action, recording action and value
-      for currAction in possibleActions:
-        value, action = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
-        vals.append(value)
-        actions.append(currAction)
-
-      # Maximize/minimize
-      if playerIndex == 0:
-        return (max(vals), actions[vals.index(max(vals))])
-      return (min(vals), actions[vals.index(min(vals))])
-
-    # Call our recursive function
-    value, action = recurse(state, self.depth, self.agentIndex)
-    if DEBUG: 
-      print "Best Action: " + str(action)
-      print "Best Value: " + str(value)
-    return action
 
   def applyAction(self, action):
     """
@@ -344,3 +272,95 @@ class PlayerAgent:
     """
     return self.victoryPoints >= VICTORY_POINTS_TO_WIN
 
+  def getAction(self, state):
+    """
+    Method: getAction
+    -----------------------------
+    Parameters:
+      state - a GameState object containing information about the current state of the game
+    Returns: an action tuple (ACTION, LOCATION) of the action this player should take
+    
+    Note: must be overridden by a subclass
+    -----------------------------
+    """
+    raise Exception("Cannot get action for superclass - must implement getAction in PlayerAgent subclass!")
+
+
+class PlayerAgentExpectiminimax:
+
+  def getAction(self, state):
+    """
+    Method: getAction
+    ------------------------
+    Parameters:
+      state - a GameState object containing information about the current state of the game
+    Returns: an action tuple (ACTION, LOCATION) of the action this player should take
+
+    Returns the best possible action that the current player can take.  Implements
+    The expectiminimax algorithm for determining the best possible move based
+    on the policies of the other Agents in the game (including other players, the
+    dice rolls, etc.).  Returns None if no action can be taken, or an action tuple
+    otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
+    ------------------------
+    """
+
+    # A function that recursively calculates and returns a tuple
+    # containing the best action/value (in the format (value, action))
+    # for the current player at the current state with the current depth.
+    def recurse(state, currDepth, playerIndex):
+      
+      # TERMINAL CASES
+      # ---------------------
+      
+      # If the player won
+      if state.gameOver() == playerIndex:
+        return (float('inf'), None)
+
+      # or lost
+      elif state.gameOver() > -1:
+        return (float('-inf'), None)
+
+      # If the max depth has been reached, call the eval function
+      elif currDepth is 0:
+        return (self.evaluationFunction(state, playerIndex), None)
+
+      # If there are no possible actions (must pass)
+      possibleActions = state.getLegalActions(playerIndex)
+      if len(possibleActions) is 0:
+        return (self.evaluationFunction(state, playerIndex), None)
+
+      # RECURSIVE CASE
+      # ---------------------
+
+      # Parallel lists of values and their corresponding actions
+      vals = []
+      actions = []
+
+      # New depth (depth - 1 for last player, otherwise depth)
+      # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
+      newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
+      newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
+
+      # Iterate over each possible action, recording action and value
+      for currAction in possibleActions:
+        value, action = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
+        vals.append(value)
+        actions.append(currAction)
+
+      # Maximize/minimize
+      if playerIndex == 0:
+        return (max(vals), actions[vals.index(max(vals))])
+      return (min(vals), actions[vals.index(min(vals))])
+
+    # Call our recursive function
+    value, action = recurse(state, self.depth, self.agentIndex)
+    if DEBUG: 
+      print "Best Action: " + str(action)
+      print "Best Value: " + str(value)
+    return action
+
+
+class PlayerAgentRandom:
+
+  def getAction(self, state):
+    
