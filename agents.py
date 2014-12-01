@@ -1,7 +1,7 @@
 from collections import Counter
 from copy import deepcopy
 from gameConstants import *
-from random import randint
+from random import choice, randint
 
 
 """
@@ -20,6 +20,7 @@ def builderEvalFn(currentGameState, currentPlayerIndex):
 GAME AGENTS
 ---------------------
 """
+
 class DiceAgent:
   """
   Class: DiceAgent
@@ -27,15 +28,48 @@ class DiceAgent:
   DiceAgent represents the random agent responsible for the
   roll of the dice for resources each turn.  It generates a
   number from 1-12 with the correct probability distribution
-  corresponding to rolling 2 dice.
+  corresponding to rolling 2 6-sided dice.
   ---------------------
   """
 
   def __init__(self):
     self.agentType = AGENT.DICE_AGENT
+    self.NUM_DICE_SIDES = 6
 
   def rollDice(self):
-    return randint(1,6) + randint(1,6)
+    """
+    Method: rollDice
+    ----------------------
+    Parameters: NA
+    Returns: an integer representing the result of a random
+      roll of 2 6-sided dice
+    ----------------------
+    """
+    return randint(1,NUM_DICE_SIDES) + randint(1,NUM_DICE_SIDES)
+
+  def getRollDistribution(self):
+    """
+    Method: getRollDistribution
+    -----------------------------
+    Parameters: NA
+    Returns: a list of (ROLL, PROBABILITY) tuples containing
+      all the possible rolls and the probabilities that they will be rolled.
+    -----------------------------
+    """
+    # Tally up all the possible roll combinations
+    # and the number of dice roll combinations per dice total
+    totalRolls = 0
+    rollCounter = Counter()
+    for dice1 in range(1, NUM_DICE_SIDES + 1):
+      for dice2 in range(1, NUM_DICE_SIDES + 1):
+        rollCounter[dice1 + dice2] += 1
+        totalRolls += 1
+
+    # Return the list of probability tuples
+    return [(roll, rollCounter[roll] / float(totalRolls)) for roll in rollCounter]
+
+
+
 
 
 class PlayerAgent:
@@ -218,21 +252,21 @@ class PlayerAgent:
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a city!")
       self.resources.subtract(CITY_COST)
 
-  def updateResources(self, dieRoll, board):
+  def updateResources(self, diceRoll, board):
     """
     Method: updateResources
     -----------------------------
     Parameters:
-      dieRoll - the sum of the two dice Rolled
+      diceRoll - the sum of the two dice Rolled
       board - a Board object representing the current board state
     Returns: a Counter containing the number of each resource gained
 
-    Takes the current die roll and board setup, and awards
+    Takes the current dice roll and board setup, and awards
     the current player resources depending on built settlements on the board.
     Returns the count of each resource that the player gained.
     -----------------------------
     """
-    newResources = Counter(board.getResourcesFromDieRollForPlayer(self.agentIndex, dieRoll))
+    newResources = Counter(board.getResourcesFromDieRollForPlayer(self.agentIndex, diceRoll))
     self.resources += newResources
     return newResources
 
@@ -286,7 +320,16 @@ class PlayerAgent:
     raise Exception("Cannot get action for superclass - must implement getAction in PlayerAgent subclass!")
 
 
-class PlayerAgentExpectiminimax:
+class PlayerAgentExpectiminimax(PlayerAgent):
+  """
+  Class: PlayerAgentExpectiminimax
+  --------------------------------
+  A subclass of PlayerAgent that uses Expectiminimax search
+  to determine what action it should take.  This assumes
+  that opponents are following a min adversarial policy
+  (and that the dice follow a random policy).
+  --------------------------------
+  """
 
   def getAction(self, state):
     """
@@ -298,8 +341,8 @@ class PlayerAgentExpectiminimax:
 
     Returns the best possible action that the current player can take.  Implements
     The expectiminimax algorithm for determining the best possible move based
-    on the policies of the other Agents in the game (including other players, the
-    dice rolls, etc.).  Returns None if no action can be taken, or an action tuple
+    on the adversarial min policies of the other Agents in the game and the random policy of
+    the dice roll.  Returns None if no action can be taken, or an action tuple
     otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
     ------------------------
     """
@@ -360,7 +403,68 @@ class PlayerAgentExpectiminimax:
     return action
 
 
-class PlayerAgentRandom:
+class PlayerAgentRandom(PlayerAgent):
+  """
+  Class: PlayerAgentRandom
+  --------------------------
+  A subclass of PlayerAgent that randomly determines
+  what action it takes (uniformly random).
+  --------------------------
+  """
 
   def getAction(self, state):
-    
+    """
+    Method: getAction
+    ------------------------
+    Parameters:
+      state - a GameState object containing information about the current state of the game
+    Returns: an action tuple (ACTION, LOCATION) of the action this player should take
+
+    Returns a random action that this player should take.  This action is
+    chosen uniformly randomly from the list of all available actions.
+    ------------------------
+    """
+    # If the game is over...
+    if state.gameOver() > -1:
+      return None
+
+    possibleActions = state.getLegalActions(playerIndex)
+
+    # If there are no possible actions (must pass)
+    if len(possibleActions) is 0:
+      return None
+
+    # Otherwise pick a random action
+    return choice(possibleActions)
+
+
+  class PlayerAgentExpectimax(PlayerAgent):
+    """
+    Class: PlayerAgentExpectimax
+    -------------------------------
+    A subclass of PlayerAgent that uses Expectimax search
+    to determine what action to take.  This assumes that
+    opponents are following a uniformly random policy
+    to determine their actions (and that the dice roll
+    follow a uniformly random policy).
+    -------------------------------
+    """
+
+    def getAction(self, state):
+    """
+    Method: getAction
+    ------------------------
+    Parameters:
+      state - a GameState object containing information about the current state of the game
+    Returns: an action tuple (ACTION, LOCATION) of the action this player should take
+
+    Returns the best possible action that the current player can take.  Implements
+    The expectimax algorithm for determining the best possible move based
+    on the random policies of the other PlayerAgents in the game and the random policy of
+    the dice roll.  Returns None if no action can be taken, or an action tuple
+    otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
+    ------------------------
+    """
+
+
+

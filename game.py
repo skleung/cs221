@@ -157,6 +157,25 @@ class GameState:
         return agent.agentIndex
     return -1
 
+  def updatePlayerResourcesForDiceRoll(self, diceRoll, verbose = False):
+    """
+    Method: updatePlayerResourcesForDiceRoll
+    -----------------------------------------
+    Parameters:
+      diceRoll - the dice total of the 2 rolled 6-sided dice
+        to use to distribute more resources
+    Returns: NA
+
+    Updates the resource counts of all agents based on the
+    given dice roll.
+    -----------------------------------------
+    """
+    for agent in self.playerAgents:
+      gainedResources = agent.updateResources(diceRoll, self.board)
+      if verbose:
+        print str(agent.name) + " received: " + str(gainedResources)
+        print str(agent.name) + " now has: " + str(agent.resources)
+
 
 class Game:
   """
@@ -278,15 +297,12 @@ class Game:
       raw_input("Press ENTER to proceed:")
       
       # Dice roll + resource distribution
-      dieRoll = self.gameState.otherAgents[self.gameState.DICE_AGENT_INDEX].rollDice()
+      diceRoll = self.gameState.otherAgents[self.gameState.DICE_AGENT_INDEX].rollDice()
       if DEBUG:
         print "Rolled a " + str(dieRoll)
+      self.gameState.updatePlayerResourcesForDiceRoll(diceRoll, verbose = DEBUG)
 
-      for agent in self.gameState.playerAgents:
-        gainedResources = agent.updateResources(dieRoll, self.gameState.board)
-        if DEBUG:
-          print str(agent.name) + " received: " + str(gainedResources)
-          print str(agent.name) + " now has: " + str(agent.resources)
+      
 
       # The current player performs 1 action
       action = currentAgent.getAction(self.gameState)
