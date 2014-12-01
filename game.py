@@ -1,8 +1,7 @@
-from agent import Agent
+from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentRandom
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from collections import Counter
 from draw import *
-from random import randint
 
 
 class GameState:
@@ -11,7 +10,7 @@ class GameState:
   -------------------------------
   A class representing all information about the current state of the game.
   Includes a Board object representing the current state of the game board,
-  as well as a list of all agents (players + random agents) in the game.
+  as well as a list of all agents (players + random agents + other agents) in the game.
   -------------------------------
   """
 
@@ -35,10 +34,23 @@ class GameState:
     """
     if prevState is not None:
       self.board = prevState.board.deepCopy()
-      self.agents = [agent.deepCopy(self.board) for agent in prevState.agents]
+      self.playerAgents = [playerAgent.deepCopy(self.board) for playerAgent in prevState.playerAgents]
+      self.otherAgents = [otherAgent.deepCopy() for otherAgent in prevState.otherAgents]
+      self.DICE_AGENT_INDEX = prevState.DICE_AGENT_INDEX
+
     else:
       self.board = Board(layout)
-      self.agents = [Agent("Player " + str(i), i) for i in xrange(NUM_PLAYERS)]
+      self.playerAgents = [None]*NUM_PLAYERS
+      self.otherAgents = [DiceAgent()]
+      self.DICE_AGENT_INDEX = 0 # index in otherAgents
+
+    # Make a list of all agents
+    self.allAgents = []
+    for agent in self.playerAgents:
+      self.allAgents.append(agent)
+
+    for agent in self.otherAgents:
+      self.allAgents.append(agent)
 
   def getLegalActions(self, agentIndex):
     """
@@ -55,7 +67,7 @@ class GameState:
 
     if self.gameOver() >= 0: return legalActions
 
-    agent = self.agents[agentIndex]
+    agent = self.playerAgents[agentIndex]
 
     # If they can build a road...
     if agent.canBuildRoad():
@@ -107,7 +119,7 @@ class GameState:
     # Create a copy of the current state, and perform the given action
     # for the given player
     state = GameState(self)
-    state.agents[playerIndex].applyAction(action)
+    state.playerAgents[playerIndex].applyAction(action)
     state.board.applyAction(playerIndex, action)
     return state
 
@@ -116,11 +128,20 @@ class GameState:
     Method: getNumAgents
     ----------------------------
     Parameters: NA
-
     Returns: the number of agents in the current game
     ----------------------------
     """
-    return len(self.agents)
+    return len(self.allAgents)
+
+  def getNumPlayerAgents(self):
+    """
+    Method: getNumPlayerAgents
+    ----------------------------
+    Parameters: NA
+    Returns: the number of PLAYER agents (players) in the game
+    ----------------------------
+    """
+    return len(self.playerAgents)
 
   def gameOver(self):
     """
@@ -131,7 +152,7 @@ class GameState:
     ----------------------------
     """
     # See if any of the agents have won
-    for agent in self.agents:
+    for agent in self.playerAgents:
       if agent.hasWon():
         return agent.agentIndex
     return -1
@@ -205,7 +226,46 @@ class Game:
     VICTORY_POINTS_TO_WIN victory points.
     ----------------------
     """
+
+    # --- GAME START --- #
+
+    # Welcome message
+    print "WELCOME TO SETTLERS OF CATAN!"
+    print "-----------------------------"
+    DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
+
     # --- PLAYER INITIALIZATION --- #
+    print "Player Agent Specifications:"
+    print "-----------------------------"
+    print "0: ExpectiMiniMax Agent - with default heuristic"
+    print "1: Random Agent"
+    print "2: ExpectiMiniMax Agent - with builder Heuristic"
+    print "3: ExpectiMiniMax Agent - with resource Heuristic"
+
+    playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1 1'):").strip()
+    if playerAgentStr == "":
+      playerAgentStr = '0 1 1'
+    playerAgents = [int(num) for num in playerAgentStr.split(" ")]
+    
+
+    # Helper method to create a player given an index
+    def createPlayer(playerCode, index):
+      if playerCode == 0:
+        return PlayerAgentExpectiminimax("Player "+str(index), index)
+      elif playerCode == 1:
+        return PlayerAgentRandom("Player "+str(index), index)
+      elif playerCode == 2:
+        return PlayerAgentExpectiminimax("Player "+str(index), index, builderEvalFn)
+      elif playerCode == 3:
+        return PlayerAgentExpectiminimax("Player "+str(index), index, resourceEvalFn)
+
+    for i in range(NUM_PLAYERS):
+      self.gameState.playerAgents[i] = createPlayer(playerAgents[i], i)
+
+    # --- END PLAYER INITIALIZATION --- #
+
+    # --- START RESOURCE/SETTLEMENT INITIALIZATION --- #
+
 
     # Each player starts with 2 settlements
     # Use beginner board suggested settlements
@@ -236,17 +296,14 @@ class Game:
       self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, roadTwo))
 
     # Each player starts with resources for each of their settlements
-    for agent in self.gameState.agents:
+    for agent in self.gameState.playerAgents:
       agent.collectInitialResources(self.gameState.board)
 
-    # --- END PLAYER INITIALIZATION --- #
 
-    # --- GAME START --- #
+    # --- END RESOURCE/SETTLEMENT INITIALIZATION --- #
 
-    # Welcome message
-    print "WELCOME TO SETTLERS OF CATAN!"
-    print "-----------------------------"
-    DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
+
+    
 
     # Turn tracking
     turnNumber = 1
@@ -259,24 +316,24 @@ class Game:
       self.drawGame()
 
       # Initial information
-      currentAgent = self.gameState.agents[currentAgentIndex]
+      currentAgent = self.gameState.playerAgents[currentAgentIndex]
       print "---------- TURN " + str(turnNumber) + " --------------"
       print "It's " + str(currentAgent.name) + "'s turn!"
 
       # Print player info
       if DEBUG:
         print "PLAYER INFO:"
-        for a in self.gameState.agents:
+        for a in self.gameState.playerAgents:
           print a
 
       raw_input("Press ENTER to proceed:")
       
       # Dice roll + resource distribution
-      dieRoll = randint(1,6) + randint(1,6)
+      dieRoll = self.gameState.otherAgents[self.gameState.DICE_AGENT_INDEX].rollDice()
       if DEBUG:
         print "Rolled a " + str(dieRoll)
 
-      for agent in self.gameState.agents:
+      for agent in self.gameState.playerAgents:
         gainedResources = agent.updateResources(dieRoll, self.gameState.board)
         if DEBUG:
           print str(agent.name) + " received: " + str(gainedResources)
@@ -295,10 +352,10 @@ class Game:
       self.moveHistory.append((currentAgent.name, action))
       
       # Go to the next player/turn
-      currentAgentIndex = (currentAgentIndex+1) % self.gameState.getNumAgents()
+      currentAgentIndex = (currentAgentIndex+1) % self.gameState.getNumPlayerAgents()
       turnNumber += 1
 
-    print self.gameState.agents[self.gameState.gameOver()], " won the game"
+    print self.gameState.playerAgents[self.gameState.gameOver()], " won the game"
 
 
 game = Game()

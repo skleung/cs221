@@ -19,5 +19,8 @@ CITY_COST = Counter({ResourceTypes.GRAIN: 2, ResourceTypes.ORE: 3})
 ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
 NUM_PLAYERS = 3
 
+# Types of Agents
+AGENT = Enum(["PLAYER_AGENT", "MINIMAX_AGENT", "DICE_AGENT"])
+
 # Set debug mode on or off
 DEBUG = True
