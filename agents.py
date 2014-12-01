@@ -59,7 +59,7 @@ class DiceAgent:
       roll of 2 6-sided dice
     ----------------------
     """
-    return randint(1,NUM_DICE_SIDES) + randint(1,NUM_DICE_SIDES)
+    return randint(1, self.NUM_DICE_SIDES) + randint(1, self.NUM_DICE_SIDES)
 
   def getRollDistribution(self):
     """
@@ -369,7 +369,8 @@ class PlayerAgentExpectiminimax(PlayerAgent):
     ------------------------
     """
     # A function that recursively calculates and returns the utility for self
-    # of the given game state with the given depth on the given player's turn
+    # of the given game state with the given depth on the given player's turn.
+    # Assumes other players are minimizing agents.
     def recurse(state, currDepth, playerIndex):
       # TERMINAL CASES
       # ---------------------
@@ -403,9 +404,8 @@ class PlayerAgentExpectiminimax(PlayerAgent):
       newDepth = currDepth - 1 if playerIndex is not self.agentIndex else currDepth
       newPlayerIndex = (playerIndex + 1) % state.getNumPlayerAgents()
 
-      # Parallel lists of values and their corresponding actions
+      # List of all values
       vals = []
-      actions = []
 
       # Try all possible actions
       for currAction in possibleActions:
@@ -423,12 +423,11 @@ class PlayerAgentExpectiminimax(PlayerAgent):
           currVal += probability * value
 
         vals.append(currVal)
-        actions.append(currAction)
 
-      # Maximize/minimize
+      # Maximize/minimize depending on player
       if playerIndex is self.agentIndex:
-        return (max(vals), actions[vals.index(max(vals))])
-      return (min(vals), actions[vals.index(min(vals))])      
+        return max(vals)
+      return min(vals)     
 
     # Call our recursive function
 
@@ -535,5 +534,104 @@ class PlayerAgentExpectimax(PlayerAgent):
     otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
     ------------------------
     """
-    raise Exception("Not implemented yet")
+    # A function that recursively calculates and returns the utility for self
+    # of the given game state with the given depth on the given player's turn.
+    # Assumes other players are random agents.
+    def recurse(state, currDepth, playerIndex):
+      # TERMINAL CASES
+      # ---------------------
+      
+      # If the player won
+      if state.gameOver() == playerIndex:
+        return float('inf')
+
+      # or lost
+      elif state.gameOver() > -1:
+        return float('-inf')
+
+      # If the max depth has been reached, call the eval function
+      elif currDepth is 0:
+        return self.evaluationFunction(state, self.agentIndex)
+
+      possibleActions = state.getLegalActions(playerIndex)
+
+      # If there are no possible actions (must pass)
+      if len(possibleActions) is 0:
+        return self.evaluationFunction(state, self.agentIndex)
+
+      # RECURSIVE CASE
+      # ----------------------
+
+      # Get dice roll probabilities to calculate expected utility
+      rollProbabilities = agent.getRollDistribution()
+
+      # New depth (depth - 1 for last player, otherwise depth)
+      # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
+      newDepth = currDepth - 1 if playerIndex is not self.agentIndex else currDepth
+      newPlayerIndex = (playerIndex + 1) % state.getNumPlayerAgents()
+
+      # List of all values
+      vals = []
+
+      # Try all possible actions
+      for currAction in possibleActions:
+        currVal = 0
+
+        # For each action, the utility is the sum of the weighted
+        # utilities for all possible dice rolls (we need to add all weighted
+        # utilities together to get the expected utility)
+        for probabilityTuple in rollProbabilities:
+          roll, probability = probabilityTuple
+          state = GameState(state)
+          state.updatePlayerResourcesForDiceRoll(roll)
+          value = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
+
+          currVal += probability * value
+
+        vals.append(currVal)
+
+      # Maximize/take average depending on player
+      if playerIndex is self.agentIndex:
+        return max(vals)
+      return sum(vals) / float(len(vals))  
+
+    # Call our recursive function
+
+    # TERMINAL CASES
+    # ---------------------
+    
+    # If the player won
+    if state.gameOver() is self.agentIndex:
+      return (float('inf'), None)
+
+    # or lost
+    elif state.gameOver() > -1:
+      return (float('-inf'), None)
+
+    # If the max depth has been reached, call the eval function
+    elif self.depth is 0:
+      return (self.evaluationFunction(state, self.agentIndex), None)
+
+    possibleActions = state.getLegalActions(self.agentIndex)
+
+    # If there are no possible actions (must pass)
+    if len(possibleActions) is 0:
+      return (self.evaluationFunction(state, self.agentIndex), None)
+
+    # RECURSIVE CASE
+    # ----------------------
+
+    # Parallel lists of values and their corresponding actions
+    vals = []
+    actions = []
+
+    newPlayerIndex = (self.agentIndex + 1) % state.getNumPlayerAgents()
+
+    # Try all possible actions
+    for currAction in possibleActions:
+      value = recurse(state.generateSuccessor(newPlayerIndex, currAction), self.depth, newPlayerIndex)
+      vals.append(value)
+      actions.append(currAction)
+
+    return (max(vals), actions[vals.index(max(vals))])
     
