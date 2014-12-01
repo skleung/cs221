@@ -20,16 +20,16 @@ class Tile:
   """
 
 
-  def __init__(self, resource, number, x, y):
+  def __init__(self, resource, number, row, col):
     self.resource = resource
-    self.x = x
-    self.y = y
+    self.row = row
+    self.col = col
     self.number = number
     self.player = None
     self.structure = Structure.NONE # Settlement, vertical road, or horizontal road
   
   def deepCopy(self):
-    newCopy = Tile(self.resource, self.number, self.x, self.y)
+    newCopy = Tile(self.resource, self.number, self.row, self.col)
     newCopy.player = self.player
     newCopy.structure = self.structure # Settlement, vertical road, or horizontal road
     return newCopy
@@ -46,6 +46,18 @@ class Tile:
   def isOccupied(self):
     return self.structure != Structure.NONE
 
+  """
+  Method: isCity
+  ---------------------------
+  Parameters: None
+  Returns: True/False depending on whether or not the tile is a city
+
+  Returns whether or not this tile is a city to check if one can upgrade this settlement
+  ---------------------------
+  """
+  def isCity(self):
+    return self.structure != Structure.CITY
+
 
   """
   Method: settle
@@ -60,6 +72,7 @@ class Tile:
   """
   def settle(self, playerIndex):
     if self.isOccupied():# and self.player != playerIndex: 
+      import pdb; pdb.set_trace()
       raise Exception("This tile is already used!")
     self.player = playerIndex
     self.structure = Structure.SETTLEMENT
@@ -77,7 +90,7 @@ class Tile:
   ---------------------------
   """
   def upgrade(self, playerIndex):
-    if not self.structure != Structure.SETTLEMENT:# and self.player != playerIndex: 
+    if self.structure != Structure.SETTLEMENT: # and self.player != playerIndex: 
       raise Exception("This tile is not settled yet!")
     if self.player != playerIndex:
       raise Exception(str(self.player)+" has already settled here!")
@@ -113,7 +126,7 @@ class Tile:
   ---------------------------
   """
   def __repr__(self):
-    val = "--------------TILE INFO AT (x=" + str(self.x) + ", y=" + str(self.y) + ")---------------\n"
+    val = "--------------TILE INFO AT (x=" + str(self.row) + ", y=" + str(self.col) + ")---------------\n"
     val += "Owned by player: " + str(self.player) +"\n"
     val += "Structure: " + str(self.structure) +"\n"
     val += "Resource Type: " + str(self.resource) +"\n"
@@ -138,6 +151,7 @@ class Tile:
     if not self.isOccupied(): return "--"
     elif self.structure == Structure.ROAD: return "R" + str(self.player)
     elif self.structure == Structure.SETTLEMENT: return "S" + str(self.player)
+    elif self.structure == Structure.CITY: return "C" + str(self.player)
     raise Exception("strRepresentation - invalid tile")
 
 
@@ -154,16 +168,16 @@ class BasicBoard:
   ---------------------------
   """
 
-  def __init__(self, size=5):
+  def __init__(self, size=10):
     self.board = []
     possibleResources = [] 
-    for i in range(5):
-      possibleResources += size*size/5*[RESOURCES[i]]
-    for i in range(size):
+    for i in range(size*size):
+      possibleResources.append(RESOURCES[i%5])
+    for row in range(size):
       boardRow = []
-      for j in xrange(size):
+      for col in xrange(size):
         # Do not randomize, this will happen every time you copy.
-        boardRow.append(Tile(possibleResources.pop(), ((i+j)%11)+2, i, j))
+        boardRow.append(Tile(possibleResources.pop(), ((row+col)%11)+2, row, col))
       self.board.append(boardRow)
     self.settlements = []
     self.roads = []
@@ -172,10 +186,9 @@ class BasicBoard:
 
   def deepCopy(self):
     newCopy = BasicBoard(self.size)
-    for i in range(newCopy.size):
-      for j in range(newCopy.size):
-        newCopy.board[j][i] = (self.getTile(i,j).deepCopy())
-    import pdb; pdb.set_trace()
+    for row in range(newCopy.size):
+      for col in range(newCopy.size):
+        newCopy.board[row][col] = (self.getTile(row,col).deepCopy())
 
     newCopy.settlements = copy.deepcopy(self.settlements)
     newCopy.roads = copy.deepcopy(self.roads)
@@ -185,17 +198,17 @@ class BasicBoard:
   Method: getTile
   ---------------------------
   Parameters:
-    x: the x coordinate of the tile to get
-    y: the y coordinate of the tile to get
-  Returns: the Tile object at that (x,y), or None if the coordinates are out of bounds
+    row: the row coordinate of the tile to get
+    col: the col coordinate of the tile to get
+  Returns: the Tile object at that (row, col), or None if the coordinates are out of bounds
 
   Returns the tile on the board at the given coordinates, or None if the
   coordinates are out of bounds.
   ---------------------------
   """
-  def getTile(self, x, y):
-    if 0 <= x < self.size and 0 <= y < self.size:
-      return self.board[y][x]
+  def getTile(self, row, col):
+    if 0 <= row < self.size and 0 <= col < self.size:
+      return self.board[row][col]
     return None
 
 
@@ -245,6 +258,8 @@ class BasicBoard:
     # Mark the tile as a settlement
     if action[0] == Actions.SETTLE:
       tile = action[1]
+      if tile.isOccupied():
+        import pdb; pdb.set_trace()
       tile.settle(playerIndex)
       self.settlements.append(tile)
 
@@ -255,7 +270,7 @@ class BasicBoard:
       self.roads.append(tile)
 
     # Or mark the tile as a city
-    elif action[0] == Actions.UPGRADE:
+    elif action[0] == Actions.CITY:
       tile = action[1]
       tile.upgrade(playerIndex)
 
@@ -283,7 +298,7 @@ class BasicBoard:
         if not diagonals and (dx != 0 and dy != 0): continue
 
         # If this location is in bounds, add the tile to our list
-        currTile = self.getTile(tile.x + dx, tile.y + dy)
+        currTile = self.getTile(tile.row + dx, tile.col + dy)
         if currTile != None:
           neighbors.append(currTile)
 
@@ -323,6 +338,8 @@ class BasicBoard:
     resources = []
     for settlement in self.settlements:
       if settlement.number == dieRoll and settlement.player == playerIndex:
+        for neighborSettlement in self.getNeighborTiles(settlement):
+          resources.append(neighborSettlement.resource)
         resources.append(settlement.resource)
         # add another resource if there's a city there
         if settlement.structure == Structure.CITY:

@@ -107,7 +107,8 @@ class Agent:
       resources to build a new settlement (based on the SETTLEMENT_COST constant)
     ---------------------
     """
-    modifiedResources = self.resources - SETTLEMENT_COST
+    modifiedResources = copy.deepcopy(self.resources)
+    modifiedResources.subtract(SETTLEMENT_COST)
 
     # If any resource counts dip below 0, we don't have enough
     for resourceType in modifiedResources:
@@ -125,7 +126,8 @@ class Agent:
       resources to build a new city (based on the CITY_COST constant)
     ----------------------
     """
-    modifiedResources = self.resources - CITY_COST
+    modifiedResources = copy.deepcopy(self.resources)
+    modifiedResources.subtract(CITY_COST)
 
     # If any resource counts dip below 0, we don't have enough
     for resourceType in modifiedResources:
@@ -143,7 +145,8 @@ class Agent:
       resources to build a new road (based on the ROAD_COST constant)
     ----------------------
     """
-    modifiedResources = self.resources - ROAD_COST
+    modifiedResources = copy.deepcopy(self.resources)
+    modifiedResources.subtract(ROAD_COST)
 
     # If any resource counts dip below 0, we don't have enough
     for resourceType in modifiedResources:
@@ -223,7 +226,7 @@ class Agent:
       # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
       newDepth = currDepth - 1 if playerIndex == state.getNumAgents() - 1 else currDepth
       newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
-
+      import pdb; pdb.set_trace()
       # Iterate over each possible action, recording action and value
       for currAction in possibleActions:
         value, action = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
@@ -263,21 +266,21 @@ class Agent:
       self.settlements.append(action[1])
       if not self.canSettle():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a settlement!")
-      self.resources -= SETTLEMENT_COST
+      self.resources.subtract(SETTLEMENT_COST)
 
     # Building a road
     if action[0] is ACTIONS.ROAD:
       self.roads.append(action[1])
       if not self.canBuildRoad():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a road!")
-      self.resources -= ROAD_COST
+      self.resources.subtract(ROAD_COST)
 
     # Building a city
     if action[0] is ACTIONS.CITY:
       self.cities.append(action[1])
       if not self.canBuildCity():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a city!")
-      self.resources -= CITY_COST
+      self.resources.subtract(CITY_COST)
 
   def updateResources(self, dieRoll, board):
     """
@@ -366,7 +369,7 @@ class GameState:
       self.board = prevState.board.deepCopy()
       self.agents = [agent.deepCopy(self.board) for agent in prevState.agents]
     else:
-      self.board = BasicBoard(5)
+      self.board = BasicBoard()
       self.agents = [Agent("Player " + str(i), i) for i in xrange(NUM_PLAYERS)]
 
   
@@ -395,12 +398,14 @@ class GameState:
       # for all roads adjacent to settlements
       for settlement in agent.settlements:
         for road in board.getNeighborTiles(settlement):
-          validRoads.add(road)
+          if not road.isOccupied():
+            validRoads.add(road)
             
       # Get all possible combinations that are road extensions
       for agentRoad in agent.roads:
         for road in board.getUnoccupiedRoadEndpoints(agentRoad):
-          validRoads.add(road)
+          if not road.isOccupied():
+            validRoads.add(road)
 
       for road in validRoads:
         legalActions.append((Actions.ROAD, road))
@@ -412,7 +417,8 @@ class GameState:
       # Get all possible settlement tiles next to a road
       for agentRoad in agent.roads:
         for settlement in board.getUnoccupiedRoadEndpoints(agentRoad):
-          validSettlements.add(settlement)
+          if not settlement.isOccupied():
+            validSettlements.add(settlement)        
 
       for settlement in validSettlements:
         legalActions.append((Actions.SETTLE, settlement))
@@ -420,7 +426,8 @@ class GameState:
     # If they can build a city
     if agent.canBuildCity() > 0:
       for settlement in agent.settlements:
-        legalActions.append((Actions.CITY, settlement))
+        if not settlement.isCity():
+          legalActions.append((Actions.CITY, settlement))
 
     return legalActions
 
@@ -522,9 +529,21 @@ class Game:
     # --- PLAYER INITIALIZATION --- #
 
     # Each player starts with 2 settlements
-    initialSettlements = [self.gameState.board.getTile(2,2), 
-      self.gameState.board.getTile(4,4), 
-      self.gameState.board.getTile(3,1)]
+    initialSettlements = [self.gameState.board.getTile(1,1), 
+      self.gameState.board.getTile(2,2), 
+      self.gameState.board.getTile(3,3)]
+
+    # Use % to essentially loop through and assign a settlement to each agent until
+    # there are no more settlements to assign
+    # ASSUMPTION: len(initialSettlements) is a clean multiple of # agents
+    for i, settlement in enumerate(self.gameState.agents):
+      agent = self.gameState.agents[i % self.gameState.getNumAgents()]
+      agent.settlements.append(initialSettlements[i])
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, initialSettlements[i]))
+    
+    initialSettlements = [self.gameState.board.getTile(4,0), 
+          self.gameState.board.getTile(0,2), 
+          self.gameState.board.getTile(3,4)]
 
     # Use % to essentially loop through and assign a settlement to each agent until
     # there are no more settlements to assign
@@ -600,13 +619,13 @@ class Game:
 
 
 # Debugging method to print out info about the agent's action
-def printGameActionForAgent(action, agent, board):
+def printGameActionForAgent(action, agent, board,):
   print "\n---------- PLAYER " + str(agent) + "----------"
   print "Victory points: " + str(agent.victoryPoints)
   print "Resources: " + str(agent.resources)
   print "----------------------------"
 
-  print "Took action " + str(action[0])
+  print "Took action " + str(action)
   print "\n\n\n"
 
 
