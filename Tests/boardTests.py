@@ -4,8 +4,12 @@ class BoardTests:
   def __init__(self):
     self.board = Board(BeginnerLayout)
     self.hexDict = {}
+    self.reverseDict = {}
     for i, tile in enumerate(self.board.tiles):
       self.hexDict[tile] = i+1
+      self.reverseDict[i+1] = tile
+    for i in range (19):
+      print str(i+1) + " : " + str(self.reverseDict[i+1])
 
   def testGetHexes(self):
     print "Testing GetHexes... "
