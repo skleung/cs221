@@ -342,8 +342,11 @@ class Board:
       self.visualBoard[3] = rowThree
       rowFour = [None, None, self.hexagons[4][2], self.hexagons[4][3], self.hexagons[3][4]]
       self.visualBoard[4] = rowFour
-
     else: self.visualBoard = None
+    self.tiles = []
+    for row in self.visualBoard:
+      for tile in row:
+        if tile != None: self.tiles.append(tile)
 
   #TODO(sierrakn): Figure out how to print settlements and cities and roads
   def printBoard(self):

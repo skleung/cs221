@@ -1,5 +1,6 @@
 from gameUtil import *
 from board import *
+from draw import *
 import random
 from enum import Enum
 import collections
@@ -401,7 +402,22 @@ class Game:
     self.gameOver = False
     self.moveHistory = []
 
+  def drawGame(self):
+    self.draw.drawBG()
+    # draw.drawTitle()  
+    self.draw.drawBoard()
+    # draw.drawDiceRoll()
+    # draw.drawPlayer(self.curPlayer)
+    #draw.drawKey(self)
+    # draw.drawRoads(self.roads, self.vertices)
+    # draw.drawSettlements(self.vertices)
+    # else: #gameOver is true
+    #     draw.drawWinner(self) #draw winning screen
+    #     self.hideButtons()          #hide all buttons 
+    #     self.f.place(x=20, y=565)   #except for New Game button
+
   def run(self, state):
+    self.draw = Draw(state.data.board.tiles)
     agents = state.data.agents
     board = state.data.board
     numAgents = len(agents)
@@ -428,6 +444,7 @@ class Game:
     turnNum = 1
     agentIndex = 0
     while (state.gameOver() < 0):
+      self.drawGame()
       print "---------- TURN " + str(turnNum) + " --------------"
       print "It's Player " + str(agentIndex) + "'s turn!"
       raw_input("Type ENTER to proceed:")
