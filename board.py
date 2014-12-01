@@ -278,7 +278,6 @@ class Tile:
     self.resource = resource
     self.number = number
 
-
 BeginnerLayout = ([[None, None, Tile(ResourceTypes.GRAIN, 9), None, None],
   [Tile(ResourceTypes.LUMBER, 11), Tile(ResourceTypes.WOOL, 12), Tile(ResourceTypes.BRICK, 5), Tile(ResourceTypes.WOOL, 10), Tile(ResourceTypes.GRAIN, 8)],
   [Tile(ResourceTypes.BRICK, 4), Tile(ResourceTypes.ORE, 6), Tile(ResourceTypes.GRAIN, 11), Tile(ResourceTypes.LUMBER, 4), Tile(ResourceTypes.ORE, 3)],
@@ -327,7 +326,7 @@ class Board:
     self.dieRollDict = {}
     for i in range(self.numRows):
       for j in range(self.numCols):
-        tile = layout[i][j]
+        tile = layout[j][i] # Layout reverse, see above
         if tile == None:
           self.hexagons[i][j] = None
         else:
@@ -343,15 +342,15 @@ class Board:
     # brute forcing this because I don't want to debug
     if self.numRows == 5 and self.numCols == 5:
       self.visualBoard = [[None for x in xrange(self.numCols)] for x in xrange(self.numRows)] 
-      rowZero = [None, None, self.hexagons[1][0], self.hexagons[1][1], self.hexagons[0][2]]
+      rowZero = [None, None, self.hexagons[0][1], self.hexagons[1][1], self.hexagons[2][0]]
       self.visualBoard[0] = rowZero
-      rowOne = [None, self.hexagons[2][0], self.hexagons[2][1], self.hexagons[1][2], self.hexagons[1][3]]
+      rowOne = [None, self.hexagons[0][2], self.hexagons[1][2], self.hexagons[2][1], self.hexagons[3][1]]
       self.visualBoard[1] = rowOne
-      rowTwo = [self.hexagons[3][0], self.hexagons[3][1], self.hexagons[2][2], self.hexagons[2][3], self.hexagons[1][4]]
+      rowTwo = [self.hexagons[0][3], self.hexagons[1][3], self.hexagons[2][2], self.hexagons[3][2], self.hexagons[4][1]]
       self.visualBoard[2] = rowTwo
-      rowThree = [None, self.hexagons[4][1], self.hexagons[3][2], self.hexagons[3][3], self.hexagons[2][4]]
+      rowThree = [None, self.hexagons[1][4], self.hexagons[2][3], self.hexagons[3][3], self.hexagons[4][2]]
       self.visualBoard[3] = rowThree
-      rowFour = [None, None, self.hexagons[4][2], self.hexagons[4][3], self.hexagons[3][4]]
+      rowFour = [None, None, self.hexagons[2][4], self.hexagons[3][4], self.hexagons[4][3]]
       self.visualBoard[4] = rowFour
     else: self.visualBoard = None
     self.tiles = []

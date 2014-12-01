@@ -1,6 +1,7 @@
 from vertexTests import *
 from hexagonTests import *
 from edgeTests import *
+from boardTests import *
 
 # vertexTests = VertexTests()
 # vertexTests.runAllTests()
