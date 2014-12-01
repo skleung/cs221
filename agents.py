@@ -254,6 +254,7 @@ class PlayerAgent:
       if not self.canSettle():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a settlement!")
       self.resources.subtract(SETTLEMENT_COST)
+      self.victoryPoints += SETTLEMENT_VICTORY_POINTS
 
     # Building a road
     if action[0] is ACTIONS.ROAD:
@@ -268,6 +269,7 @@ class PlayerAgent:
       if not self.canBuildCity():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a city!")
       self.resources.subtract(CITY_COST)
+      self.victoryPoints += CITY_VICTORY_POINTS
 
   def updateResources(self, diceRoll, board):
     """
@@ -366,6 +368,20 @@ class PlayerAgentExpectiminimax(PlayerAgent):
     otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
     ------------------------
     """
+    def recurse(state, currDepth, playerIndex):
+      agent = state.allAgents[playerIndex]
+      
+      # Dice agent
+      if agent.agentType == AGENT.DICE_AGENT:
+        rollProbabilities = agent.getRollDistribution()
+
+        newPlayerIndex = (playerIndex + 1) % state.getNumAgents()
+
+        for probabilityTuple in rollProbabilities:
+          roll, probability = probabilityTuple
+          newState = GameState(state)
+          newState.updatePlayerResourcesForDiceRoll(roll)
+
 
     # A function that recursively calculates and returns a tuple
     # containing the best action/value (in the format (value, action))
