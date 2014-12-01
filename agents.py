@@ -493,13 +493,13 @@ class PlayerAgentRandom(PlayerAgent):
     """
     # If the game is over...
     if state.gameOver() > -1:
-      return None
+      return (0, None)
 
     possibleActions = state.getLegalActions(self.agentIndex)
 
     # If there are no possible actions (must pass)
     if len(possibleActions) is 0:
-      return None
+      return (0, None)
 
     # Otherwise pick a random action
     return (0, choice(possibleActions))
