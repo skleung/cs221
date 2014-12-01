@@ -495,7 +495,7 @@ class PlayerAgentRandom(PlayerAgent):
     if state.gameOver() > -1:
       return None
 
-    possibleActions = state.getLegalActions(playerIndex)
+    possibleActions = state.getLegalActions(self.agentIndex)
 
     # If there are no possible actions (must pass)
     if len(possibleActions) is 0:
