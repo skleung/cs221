@@ -1,33 +1,6 @@
-<<<<<<< HEAD
-# CHANGES - Vertex canSettle -> occupied(), Hexagon tostring
-
-from sets import Set
-from enum import Enum
-
-# Possible actions a player can take
-Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
-
-# Different resource types a tile could have
-ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER" ,"NOTHING"])
-# A dictionary from resource type (enum, above) to string representation
-# so we can print out the resource type easily
-ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
-
-# ---------- DELETE? ----------- #
-# Resources = ([ResourceTypes.BRICK, ResourceTypes.BRICK, ResourceTypes.BRICK,
-#   ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL, ResourceTypes.WOOL,
-#   ResourceTypes.ORE, ResourceTypes.ORE, ResourceTypes.ORE,
-#   ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN, ResourceTypes.GRAIN,
-#   ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER, ResourceTypes.LUMBER,
-#   ResourceTypes.NOTHING])
-# NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-# ---------- DELETE? ----------- #
-=======
 from collections import Counter
 from gameConstants import *
 
-
->>>>>>> 8139e77e34407968f1311027ca981e69bfee9ff3
 
 class Hexagon:
   """
