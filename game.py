@@ -348,7 +348,11 @@ class Game:
       self.gameState.board.applyAction(currentAgent.agentIndex, action)
 
       # Print out the updated game state
-      print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
+      if (action != None):
+        print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
+      else:
+        print str(currentAgent.name) + " had no actions to take"
+      
       print currentAgent
 
       # Track the game's move history
