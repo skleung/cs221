@@ -502,7 +502,7 @@ class PlayerAgentRandom(PlayerAgent):
       return None
 
     # Otherwise pick a random action
-    return choice(possibleActions)
+    return (0, choice(possibleActions))
 
 
 class PlayerAgentExpectimax(PlayerAgent):
