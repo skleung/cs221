@@ -1,4 +1,5 @@
 from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentRandom
+from agent import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from collections import Counter
 from draw import *
@@ -36,11 +37,13 @@ class GameState:
       self.board = prevState.board.deepCopy()
       self.playerAgents = [playerAgent.deepCopy(self.board) for playerAgent in prevState.playerAgents]
       self.otherAgents = [otherAgent.deepCopy() for otherAgent in prevState.otherAgents]
+      self.allAgents = self.playerAgents
+      self.allAgents.extend(self.otherAgents)
       self.DICE_AGENT_INDEX = prevState.DICE_AGENT_INDEX
 
     else:
       self.board = Board(layout)
-      self.playerAgents = [None]*NUM_PLAYERS
+      self.playerAgents = [Agent(x, "Player: " + str(x)) for x in range(NUM_PLAYERS)]
       self.otherAgents = [DiceAgent()]
       self.DICE_AGENT_INDEX = 0 # index in otherAgents
 
@@ -284,8 +287,8 @@ class Game:
     # Use % to essentially loop through and assign a settlement to each agent until
     # there are no more settlements to assign
     # ASSUMPTION: len(initialSettlements) is a clean multiple of # agents
-    for i, settlement in enumerate(self.gameState.agents):
-      agent = self.gameState.agents[i % self.gameState.getNumAgents()]
+    for i in range(len(self.gameState.playerAgents)):
+      agent = self.gameState.playerAgents[i % self.gameState.getNumAgents()]
       settleOne, settleTwo = initialSettlements[i]
       roadOne, roadTwo = initialRoads[i]
       agent.settlements.append(settleOne); agent.settlements.append(settleTwo)
