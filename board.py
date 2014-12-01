@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CHANGES - Vertex canSettle -> occupied(), Hexagon tostring
 
 from sets import Set
@@ -21,6 +22,12 @@ ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.O
 #   ResourceTypes.NOTHING])
 # NumberChits = [-1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 # ---------- DELETE? ----------- #
+=======
+from collections import Counter
+from gameConstants import *
+
+
+>>>>>>> 8139e77e34407968f1311027ca981e69bfee9ff3
 
 class Hexagon:
   """
@@ -61,7 +68,8 @@ class Hexagon:
       with dice roll number 4.
     --------------------------
     """
-    return "/" + ResourceDict[self.resource] + str(self.diceValue) + "\\"
+    coordinateString = " (" + str(self.X) + ", " + str(self.Y) + ")"
+    return "/" + ResourceDict[self.resource] + str(self.diceValue) + coordinateString + "\\"
 
 
 class Vertex:
@@ -88,6 +96,7 @@ class Vertex:
     self.player = None
     self.isSettlement = False
     self.isCity = False
+    self.canSettle = True
 
   def isOccupied(self):
     """
@@ -113,6 +122,7 @@ class Vertex:
     copy.player = self.player
     copy.isSettlement = self.isSettlement
     copy.isCity = self.isCity
+    copy.canSettle = self.canSettle
     return copy
 
   def settle(self, playerIndex):
@@ -134,6 +144,7 @@ class Vertex:
 
     self.isSettlement = True
     self.player = playerIndex
+    self.canSettle = False
 
   def upgrade(self, playerIndex):
     """
@@ -174,6 +185,8 @@ class Vertex:
       a city owned by player 5. '--' means this vertex is unoccupied.
     --------------------------
     """
+    coordinateString = " (" + str(self.X) + ", " + str(self.Y) + ")"
+
     s = ""
     if self.isOccupied():
       if self.isSettlement:
@@ -181,10 +194,12 @@ class Vertex:
       elif self.isCity:
         s = "C"
 
-      return s + str(self.player)
+      return s + str(self.player) + coordinateString
 
+    elif not self.canSettle:
+      return "Unsettlable" + coordinateString
     else:
-      return "--"
+      return "Unoccupied" + coordinateString
 
 class Edge:
   """
@@ -254,19 +269,18 @@ class Edge:
       '--' means nothing is built on this edge.
     --------------------------
     """
+    coordinateString = " (" + str(self.X) + ", " + str(self.Y) + ")"
     if self.isOccupied():
-      return "R" + str(self.player)
+      return "R" + str(self.player) + coordinateString
     else:
-      return "--"
+      return "Unoccupied" + coordinateString
 
 
-# -------------- DELETE? --------------- #
-# Keeps track of resource + numberchit
 class Tile:
   def __init__(self, resource, number):
     self.resource = resource
     self.number = number
-# -------------- DELETE? --------------- #
+
 
 BeginnerLayout = ([[None, None, Tile(ResourceTypes.GRAIN, 9), None, None],
   [Tile(ResourceTypes.LUMBER, 11), Tile(ResourceTypes.WOOL, 12), Tile(ResourceTypes.BRICK, 5), Tile(ResourceTypes.WOOL, 10), Tile(ResourceTypes.GRAIN, 8)],
@@ -341,8 +355,11 @@ class Board:
       self.visualBoard[3] = rowThree
       rowFour = [None, None, self.hexagons[4][2], self.hexagons[4][3], self.hexagons[3][4]]
       self.visualBoard[4] = rowFour
-
     else: self.visualBoard = None
+    self.tiles = []
+    for row in self.visualBoard:
+      for tile in row:
+        if tile != None: self.tiles.append(tile)
 
   #TODO(sierrakn): Figure out how to print settlements and cities and roads
   def printBoard(self):
@@ -407,27 +424,27 @@ class Board:
     return self.hexagons[x][y]
 
   def applyAction(self, playerIndex, action):
-    if action[0] == Actions.SETTLE:
-      vertices = action[1]
-      for vertex in vertices:
-        vertex.settle(playerIndex)
-        # All vertices one away are now unsettleable
-        for neighborVertex in self.getNeighborVertices(vertex):
-          neighborVertex.canSettle = False
-        self.allSettlements.append(vertex)
+    if action is None:
+      return
+      
+    if action[0] == ACTIONS.SETTLE:
+      vertex = action[1]
+      vertex.settle(playerIndex)
+      # All vertices one away are now unsettleable
+      for neighborVertex in self.getNeighborVertices(vertex):
+        neighborVertex.canSettle = False
+      self.allSettlements.append(vertex)
 
-    if action[0] == Actions.ROAD:
-      edges = action[1]
-      for edge in edges:
-        edge.build(playerIndex)
-        self.allRoads.append(edge)
+    if action[0] == ACTIONS.ROAD:
+      edge = action[1]
+      edge.build(playerIndex)
+      self.allRoads.append(edge)
 
-    if action[0] == Actions.SETTLE:
-      vertices = action[1]
-      for vertex in vertices:
-        vertex.upgrade(playerIndex)
+    if action[0] == ACTIONS.CITY:
+      vertex = action[1]
+      vertex.upgrade(playerIndex)
 
-  def getResourcesFromDieRoll(self, playerIndex, dieRoll):
+  def getResourcesFromDieRollForPlayer(self, playerIndex, dieRoll):
     hexagons = self.dieRollDict[dieRoll] #retrieve the hexagons that correspond to that dice roll
     resources = []
     for hexagon in hexagons:

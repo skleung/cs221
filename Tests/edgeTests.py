@@ -50,18 +50,18 @@ class EdgeTests:
 		# Test with Edge at (1,2) with road ultimately built
 		# by Player 5
 		e1 = Edge(1, 2)
-		assert(e1.__repr__() == "--")
+		assert(e1.__repr__() == "Unoccupied (1, 2)")
 
 		e1.build(5)
-		assert(e1.__repr__() == "R5")
+		assert(e1.__repr__() == "R5 (1, 2)")
 
 		# Test with Edge at (5, 6) with road ultimately built
 		# by Player 2
 		e1 = Edge(5, 6)
-		assert(e1.__repr__() == "--")
+		assert(e1.__repr__() == "Unoccupied (5, 6)")
 
 		e1.build(2)
-		assert(e1.__repr__() == "R2")
+		assert(e1.__repr__() == "R2 (5, 6)")
 
 	def testEdgeIsOccupied(self):
 		"""

@@ -28,6 +28,7 @@ class VertexTests:
 		assert(v1.player is None)
 		assert(not v1.isSettlement)
 		assert(not v1.isCity)
+		assert(v1.canSettle)
 
 		v1 = Vertex(3, 4)
 		assert(v1.X is 3)
@@ -35,6 +36,7 @@ class VertexTests:
 		assert(v1.player is None)
 		assert(not v1.isSettlement)
 		assert(not v1.isCity)
+		assert(v1.canSettle)
 
 	def testVertexPrint(self):
 		"""
@@ -48,23 +50,28 @@ class VertexTests:
 
 		# Test with vertex at (1,2) settled/upgraded by 4
 		v1 = Vertex(1, 2)
-		assert(v1.__repr__() == "--")
+		assert(v1.__repr__() == "Unoccupied (1, 2)")
 
 		v1.settle(4)
-		assert(v1.__repr__() == "S4")
+		assert(v1.__repr__() == "S4 (1, 2)")
 
 		v1.upgrade(4)
-		assert(v1.__repr__() == "C4")
+		assert(v1.__repr__() == "C4 (1, 2)")
 
 		# Test with vertex at (3,5) settled/upgraded by 2
 		v1 = Vertex(3, 5)
-		assert(v1.__repr__() == "--")
+		assert(v1.__repr__() == "Unoccupied (3, 5)")
 
 		v1.settle(2)
-		assert(v1.__repr__() == "S2")
+		assert(v1.__repr__() == "S2 (3, 5)")
 
 		v1.upgrade(2)
-		assert(v1.__repr__() == "C2")
+		assert(v1.__repr__() == "C2 (3, 5)")
+
+		# Test with unoccupied but unsettlable vertex
+		v1 = Vertex(3, 5)
+		v1.canSettle = False
+		assert(v1.__repr__() == "Unsettlable (3, 5)")
 
 	def testVertexIsOccupied(self):
 		"""
@@ -154,6 +161,7 @@ class VertexTests:
 		assert(v1.player is 2)
 		assert(v1.isSettlement)
 		assert(not v1.isCity)
+		assert(not v1.canSettle)
 
 		# Make sure you can't settle twice (this should
 		# raise an exception but be caught)
@@ -165,6 +173,7 @@ class VertexTests:
 			assert(v1.player is 2)
 			assert(v1.isSettlement)
 			assert(not v1.isCity)
+			assert(not v1.canSettle)
 
 	def testVertexUpgrade(self):
 		"""
@@ -187,6 +196,7 @@ class VertexTests:
 		assert(v1.player is 3)
 		assert(not v1.isSettlement)
 		assert(v1.isCity)
+		assert(not v1.canSettle)
 		# ---- End Minitest 1 ---- #
 
 
@@ -200,6 +210,7 @@ class VertexTests:
 			assert(v1.player is 3)
 			assert(not v1.isSettlement)
 			assert(v1.isCity)
+			assert(not v1.canSettle)
 		# ---- End Minitest 2 ---- #
 
 
@@ -218,6 +229,7 @@ class VertexTests:
 			assert(v1.player is 3)
 			assert(v1.isSettlement)
 			assert(not v1.isCity)
+			assert(not v1.canSettle)
 		# ---- End Minitest 3 ---- #
 
 
@@ -235,6 +247,7 @@ class VertexTests:
 			assert(v1.player is None)
 			assert(not v1.isSettlement)
 			assert(not v1.isCity)
+			assert(v1.canSettle)
 		# ---- End Minitest 4 ---- #
 
 	def runAllTests(self):

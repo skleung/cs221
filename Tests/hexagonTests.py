@@ -85,7 +85,7 @@ class HexagonTests:
 
 			# Make sure the string representation contains the
 			# correct roll value and resource string
-			correctStringRep = "/" + ResourceDict[resourceType] + "5\\"
+			correctStringRep = "/" + ResourceDict[resourceType] + "5" + " (1, 2)\\"
 			assert(stringRep == correctStringRep)
 
 	def runAllTests(self):
