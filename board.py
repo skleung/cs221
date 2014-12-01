@@ -259,7 +259,7 @@ class Edge:
     already been built on this Edge.
     --------------------------
     """
-    if self.player:
+    if self.player != None:
       raise Exception("Player " + str(self.player) + " already has a road here!")
     self.player = playerIndex
 

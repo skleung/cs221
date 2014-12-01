@@ -266,6 +266,7 @@ class PlayerAgent:
     # Building a city
     if action[0] is ACTIONS.CITY:
       self.cities.append(action[1])
+      self.settlements.remove(action[1])
       if not self.canBuildCity():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a city!")
       self.resources.subtract(CITY_COST)
@@ -499,10 +500,10 @@ class PlayerAgentRandom(PlayerAgent):
 
     # If there are no possible actions (must pass)
     if len(possibleActions) is 0:
-      return None
+      return (0, None)
 
     # Otherwise pick a random action
-    return choice(possibleActions)
+    return (0, choice(possibleActions))
 
 
 class PlayerAgentExpectimax(PlayerAgent):
