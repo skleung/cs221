@@ -1,4 +1,5 @@
-from agents import PlayerAgent, DiceAgent
+from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentRandom
+from agent import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from collections import Counter
 from draw import *
@@ -36,11 +37,13 @@ class GameState:
       self.board = prevState.board.deepCopy()
       self.playerAgents = [playerAgent.deepCopy(self.board) for playerAgent in prevState.playerAgents]
       self.otherAgents = [otherAgent.deepCopy() for otherAgent in prevState.otherAgents]
+      self.allAgents = self.playerAgents
+      self.allAgents.extend(self.otherAgents)
       self.DICE_AGENT_INDEX = prevState.DICE_AGENT_INDEX
 
     else:
       self.board = Board(layout)
-      self.playerAgents = [PlayerAgent("Player " + str(i), i) for i in xrange(NUM_PLAYERS)]
+      self.playerAgents = [Agent(x, "Player: " + str(x)) for x in range(NUM_PLAYERS)]
       self.otherAgents = [DiceAgent()]
       self.DICE_AGENT_INDEX = 0 # index in otherAgents
 
@@ -218,13 +221,13 @@ class Game:
     ----------------------
     """
     self.draw.drawBG()
-    # draw.drawTitle()  
+    self.draw.drawTitle()
     self.draw.drawBoard()
     # draw.drawDiceRoll()
     # draw.drawPlayer(self.curPlayer)
     #draw.drawKey(self)
-    # draw.drawRoads(self.roads, self.vertices)
-    # draw.drawSettlements(self.vertices)
+    self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
+    self.draw.drawSettlements(self.gameState.board.allSettlements)
     # else: #gameOver is true
     #     draw.drawWinner(self) #draw winning screen
     #     self.hideButtons()          #hide all buttons 
@@ -245,26 +248,6 @@ class Game:
     VICTORY_POINTS_TO_WIN victory points.
     ----------------------
     """
-    # --- PLAYER INITIALIZATION --- #
-
-    # Each player starts with 2 settlements
-    initialSettlements = [self.gameState.board.getVertex(2,2), 
-      self.gameState.board.getVertex(4,4), 
-      self.gameState.board.getVertex(3,1)]
-
-    # Use % to essentially loop through and assign a settlement to each agent until
-    # there are no more settlements to assign
-    # ASSUMPTION: len(initialSettlements) is a clean multiple of # agents
-    for i, settlement in enumerate(self.gameState.playerAgents):
-      agent = self.gameState.playerAgents[i % self.gameState.getNumPlayerAgents()]
-      agent.settlements.append(initialSettlements[i])
-      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, initialSettlements[i]))
-
-    # Each player starts with resources for each of their settlements
-    for agent in self.gameState.playerAgents:
-      agent.collectInitialResources(self.gameState.board)
-
-    # --- END PLAYER INITIALIZATION --- #
 
     # --- GAME START --- #
 
@@ -272,6 +255,77 @@ class Game:
     print "WELCOME TO SETTLERS OF CATAN!"
     print "-----------------------------"
     DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
+
+    # --- PLAYER INITIALIZATION --- #
+    print "Player Agent Specifications:"
+    print "-----------------------------"
+    print "0: ExpectiMiniMax Agent - with default heuristic"
+    print "1: Random Agent"
+    print "2: ExpectiMiniMax Agent - with builder Heuristic"
+    print "3: ExpectiMiniMax Agent - with resource Heuristic"
+
+    playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1 1'):").strip()
+    if playerAgentStr == "":
+      playerAgentStr = '0 1 1'
+    playerAgents = [int(num) for num in playerAgentStr.split(" ")]
+    
+
+    # Helper method to create a player given an index
+    def createPlayer(playerCode, index):
+      if playerCode == 0:
+        return PlayerAgentExpectiminimax("Player "+str(index), index)
+      elif playerCode == 1:
+        return PlayerAgentRandom("Player "+str(index), index)
+      elif playerCode == 2:
+        return PlayerAgentExpectiminimax("Player "+str(index), index, builderEvalFn)
+      elif playerCode == 3:
+        return PlayerAgentExpectiminimax("Player "+str(index), index, resourceEvalFn)
+
+    for i in range(NUM_PLAYERS):
+      self.gameState.playerAgents[i] = createPlayer(playerAgents[i], i)
+
+    # --- END PLAYER INITIALIZATION --- #
+
+    # --- START RESOURCE/SETTLEMENT INITIALIZATION --- #
+
+
+    # Each player starts with 2 settlements
+    # Use beginner board suggested settlements
+    initialSettlements = ([
+      (self.gameState.board.getVertex(2, 4), self.gameState.board.getVertex(3, 5)),
+      (self.gameState.board.getVertex(2, 8), self.gameState.board.getVertex(4, 8)),
+      (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6)),
+      (self.gameState.board.getVertex(3, 1), self.gameState.board.getVertex(4, 3))])
+
+    initialRoads = ([
+      (self.gameState.board.getEdge(4, 3), self.gameState.board.getEdge(6, 4)),
+      (self.gameState.board.getEdge(4, 7), self.gameState.board.getEdge(8, 8)),
+      (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)),
+      (self.gameState.board.getEdge(6, 1), self.gameState.board.getEdge(8, 3))])
+
+    # Use % to essentially loop through and assign a settlement to each agent until
+    # there are no more settlements to assign
+    # ASSUMPTION: len(initialSettlements) is a clean multiple of # agents
+    for i in range(len(self.gameState.playerAgents)):
+      agent = self.gameState.playerAgents[i % self.gameState.getNumAgents()]
+      settleOne, settleTwo = initialSettlements[i]
+      roadOne, roadTwo = initialRoads[i]
+      agent.settlements.append(settleOne); agent.settlements.append(settleTwo)
+      agent.roads.append(roadOne); agent.roads.append(roadTwo)
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settleOne))
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settleTwo))
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, roadOne))
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, roadTwo))
+
+    # Each player starts with resources for each of their settlements
+    for agent in self.gameState.playerAgents:
+      agent.collectInitialResources(self.gameState.board)
+
+
+    # --- END RESOURCE/SETTLEMENT INITIALIZATION --- #
+
+
+    
 
     # Turn tracking
     turnNumber = 1
@@ -310,7 +364,11 @@ class Game:
       self.gameState.board.applyAction(currentAgent.agentIndex, action)
 
       # Print out the updated game state
-      print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
+      if (action != None):
+        print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
+      else:
+        print str(currentAgent.name) + " had no actions to take"
+      
       print currentAgent
 
       # Track the game's move history
