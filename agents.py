@@ -74,8 +74,8 @@ class DiceAgent:
     # and the number of dice roll combinations per dice total
     totalRolls = 0
     rollCounter = Counter()
-    for dice1 in range(1, NUM_DICE_SIDES + 1):
-      for dice2 in range(1, NUM_DICE_SIDES + 1):
+    for dice1 in range(1, self.NUM_DICE_SIDES + 1):
+      for dice2 in range(1, self.NUM_DICE_SIDES + 1):
         rollCounter[dice1 + dice2] += 1
         totalRolls += 1
 

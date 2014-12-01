@@ -330,7 +330,7 @@ class Game:
       # Dice roll + resource distribution
       diceRoll = self.gameState.diceAgent.rollDice()
       if DEBUG:
-        print "Rolled a " + str(dieRoll)
+        print "Rolled a " + str(diceRoll)
       self.gameState.updatePlayerResourcesForDiceRoll(diceRoll, verbose = DEBUG)
 
       
