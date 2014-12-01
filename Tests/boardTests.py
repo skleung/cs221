@@ -13,6 +13,31 @@ class BoardTests:
 
   def testGetNeighborVertices(self):
     print "Testing getNeighborVertices... "
+    testVertices = ([ # tuples of vertex with expected neighbor vertices
+      (Vertex(1,3), [Vertex(1,2), Vertex(1,4), Vertex(2,3)]), # testing odd, odd
+      (Vertex(4,4), [Vertex(4,3), Vertex(4,5), Vertex(5,4)]), # testing even, even
+      (Vertex(2,5), [Vertex(2,4), Vertex(2,6), Vertex(1,5)]), # testing even, odd
+      (Vertex(3,6), [Vertex(3,5), Vertex(3,7), Vertex(2,6)]), # testing odd, even
+      (Vertex(0,2), [Vertex(0,3), Vertex(1,2)]), # testing only two vertices
+      (Vertex(5,2), [Vertex(4,2), Vertex(5,3)]), # testing only two vertices
+      (Vertex(3,0), [Vertex(2,0), Vertex(3,1)]) # testing only two vertices
+      ])
+
+    def equivalent(vertexList, otherVertexList):
+      if len(vertexList) != len(otherVertexList):
+        return False
+      for vertex in vertexList:
+        exists = False
+        for i in range(len(otherVertexList)):
+          if vertex.equivLocation(otherVertexList[i]): exists = True
+        if not exists: return False
+      return True
+
+    for vertex, vertices in testVertices:
+      outputVertices = self.board.getNeighborVertices(vertex)
+      if not equivalent(vertices, outputVertices):
+        raise Exception("getNeighborVertices was wrong for vertex at " + str(vertex.X) + "," + str(vertex.Y) + "\n"
+          + "Should have returned vertices " + str(vertices) + " but instead returned vertices " + str(outputVertices))
 
   def testGetVertices(self):
     print "Testing getVertices... "
