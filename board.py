@@ -42,7 +42,8 @@ class Hexagon:
       with dice roll number 4.
     --------------------------
     """
-    return "/" + ResourceDict[self.resource] + str(self.diceValue) + "\\"
+    coordinateString = " (" + str(self.X) + ", " + str(self.Y) + ")"
+    return "/" + ResourceDict[self.resource] + str(self.diceValue) + coordinateString + "\\"
 
 
 class Vertex:
@@ -158,6 +159,8 @@ class Vertex:
       a city owned by player 5. '--' means this vertex is unoccupied.
     --------------------------
     """
+    coordinateString = " (" + str(self.X) + ", " + str(self.Y) + ")"
+
     s = ""
     if self.isOccupied():
       if self.isSettlement:
@@ -165,10 +168,12 @@ class Vertex:
       elif self.isCity:
         s = "C"
 
-      return s + str(self.player)
+      return s + str(self.player) + coordinateString
 
+    elif not self.canSettle:
+      return "Unsettlable" + coordinateString
     else:
-      return "--"
+      return "Unoccupied" + coordinateString
 
 class Edge:
   """
@@ -238,10 +243,11 @@ class Edge:
       '--' means nothing is built on this edge.
     --------------------------
     """
+    coordinateString = " (" + str(self.X) + ", " + str(self.Y) + ")"
     if self.isOccupied():
-      return "R" + str(self.player)
+      return "R" + str(self.player) + coordinateString
     else:
-      return "--"
+      return "Unoccupied" + coordinateString
 
 
 class Tile:

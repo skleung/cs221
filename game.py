@@ -233,10 +233,6 @@ class Game:
     print "-----------------------------"
     DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
 
-    if DEBUG:
-      for agent in self.gameState.agents:
-        print str(agent) + ": " + str(agent.resources)
-
     # Turn tracking
     turnNumber = 1
     currentAgentIndex = 0
@@ -250,8 +246,15 @@ class Game:
       # Initial information
       currentAgent = self.gameState.agents[currentAgentIndex]
       print "---------- TURN " + str(turnNumber) + " --------------"
-      print "It's " + str(currentAgent) + "'s turn!"
-      raw_input("Type ENTER to proceed:")
+      print "It's " + str(currentAgent.name) + "'s turn!"
+
+      # Print player info
+      if DEBUG:
+        print "PLAYER INFO:"
+        for a in self.gameState.agents:
+          print a
+
+      raw_input("Press ENTER to proceed:")
       
       # Dice roll + resource distribution
       dieRoll = randint(1,6) + randint(1,6)
@@ -259,9 +262,10 @@ class Game:
         print "Rolled a " + str(dieRoll)
 
       for agent in self.gameState.agents:
-        agent.updateResources(dieRoll, self.gameState.board)
+        gainedResources = agent.updateResources(dieRoll, self.gameState.board)
         if DEBUG:
-          print str(agent) + ": " + str(agent.resources)
+          print str(agent.name) + " received: " + str(gainedResources)
+          print str(agent.name) + " now has: " + str(agent.resources)
 
       # The current player performs 1 action
       action = currentAgent.getAction(self.gameState)
@@ -269,10 +273,8 @@ class Game:
       self.gameState.board.applyAction(currentAgent.agentIndex, action)
 
       # Print out the updated game state
-      if DEBUG:
-        printGameActionForAgent(action, currentAgent, self.gameState.board)
-      elif action is None:
-        print "Unable to take any actions"
+      print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
+      print currentAgent
 
       # Track the game's move history
       self.moveHistory.append((currentAgent.name, action))
@@ -282,17 +284,6 @@ class Game:
       turnNumber += 1
 
     print self.gameState.agents[self.gameState.gameOver()], " won the game"
-
-
-# Debugging method to print out info about the agent's action
-def printGameActionForAgent(action, agent, board):
-  print "\n---------- PLAYER " + str(agent) + "----------"
-  print "Victory points: " + str(agent.victoryPoints)
-  print "Resources: " + str(agent.resources)
-  print "----------------------------"
-
-  print "Took action " + str(action[0])
-  print "\n\n\n"
 
 
 game = Game()

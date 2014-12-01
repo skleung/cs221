@@ -274,13 +274,16 @@ class Agent:
     Parameters:
       dieRoll - the sum of the two dice Rolled
       board - a Board object representing the current board state
-    Returns: NA
+    Returns: a Counter containing the number of each resource gained
 
     Takes the current die roll and board setup, and awards
     the current player resources depending on built settlements on the board.
+    Returns the count of each resource that the player gained.
     -----------------------------
     """
-    self.resources += Counter(board.getResourcesFromDieRollForPlayer(self.agentIndex, dieRoll))
+    newResources = Counter(board.getResourcesFromDieRollForPlayer(self.agentIndex, dieRoll))
+    self.resources += newResources
+    return newResources
 
   def collectInitialResources(self, board):
     """
