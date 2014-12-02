@@ -192,7 +192,7 @@ class Game:
   ------------------------
   """
 
-  def __init__(self, gameState = GameState()):
+  def __init__(self):
     """
     Method: __init__
     ----------------------
@@ -207,7 +207,7 @@ class Game:
     ----------------------
     """
     self.moveHistory = []
-    self.gameState = gameState
+    self.gameState = GameState()
     # self.draw = Draw(self.gameState.board.tiles)
 
 
@@ -285,6 +285,7 @@ class Game:
     # Welcome message
     # print "WELCOME TO SETTLERS OF CATAN!"
     # print "-----------------------------"
+
     # DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
     self.initializePlayers()
 
@@ -293,12 +294,18 @@ class Game:
     # Each player starts with 2 settlements
     # Use beginner board suggested settlements
     initialSettlements = ([
-      (self.gameState.board.getVertex(2, 4), self.gameState.board.getVertex(3, 5)),
-      (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6))])
+      (self.gameState.board.getVertex(2, 4), self.gameState.board.getVertex(4, 8)),
+      (self.gameState.board.getVertex(2, 8), self.gameState.board.getVertex(3, 5)),
+      (self.gameState.board.getVertex(3, 1), self.gameState.board.getVertex(4, 3)), # unused
+      (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6)) # unused
+      ]) 
 
     initialRoads = ([
-      (self.gameState.board.getEdge(4, 3), self.gameState.board.getEdge(6, 4)),
-       (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)),])
+      (self.gameState.board.getEdge(4, 3), self.gameState.board.getEdge(8, 8)),
+      (self.gameState.board.getEdge(4, 7), self.gameState.board.getEdge(6, 4)),
+      (self.gameState.board.getEdge(6, 1), self.gameState.board.getEdge(8, 3)), # unused
+      (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)) # unused
+      ])
     # Use % to essentially loop through and assign a settlement to each agent until
     # there are no more settlements to assign
     # ASSUMPTION: len(initialSettlements) is a clean multiple of # agents
@@ -364,6 +371,7 @@ class Game:
       
       # print currentAgent
 
+
       # Track the game's move history
       self.moveHistory.append((currentAgent.name, action))
       
@@ -373,7 +381,6 @@ class Game:
 
     # print self.gameState.playerAgents[self.gameState.gameOver()].name + " won the game"
     return self.gameState.gameOver()
-
 
 
 numZeroWins = 0

@@ -417,6 +417,8 @@ class PlayerAgentExpectiminimax(PlayerAgent):
       # If there are no possible actions (must pass)
       if len(possibleActions) is 0:
         return self.evaluationFunction(currState, self.agentIndex)
+      # if len(possibleActions) > 6:
+      #   return self.evaluationFunction(currState, self.agentIndex)
 
       # RECURSIVE CASE
       # ----------------------
