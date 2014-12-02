@@ -1,4 +1,4 @@
-from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentRandom
+from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentAlphaBeta, PlayerAgentRandom
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from collections import Counter
 from draw import *
@@ -238,6 +238,8 @@ class Game:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, evalFn=builderEvalFn)
     elif playerCode == 3:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, evalFn=resourceEvalFn)
+    elif playerCode == 4:
+      return PlayerAgentAlphaBeta("Player "+str(index), index, color)
 
   def initializePlayers(self):
     print "Player Agent Specifications:"
@@ -246,6 +248,7 @@ class Game:
     print "1: Random Agent"
     print "2: ExpectiMiniMax Agent - with builder Heuristic"
     print "3: ExpectiMiniMax Agent - with resource Heuristic"
+    print "4: AlphaBeta Agent - with default Heuristic"
 
     playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1'):").strip()
     playerAgentStr = '0 1' if playerAgentStr is "" else playerAgentStr
