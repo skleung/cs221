@@ -398,6 +398,11 @@ class Board:
             s += " /-\\ "
         print s
 
+  def printData(self):
+    print self.hexagons
+    print self.edges
+    print self.vertices
+
   def deepCopy(self):
     copy = Board()
     copy.hexagons = []
@@ -434,7 +439,8 @@ class Board:
       return
       
     if action[0] == ACTIONS.SETTLE:
-      vertex = action[1]
+      actionVertex = action[1]
+      vertex = self.getVertex(actionVertex.X, actionVertex.Y)
       vertex.settle(playerIndex)
       # All vertices one away are now unsettleable
       for neighborVertex in self.getNeighborVertices(vertex):
@@ -442,12 +448,14 @@ class Board:
       self.allSettlements.append(vertex)
 
     if action[0] == ACTIONS.ROAD:
-      edge = action[1]
+      actionEdge = action[1]
+      edge = self.getEdge(actionEdge.X, actionEdge.Y)
       edge.build(playerIndex)
       self.allRoads.append(edge)
 
     if action[0] == ACTIONS.CITY:
-      vertex = action[1]
+      actionVertex = action[1]
+      vertex = self.getVertex(actionVertex.X, actionVertex.Y)
       vertex.upgrade(playerIndex)
       self.allCities.append(vertex)
       for settlement in self.allSettlements:

@@ -14,7 +14,7 @@ class GameState:
   -------------------------------
   """
 
-  def __init__(self, prevState = None, layout = BeginnerLayout):
+  def __init__(self, layout = BeginnerLayout):
     """
     Method: __init__
     -----------------------------
@@ -32,16 +32,18 @@ class GameState:
     GameState object from scratch.
     ------------------------------
     """
-    if prevState is not None:
-      self.board = prevState.board.deepCopy()
-      self.playerAgents = [playerAgent.deepCopy(self.board) for playerAgent in prevState.playerAgents]
-
-    else:
-      self.board = Board(layout)
-      self.playerAgents = [None] * NUM_PLAYERS
+    
+    self.board = Board(layout)
+    self.playerAgents = [None] * NUM_PLAYERS
 
     # Make the dice agent
     self.diceAgent = DiceAgent()
+
+  def deepCopy(self):
+    copy = GameState()
+    copy.board = self.board.deepCopy()
+    copy.playerAgents = [playerAgent.deepCopy(copy.board) for playerAgent in self.playerAgents]
+    return copy
 
   def getLegalActions(self, agentIndex):
     """
@@ -122,10 +124,10 @@ class GameState:
 
     # Create a copy of the current state, and perform the given action
     # for the given player
-    state = GameState(self)
-    state.playerAgents[playerIndex].applyAction(action)
-    state.board.applyAction(playerIndex, action)
-    return state
+    copy = self.deepCopy()
+    copy.playerAgents[playerIndex].applyAction(action)
+    copy.board.applyAction(playerIndex, action)
+    return copy
 
   def getNumPlayerAgents(self):
     """
