@@ -2,8 +2,7 @@ from enum import Enum
 from collections import Counter
 
 VICTORY_POINTS_TO_WIN = 10
-STARTING_NUM_OF_CARDS = 7
-SETTLEMENT_VICTORY_POINTS = 3
+SETTLEMENT_VICTORY_POINTS = 1
 CITY_VICTORY_POINTS = SETTLEMENT_VICTORY_POINTS + 1
 
 ACTIONS = Enum(["SETTLE", "CITY", "ROAD"])
@@ -18,7 +17,7 @@ CITY_COST = Counter({ResourceTypes.GRAIN: 2, ResourceTypes.ORE: 3})
 # A dictionary from resource type (enum, above) to string representation
 # so we can print out the resource type easily
 ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
-NUM_PLAYERS = 3
+NUM_PLAYERS = 2
 
 # Types of Agents
 AGENT = Enum(["PLAYER_AGENT", "DICE_AGENT"])

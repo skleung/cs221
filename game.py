@@ -62,12 +62,13 @@ class GameState:
     if agent.canBuildRoad():
 
       # Look at all unoccupied edges coming from the player's existing settlements and cities
-      allSettlements = []; allSettlements.extend(agent.settlements); allSettlements.extend(agent.cities)
-      for settlement in allSettlements:
+      agentSettlements = []; agentSettlements.extend(agent.settlements); agentSettlements.extend(agent.cities)
+      for settlement in agentSettlements:
         currEdges = self.board.getEdgesOfVertex(settlement)
         for currEdge in currEdges:
           if not currEdge.isOccupied():
-            legalActions.append((ACTIONS.ROAD, currEdge))  
+            legalActions.append((ACTIONS.ROAD, currEdge))
+
       # Look at all unoccupied edges coming from the player's existing roads
       for road in agent.roads:
         currVertices = self.board.getVertexEnds(road)
@@ -75,7 +76,8 @@ class GameState:
           if vertex.player != None and vertex.player != agentIndex: continue
           currEdges = self.board.getEdgesOfVertex(vertex)
           for currEdge in currEdges:
-            if not currEdge.isOccupied(): legalActions.append((ACTIONS.ROAD, currEdge)) 
+            if not currEdge.isOccupied(): 
+              legalActions.append((ACTIONS.ROAD, currEdge)) 
 
     # If they can settle...
     if agent.canSettle():
@@ -279,16 +281,11 @@ class Game:
     # Use beginner board suggested settlements
     initialSettlements = ([
       (self.gameState.board.getVertex(2, 4), self.gameState.board.getVertex(3, 5)),
-      (self.gameState.board.getVertex(2, 8), self.gameState.board.getVertex(4, 8)),
-      (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6)),
-      (self.gameState.board.getVertex(3, 1), self.gameState.board.getVertex(4, 3))])
+      (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6))])
 
     initialRoads = ([
       (self.gameState.board.getEdge(4, 3), self.gameState.board.getEdge(6, 4)),
-      (self.gameState.board.getEdge(4, 7), self.gameState.board.getEdge(8, 8)),
-      (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)),
-      (self.gameState.board.getEdge(6, 1), self.gameState.board.getEdge(8, 3))])
-
+       (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)),])
     # Use % to essentially loop through and assign a settlement to each agent until
     # there are no more settlements to assign
     # ASSUMPTION: len(initialSettlements) is a clean multiple of # agents
@@ -307,11 +304,7 @@ class Game:
     for agent in self.gameState.playerAgents:
       agent.collectInitialResources(self.gameState.board)
 
-
     # --- END RESOURCE/SETTLEMENT INITIALIZATION --- #
-
-
-    
 
     # Turn tracking
     turnNumber = 1
@@ -341,8 +334,6 @@ class Game:
       print "Rolled a " + str(diceRoll)
       self.gameState.updatePlayerResourcesForDiceRoll(diceRoll, verbose = DEBUG)
 
-      
-
       # The current player performs 1 action
       value, action = currentAgent.getAction(self.gameState)
       if DEBUG: 
@@ -368,7 +359,9 @@ class Game:
       turnNumber += 1
 
     print self.gameState.playerAgents[self.gameState.gameOver()].name + " won the game"
+    return self.gameState.gameOver()
 
 
 game = Game()
+# for i in range(100): # for multiple iterations
 game.run()

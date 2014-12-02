@@ -231,6 +231,7 @@ class PlayerAgent:
     newCopy.depth = self.depth
     newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
     newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
+    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
     newCopy.resources = copy.deepcopy(self.resources)
     return newCopy
 
