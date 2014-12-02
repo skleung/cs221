@@ -349,8 +349,6 @@ class Game:
         print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
       else:
         print str(currentAgent.name) + " had no actions to take"
-      
-      print currentAgent
 
       # Track the game's move history
       self.moveHistory.append((currentAgent.name, action))
