@@ -127,7 +127,7 @@ class PlayerAgent(object):
     self.agentIndex = agentIndex
     self.color = color
     self.victoryPoints = 0
-    self.depth = 3
+    self.depth = 1
 
     # List of Edges
     self.roads = []
@@ -452,7 +452,8 @@ class PlayerAgentExpectiminimax(PlayerAgent):
       # Maximize/minimize depending on player
       if playerIndex is self.agentIndex:
         return max(vals)
-      return min(vals)     
+      return min(vals) 
+           
 
     # Call our recursive function
 
@@ -490,6 +491,182 @@ class PlayerAgentExpectiminimax(PlayerAgent):
     for currAction in possibleActions:
       successor = state.generateSuccessor(self.agentIndex, currAction)
       value = recurse(successor, self.depth, newPlayerIndex)
+      vals.append(value)
+      actions.append(currAction)
+
+    return (max(vals), actions[vals.index(max(vals))])
+
+  def deepCopy(self, board):
+    """
+    Method: deepCopy
+    ----------------------
+    Parameters:
+      board - the current state of the board (an instance of Board)
+    Returns: a deep copy of this instance of PlayerAgent, including full
+      copies of all instance Variables
+    ----------------------
+    """
+    newCopy = PlayerAgentExpectiminimax(self.name, self.agentIndex, self.color, evalFn=self.evaluationFunction)
+    newCopy.victoryPoints = self.victoryPoints
+    newCopy.depth = self.depth
+    newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
+    newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
+    newCopy.resources = copy.deepcopy(self.resources)
+    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
+    return newCopy
+
+
+class PlayerAgentAlphaBeta(PlayerAgent):
+  """
+  Class: PlayerAgentExpectiminimax
+  --------------------------------
+  A subclass of PlayerAgent that uses Expectiminimax search
+  to determine what action it should take.  This assumes
+  that opponents are following a min adversarial policy
+  (and that the dice follow a random policy).
+  --------------------------------
+  """
+
+  def __init__(self, name, agentIndex, color, evalFn = defaultEvalFn):
+    super(PlayerAgentAlphaBeta, self).__init__(name, agentIndex, color, evalFn=evalFn)
+
+  def getAction(self, state):
+    """
+    Method: getAction
+    ------------------------
+    Parameters:
+      state - a GameState object containing information about the current state of the game
+    Returns: an action tuple (ACTION, LOCATION) of the action this player should take
+
+    Returns the best possible action that the current player can take.  Implements
+    The expectiminimax algorithm for determining the best possible move based
+    on the adversarial min policies of the other Agents in the game and the random policy of
+    the dice roll.  Returns None if no action can be taken, or an action tuple
+    otherwise - e.g. (ACTIONS.SETTLE, *corresponding Vertex object where settlement is*).
+    ------------------------
+    """
+    # A function that recursively calculates and returns the utility for self
+    # of the given game state with the given depth on the given player's turn.
+    # Assumes other players are minimizing agents.
+    def V_opt(currState, currDepth, playerIndex, alpha, beta):
+      # TERMINAL CASES
+      # ---------------------
+      # If the player won
+      if currState.gameOver() == playerIndex:
+        return (float('inf'), None)
+      # or lost
+      elif currState.gameOver() > -1:
+        return (float('-inf'), None)
+      # If the max depth has been reached, call the eval function
+      elif currDepth is 0:
+        return self.evaluationFunction(currState, self.agentIndex)
+
+      possibleActions = currState.getLegalActions(playerIndex)
+
+      # If there are no possible actions (must pass)
+      if len(possibleActions) is 0:
+        return (self.evaluationFunction(currState, self.agentIndex), None)
+
+      # RECURSIVE CASE
+      # ----------------------
+
+      # Get dice roll probabilities to calculate expected utility
+      rollProbabilities = currState.diceAgent.getRollDistribution()
+
+      # New depth (depth - 1 for last player, otherwise depth)
+      # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
+      newDepth = currDepth - 1 if playerIndex is not self.agentIndex else currDepth
+      newPlayerIndex = (playerIndex + 1) % currState.getNumPlayerAgents()
+
+      # List of all values
+      vals = []
+
+      # Maximize values
+      if playerIndex is self.agentIndex: 
+        best = (alpha, possibleActions[0])
+        for currAction in possibleActions:
+          currVal = 0
+
+          # For each action, the utility is the sum of the weighted
+          # utilities for all possible dice rolls (we need to add all weighted
+          # utilities together to get the expected utility)
+          for probabilityTuple in rollProbabilities:
+            roll, probability = probabilityTuple
+            successor = currState.generateSuccessor(playerIndex, currAction)
+            successor.updatePlayerResourcesForDiceRoll(roll)
+            value, action = V_opt(successor, newDepth, newPlayerIndex)
+
+            currVal += probability * value
+
+          if (currVal > alpha):
+            alpha = currVal
+            best = (alpha, currAction)
+          if beta <= alpha:
+            break
+        return best
+
+      # minimizing values
+      else:
+        best = (beta, possibleActions[0])
+        for currAction in possibleActions:
+          currVal = 0
+
+          # For each action, the utility is the sum of the weighted
+          # utilities for all possible dice rolls (we need to add all weighted
+          # utilities together to get the expected utility)
+          for probabilityTuple in rollProbabilities:
+            roll, probability = probabilityTuple
+            successor = currState.generateSuccessor(playerIndex, currAction)
+            successor.updatePlayerResourcesForDiceRoll(roll)
+            value, action = V_opt(successor, newDepth, newPlayerIndex)
+
+            currVal += probability * value
+
+          if (currVal < beta):
+            beta = currVal
+            best = (beta, currAction)
+          if beta <= alpha:
+            break
+        return best
+
+
+
+    # Call our recursive function
+
+    # TERMINAL CASES
+    # ---------------------
+
+    # If the player won
+    if state.gameOver() is self.agentIndex:
+      return (float('inf'), None)
+
+    # or lost
+    elif state.gameOver() > -1:
+      return (float('-inf'), None)
+
+    # If the max depth has been reached, call the eval function
+    elif self.depth is 0:
+      return (self.evaluationFunction(state, self.agentIndex), None)
+
+    possibleActions = state.getLegalActions(self.agentIndex)
+
+    # If there are no possible actions (must pass)
+    if len(possibleActions) is 0:
+      return (self.evaluationFunction(state, self.agentIndex), None)
+
+    # RECURSIVE CASE
+    # ----------------------
+
+    # Parallel lists of values and their corresponding actions
+    vals = []
+    actions = []
+
+    newPlayerIndex = (self.agentIndex + 1) % state.getNumPlayerAgents()
+
+    # Try all possible actions
+    for currAction in possibleActions:
+      successor = state.generateSuccessor(self.agentIndex, currAction)
+      value = V_opt(successor, self.depth, newPlayerIndex, float("-inf"), float("inf"))
       vals.append(value)
       actions.append(currAction)
 
@@ -631,6 +808,7 @@ class PlayerAgentExpectimax(PlayerAgent):
 
       # New depth (depth - 1 for last player, otherwise depth)
       # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
+      print "CUR DEPTH" + str(currDepth)
       newDepth = currDepth - 1 if playerIndex is not self.agentIndex else currDepth
       newPlayerIndex = (playerIndex + 1) % state.getNumPlayerAgents()
 

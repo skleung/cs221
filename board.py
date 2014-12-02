@@ -433,6 +433,8 @@ class Board:
     copy.allRoads = []
     for road in self.allRoads:
       copy.allRoads.append(road.deepCopy())
+    for city in self.allCities:
+      copy.allCities.append(city.deepCopy())
     return copy
 
   def applyAction(self, playerIndex, action):
