@@ -184,7 +184,7 @@ class Game:
   ------------------------
   """
 
-  def __init__(self, gameState = GameState()):
+  def __init__(self):
     """
     Method: __init__
     ----------------------
@@ -199,8 +199,8 @@ class Game:
     ----------------------
     """
     self.moveHistory = []
-    self.gameState = gameState
-    self.draw = Draw(self.gameState.board.tiles)
+    self.gameState = GameState()
+    # self.draw = Draw(self.gameState.board.tiles)
 
   def drawGame(self):
     """
@@ -248,7 +248,7 @@ class Game:
     print "3: ExpectiMiniMax Agent - with resource Heuristic"
 
     playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1'):").strip()
-    playerAgentStr = '0 1' if playerAgentStr is "" else playerAgentStr
+    playerAgentStr = '1 0' if playerAgentStr is "" else playerAgentStr
 
     playerAgents = [int(num) for num in playerAgentStr.split(" ")]    
 
@@ -273,7 +273,7 @@ class Game:
     # Welcome message
     print "WELCOME TO SETTLERS OF CATAN!"
     print "-----------------------------"
-    DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
+    # DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
     self.initializePlayers()
 
     # --- START RESOURCE/SETTLEMENT INITIALIZATION --- #
@@ -321,7 +321,7 @@ class Game:
     while (self.gameState.gameOver() < 0):
 
       # Draw the gameboard
-      self.drawGame()
+      # self.drawGame()
 
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
@@ -334,7 +334,7 @@ class Game:
         for a in self.gameState.playerAgents:
           print a
 
-      raw_input("Press ENTER to proceed:")
+      # raw_input("Press ENTER to proceed:")
       
       # Dice roll + resource distribution
       diceRoll = self.gameState.diceAgent.rollDice()
@@ -367,6 +367,19 @@ class Game:
     return self.gameState.gameOver()
 
 
-game = Game()
-# for i in range(100): # for multiple iterations
-game.run()
+numZeroWins = 0
+numOneWins = 0
+TOTAL_ITERATIONS = 4
+for i in range(TOTAL_ITERATIONS): # for multiple iterations
+  game = Game()
+  if game.run() == 0:
+    numZeroWins+=1
+  else:
+    numOneWins +=1
+print "PlayerAgent 0 (expectiminimax with default heuristic) won "+str(numZeroWins)+ "games"
+print "PlayerAgent 1 (random agent) won "+str(numOneWins)+ "games"
+print "============="
+print "Expectiminimax Agent: "+str(float(numZeroWins)/TOTAL_ITERATIONS)
+print "Random Agent: "+str(float(numOneWins)/TOTAL_ITERATIONS)
+
+

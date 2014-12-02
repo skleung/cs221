@@ -127,7 +127,7 @@ class PlayerAgent(object):
     self.agentIndex = agentIndex
     self.color = color
     self.victoryPoints = 0
-    self.depth = 3
+    self.depth = 1
 
     # List of Edges
     self.roads = []
