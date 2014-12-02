@@ -67,7 +67,8 @@ class GameState:
         currEdges = self.board.getEdgesOfVertex(settlement)
         for currEdge in currEdges:
           if not currEdge.isOccupied():
-            legalActions.append((ACTIONS.ROAD, currEdge))
+            if (ACTIONS.ROAD, currEdge) not in legalActions:
+              legalActions.append((ACTIONS.ROAD, currEdge))
 
       # Look at all unoccupied edges coming from the player's existing roads
       for road in agent.roads:
@@ -77,7 +78,8 @@ class GameState:
           currEdges = self.board.getEdgesOfVertex(vertex)
           for currEdge in currEdges:
             if not currEdge.isOccupied(): 
-              legalActions.append((ACTIONS.ROAD, currEdge)) 
+              if (ACTIONS.ROAD, currEdge) not in legalActions:
+                legalActions.append((ACTIONS.ROAD, currEdge)) 
 
     # If they can settle...
     if agent.canSettle():
@@ -87,14 +89,16 @@ class GameState:
         possibleSettlements = self.board.getVertexEnds(road)
         for possibleSettlement in possibleSettlements:
           if possibleSettlement.canSettle:
-            legalActions.append((ACTIONS.SETTLE, possibleSettlement))
+            if (ACTIONS.SETTLE, possibleSettlement) not in legalActions:
+              legalActions.append((ACTIONS.SETTLE, possibleSettlement))
 
     # If they can build a city...
     if agent.canBuildCity():
 
       # All current settlements are valid city locations
       for settlement in agent.settlements:
-        legalActions.append((ACTIONS.CITY, settlement))
+        if (ACTIONS.CITY, settlement) not in legalActions:
+          legalActions.append((ACTIONS.CITY, settlement))
             
     return legalActions
 
