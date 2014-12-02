@@ -141,7 +141,9 @@ class Vertex:
     --------------------------
     """
     if self.isSettlement:
-      raise Exception("Can't settle here - already settled by player " + str(self.player) + "!")
+      raise Exception("Can't settle here - already settled by player " + str(self.player) + "! At " + str(self))
+    elif self.isCity:
+      raise Exception("Can't settle here - already a city owned by player " + str(self.player) + "! At " + str(self))
 
     self.isSettlement = True
     self.player = playerIndex
@@ -261,7 +263,7 @@ class Edge:
     --------------------------
     """
     if self.player != None:
-      raise Exception("Player " + str(self.player) + " already has a road here!")
+      raise Exception("Player " + str(self.player) + " already has a road here! At " + str(self))
     self.player = playerIndex
 
   def __repr__(self):
