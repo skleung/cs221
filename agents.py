@@ -438,9 +438,9 @@ class PlayerAgentExpectiminimax(PlayerAgent):
         # utilities together to get the expected utility)
         for probabilityTuple in rollProbabilities:
           roll, probability = probabilityTuple
-          state = GameState(state)
-          state.updatePlayerResourcesForDiceRoll(roll)
-          value = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
+          updatedState = GameState(state)
+          updatedState.updatePlayerResourcesForDiceRoll(roll)
+          value = recurse(updatedState.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
 
           currVal += probability * value
 
