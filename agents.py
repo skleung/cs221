@@ -127,7 +127,7 @@ class PlayerAgent(object):
     self.agentIndex = agentIndex
     self.color = color
     self.victoryPoints = 0
-    self.depth = 3
+    self.depth = 2
 
     # List of Edges
     self.roads = []
@@ -567,7 +567,7 @@ class PlayerAgentAlphaBeta(PlayerAgent):
 
       # If there are no possible actions (must pass)
       if len(possibleActions) is 0:
-        return self.evaluationFunction(currState, self.agentIndex)
+        return (self.evaluationFunction(currState, self.agentIndex), None)
 
       # RECURSIVE CASE
       # ----------------------
@@ -596,7 +596,7 @@ class PlayerAgentAlphaBeta(PlayerAgent):
             roll, probability = probabilityTuple
             successor = currState.generateSuccessor(playerIndex, currAction)
             successor.updatePlayerResourcesForDiceRoll(roll)
-            value = recurse(successor, newDepth, newPlayerIndex, alpha, beta)
+            value, action = recurse(successor, newDepth, newPlayerIndex, alpha, beta)
 
             currVal += probability * value
 
@@ -618,7 +618,7 @@ class PlayerAgentAlphaBeta(PlayerAgent):
             roll, probability = probabilityTuple
             successor = currState.generateSuccessor(playerIndex, currAction)
             successor.updatePlayerResourcesForDiceRoll(roll)
-            value = recurse(successor, newDepth, newPlayerIndex, alpha, beta)
+            value, action = recurse(successor, newDepth, newPlayerIndex, alpha, beta)
 
             currVal += probability * value
 
