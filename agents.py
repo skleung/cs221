@@ -20,7 +20,7 @@ def builderEvalFn(currentGameState, currentPlayerIndex):
 # 3 utility points per settlement, 1 per road
 def defaultEvalFn(currentGameState, currentPlayerIndex):
   currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
-  return 3 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+  return 10 * len(currentPlayer.settlements) + len(currentPlayer.roads)
 
 # EVAL FUNCTION: RESOURCE AGENT
 # --------------------------
@@ -127,7 +127,7 @@ class PlayerAgent(object):
     self.agentIndex = agentIndex
     self.color = color
     self.victoryPoints = 0
-    self.depth = 3
+    self.depth = 2
 
     # List of Edges
     self.roads = []
