@@ -419,7 +419,7 @@ class PlayerAgentExpectiminimax(PlayerAgent):
       # ----------------------
 
       # Get dice roll probabilities to calculate expected utility
-      rollProbabilities = agent.getRollDistribution()
+      rollProbabilities = state.diceAgent.getRollDistribution()
 
       # New depth (depth - 1 for last player, otherwise depth)
       # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
@@ -623,7 +623,7 @@ class PlayerAgentExpectimax(PlayerAgent):
       # ----------------------
 
       # Get dice roll probabilities to calculate expected utility
-      rollProbabilities = agent.getRollDistribution()
+      rollProbabilities = state.diceAgent.getRollDistribution()
 
       # New depth (depth - 1 for last player, otherwise depth)
       # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
