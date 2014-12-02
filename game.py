@@ -125,7 +125,7 @@ class GameState:
     # Create a copy of the current state, and perform the given action
     # for the given player
     copy = self.deepCopy()
-    copy.playerAgents[playerIndex].applyAction(action)
+    copy.playerAgents[playerIndex].applyAction(action, copy.board)
     copy.board.applyAction(playerIndex, action)
     return copy
 
@@ -341,7 +341,7 @@ class Game:
         print "Best Action: " + str(action)
         print "Best Value: " + str(value)
       
-      currentAgent.applyAction(action)
+      currentAgent.applyAction(action, self.gameState.board)
       self.gameState.board.applyAction(currentAgent.agentIndex, action)
 
       # Print out the updated game state

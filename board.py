@@ -323,7 +323,8 @@ Which is necessary to know when creating layouts
 class Board:
   # Layout is just a double list of Tiles, some will be None
   def __init__(self, layout=None):
-    if layout == None: return
+    if layout == None: raise Exception("Must pass layout to Board.")
+    self.layout = layout
     
     self.numRows = len(layout)
     self.numCols = len(layout[0])
@@ -404,7 +405,7 @@ class Board:
     print self.vertices
 
   def deepCopy(self):
-    copy = Board()
+    copy = Board(self.layout)
     copy.hexagons = []
     for row in self.hexagons:
       copyHexRow = []

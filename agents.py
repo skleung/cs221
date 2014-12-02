@@ -240,7 +240,7 @@ class PlayerAgent(object):
     newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
     return newCopy
 
-  def applyAction(self, action):
+  def applyAction(self, action, board):
     """
     Method: applyAction
     -----------------------
@@ -263,7 +263,9 @@ class PlayerAgent(object):
       
       # Add this settlement to our settlements list and update victory
       # points and resources
-      self.settlements.append(action[1])
+      actionVertex = action[1]
+      vertex = board.getVertex(actionVertex.X, actionVertex.Y)
+      self.settlements.append(vertex)
       self.resources.subtract(SETTLEMENT_COST)
       self.victoryPoints += SETTLEMENT_VICTORY_POINTS
 
@@ -273,7 +275,9 @@ class PlayerAgent(object):
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a road!")
 
       # Add this road to our roads list and update resources
-      self.roads.append(action[1])
+      actionEdge = action[1]
+      road = board.getEdge(actionEdge.X, actionEdge.Y)
+      self.roads.append(road)
       self.resources.subtract(ROAD_COST)
 
     # Building a city
@@ -283,9 +287,11 @@ class PlayerAgent(object):
       
       # Add this city to our list of cities and remove this city
       # from our list of settlements (since it was formerly a settlement)
-      self.cities.append(action[1])
+      actionVertex = action[1]
+      vertex = board.getVertex(actionVertex.X, actionVertex.Y)
+      self.cities.append(vertex)
       for settlement in self.settlements:
-        if settlement.X == action[1].X and settlement.Y == action[1].Y:
+        if settlement.X == vertex.X and settlement.Y == vertex.Y:
           self.settlements.remove(settlement)
           break
 
