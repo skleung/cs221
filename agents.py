@@ -240,7 +240,7 @@ class PlayerAgent(object):
     newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
     return newCopy
 
-  def applyAction(self, action):
+  def applyAction(self, action, board):
     """
     Method: applyAction
     -----------------------
@@ -263,7 +263,9 @@ class PlayerAgent(object):
       
       # Add this settlement to our settlements list and update victory
       # points and resources
-      self.settlements.append(action[1])
+      actionVertex = action[1]
+      vertex = board.getVertex(actionVertex.X, actionVertex.Y)
+      self.settlements.append(vertex)
       self.resources.subtract(SETTLEMENT_COST)
       self.victoryPoints += SETTLEMENT_VICTORY_POINTS
 
@@ -273,7 +275,9 @@ class PlayerAgent(object):
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a road!")
 
       # Add this road to our roads list and update resources
-      self.roads.append(action[1])
+      actionEdge = action[1]
+      road = board.getEdge(actionEdge.X, actionEdge.Y)
+      self.roads.append(road)
       self.resources.subtract(ROAD_COST)
 
     # Building a city
@@ -283,9 +287,11 @@ class PlayerAgent(object):
       
       # Add this city to our list of cities and remove this city
       # from our list of settlements (since it was formerly a settlement)
-      self.cities.append(action[1])
+      actionVertex = action[1]
+      vertex = board.getVertex(actionVertex.X, actionVertex.Y)
+      self.cities.append(vertex)
       for settlement in self.settlements:
-        if settlement.X == action[1].X and settlement.Y == action[1].Y:
+        if settlement.X == vertex.X and settlement.Y == vertex.Y:
           self.settlements.remove(settlement)
           break
 
@@ -393,38 +399,35 @@ class PlayerAgentExpectiminimax(PlayerAgent):
     # A function that recursively calculates and returns the utility for self
     # of the given game state with the given depth on the given player's turn.
     # Assumes other players are minimizing agents.
-    def recurse(state, currDepth, playerIndex):
+    def recurse(currState, currDepth, playerIndex):
       # TERMINAL CASES
       # ---------------------
-      
       # If the player won
-      if state.gameOver() == playerIndex:
+      if currState.gameOver() == playerIndex:
         return float('inf')
-
       # or lost
-      elif state.gameOver() > -1:
+      elif currState.gameOver() > -1:
         return float('-inf')
-
       # If the max depth has been reached, call the eval function
       elif currDepth is 0:
-        return self.evaluationFunction(state, self.agentIndex)
+        return self.evaluationFunction(currState, self.agentIndex)
 
-      possibleActions = state.getLegalActions(playerIndex)
+      possibleActions = currState.getLegalActions(playerIndex)
 
       # If there are no possible actions (must pass)
       if len(possibleActions) is 0:
-        return self.evaluationFunction(state, self.agentIndex)
+        return self.evaluationFunction(currState, self.agentIndex)
 
       # RECURSIVE CASE
       # ----------------------
 
       # Get dice roll probabilities to calculate expected utility
-      rollProbabilities = state.diceAgent.getRollDistribution()
+      rollProbabilities = currState.diceAgent.getRollDistribution()
 
       # New depth (depth - 1 for last player, otherwise depth)
       # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
       newDepth = currDepth - 1 if playerIndex is not self.agentIndex else currDepth
-      newPlayerIndex = (playerIndex + 1) % state.getNumPlayerAgents()
+      newPlayerIndex = (playerIndex + 1) % currState.getNumPlayerAgents()
 
       # List of all values
       vals = []
@@ -438,9 +441,9 @@ class PlayerAgentExpectiminimax(PlayerAgent):
         # utilities together to get the expected utility)
         for probabilityTuple in rollProbabilities:
           roll, probability = probabilityTuple
-          updatedState = GameState(state)
-          updatedState.updatePlayerResourcesForDiceRoll(roll)
-          value = recurse(updatedState.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
+          successor = currState.generateSuccessor(playerIndex, currAction)
+          successor.updatePlayerResourcesForDiceRoll(roll)
+          value = recurse(successor, newDepth, newPlayerIndex)
 
           currVal += probability * value
 
@@ -485,7 +488,8 @@ class PlayerAgentExpectiminimax(PlayerAgent):
 
     # Try all possible actions
     for currAction in possibleActions:
-      value = recurse(state.generateSuccessor(self.agentIndex, currAction), self.depth, newPlayerIndex)
+      successor = state.generateSuccessor(self.agentIndex, currAction)
+      value = recurse(successor, self.depth, newPlayerIndex)
       vals.append(value)
       actions.append(currAction)
 

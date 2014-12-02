@@ -14,7 +14,7 @@ class GameState:
   -------------------------------
   """
 
-  def __init__(self, prevState = None, layout = BeginnerLayout):
+  def __init__(self, layout = BeginnerLayout):
     """
     Method: __init__
     -----------------------------
@@ -32,16 +32,18 @@ class GameState:
     GameState object from scratch.
     ------------------------------
     """
-    if prevState is not None:
-      self.board = prevState.board.deepCopy()
-      self.playerAgents = [playerAgent.deepCopy(self.board) for playerAgent in prevState.playerAgents]
-
-    else:
-      self.board = Board(layout)
-      self.playerAgents = [None] * NUM_PLAYERS
+    
+    self.board = Board(layout)
+    self.playerAgents = [None] * NUM_PLAYERS
 
     # Make the dice agent
     self.diceAgent = DiceAgent()
+
+  def deepCopy(self):
+    copy = GameState()
+    copy.board = self.board.deepCopy()
+    copy.playerAgents = [playerAgent.deepCopy(copy.board) for playerAgent in self.playerAgents]
+    return copy
 
   def getLegalActions(self, agentIndex):
     """
@@ -67,7 +69,8 @@ class GameState:
         currEdges = self.board.getEdgesOfVertex(settlement)
         for currEdge in currEdges:
           if not currEdge.isOccupied():
-            legalActions.append((ACTIONS.ROAD, currEdge))
+            if (ACTIONS.ROAD, currEdge) not in legalActions:
+              legalActions.append((ACTIONS.ROAD, currEdge))
 
       # Look at all unoccupied edges coming from the player's existing roads
       for road in agent.roads:
@@ -77,7 +80,8 @@ class GameState:
           currEdges = self.board.getEdgesOfVertex(vertex)
           for currEdge in currEdges:
             if not currEdge.isOccupied(): 
-              legalActions.append((ACTIONS.ROAD, currEdge)) 
+              if (ACTIONS.ROAD, currEdge) not in legalActions:
+                legalActions.append((ACTIONS.ROAD, currEdge)) 
 
     # If they can settle...
     if agent.canSettle():
@@ -87,14 +91,16 @@ class GameState:
         possibleSettlements = self.board.getVertexEnds(road)
         for possibleSettlement in possibleSettlements:
           if possibleSettlement.canSettle:
-            legalActions.append((ACTIONS.SETTLE, possibleSettlement))
+            if (ACTIONS.SETTLE, possibleSettlement) not in legalActions:
+              legalActions.append((ACTIONS.SETTLE, possibleSettlement))
 
     # If they can build a city...
     if agent.canBuildCity():
 
       # All current settlements are valid city locations
       for settlement in agent.settlements:
-        legalActions.append((ACTIONS.CITY, settlement))
+        if (ACTIONS.CITY, settlement) not in legalActions:
+          legalActions.append((ACTIONS.CITY, settlement))
             
     return legalActions
 
@@ -118,10 +124,10 @@ class GameState:
 
     # Create a copy of the current state, and perform the given action
     # for the given player
-    state = GameState(self)
-    state.playerAgents[playerIndex].applyAction(action)
-    state.board.applyAction(playerIndex, action)
-    return state
+    copy = self.deepCopy()
+    copy.playerAgents[playerIndex].applyAction(action, copy.board)
+    copy.board.applyAction(playerIndex, action)
+    return copy
 
   def getNumPlayerAgents(self):
     """
@@ -335,7 +341,7 @@ class Game:
         print "Best Action: " + str(action)
         print "Best Value: " + str(value)
       
-      currentAgent.applyAction(action)
+      currentAgent.applyAction(action, self.gameState.board)
       self.gameState.board.applyAction(currentAgent.agentIndex, action)
 
       # Print out the updated game state

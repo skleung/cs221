@@ -141,7 +141,9 @@ class Vertex:
     --------------------------
     """
     if self.isSettlement:
-      raise Exception("Can't settle here - already settled by player " + str(self.player) + "!")
+      raise Exception("Can't settle here - already settled by player " + str(self.player) + "! At " + str(self))
+    elif self.isCity:
+      raise Exception("Can't settle here - already a city owned by player " + str(self.player) + "! At " + str(self))
 
     self.isSettlement = True
     self.player = playerIndex
@@ -261,7 +263,7 @@ class Edge:
     --------------------------
     """
     if self.player != None:
-      raise Exception("Player " + str(self.player) + " already has a road here!")
+      raise Exception("Player " + str(self.player) + " already has a road here! At " + str(self))
     self.player = playerIndex
 
   def __repr__(self):
@@ -321,7 +323,8 @@ Which is necessary to know when creating layouts
 class Board:
   # Layout is just a double list of Tiles, some will be None
   def __init__(self, layout=None):
-    if layout == None: return
+    if layout == None: raise Exception("Must pass layout to Board.")
+    self.layout = layout
     
     self.numRows = len(layout)
     self.numCols = len(layout[0])
@@ -396,8 +399,13 @@ class Board:
             s += " /-\\ "
         print s
 
+  def printData(self):
+    print self.hexagons
+    print self.edges
+    print self.vertices
+
   def deepCopy(self):
-    copy = Board()
+    copy = Board(self.layout)
     copy.hexagons = []
     for row in self.hexagons:
       copyHexRow = []
@@ -432,7 +440,8 @@ class Board:
       return
       
     if action[0] == ACTIONS.SETTLE:
-      vertex = action[1]
+      actionVertex = action[1]
+      vertex = self.getVertex(actionVertex.X, actionVertex.Y)
       vertex.settle(playerIndex)
       # All vertices one away are now unsettleable
       for neighborVertex in self.getNeighborVertices(vertex):
@@ -440,12 +449,14 @@ class Board:
       self.allSettlements.append(vertex)
 
     if action[0] == ACTIONS.ROAD:
-      edge = action[1]
+      actionEdge = action[1]
+      edge = self.getEdge(actionEdge.X, actionEdge.Y)
       edge.build(playerIndex)
       self.allRoads.append(edge)
 
     if action[0] == ACTIONS.CITY:
-      vertex = action[1]
+      actionVertex = action[1]
+      vertex = self.getVertex(actionVertex.X, actionVertex.Y)
       vertex.upgrade(playerIndex)
       self.allCities.append(vertex)
       for settlement in self.allSettlements:
