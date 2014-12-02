@@ -1,7 +1,7 @@
 from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentRandom
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from collections import Counter
-from draw import *
+# from draw import *
 import time
 
 class GameState:
@@ -197,8 +197,9 @@ class Game:
     """
     self.moveHistory = []
     self.gameState = GameState()
-    self.draw = Draw(self.gameState.board.tiles)
+    # self.draw = Draw(self.gameState.board.tiles)
 
+'''
   def drawGame(self):
     """
     Method: drawGame
@@ -223,7 +224,7 @@ class Game:
     #     draw.drawWinner(self) #draw winning screen
     #     self.hideButtons()          #hide all buttons 
     #     self.f.place(x=20, y=565)   #except for New Game button
-
+'''
   def createPlayer(self, playerCode, index):
     color = getColorForPlayer(index)
 
@@ -307,7 +308,7 @@ class Game:
     while (self.gameState.gameOver() < 0):
 
       # Draw the gameboard
-      self.drawGame()
+      # self.drawGame()
       raw_input("ENTER")
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
