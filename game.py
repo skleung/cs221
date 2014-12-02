@@ -87,7 +87,7 @@ class GameState:
         possibleSettlements = self.board.getVertexEnds(road)
         for possibleSettlement in possibleSettlements:
           if possibleSettlement.canSettle:
-            legalActions.append((ACTIONS.SETTLE, settlement))
+            legalActions.append((ACTIONS.SETTLE, possibleSettlement))
 
     # If they can build a city...
     if agent.canBuildCity():
