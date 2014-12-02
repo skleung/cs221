@@ -2,7 +2,6 @@ from collections import Counter
 import copy
 from gameConstants import *
 from random import choice, randint
-import draw
 
 
 """
@@ -11,17 +10,17 @@ EVALUATION FUNCTIONS
 """
 # EVAL FUNCTION: THE BUILDER
 # --------------------------
-# 5 utility points per settlement, 1 per road
+# 5 utility points per settlement, 2 per road
 def builderEvalFn(currentGameState, currentPlayerIndex):
   currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
-  return 5 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+  return 5 * len(currentPlayer.settlements) + 2 * len(currentPlayer.roads)
 
 # EVAL FUNCTION: DEFAULT AGENT
 # --------------------------
 # 3 utility points per settlement, 1 per road
 def defaultEvalFn(currentGameState, currentPlayerIndex):
   currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
-  return 5 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+  return 3 * len(currentPlayer.settlements) + len(currentPlayer.roads)
 
 # EVAL FUNCTION: RESOURCE AGENT
 # --------------------------
@@ -47,9 +46,9 @@ class DiceAgent:
   ---------------------
   """
 
-  def __init__(self):
+  def __init__(self, numDiceSides = 6):
     self.agentType = AGENT.DICE_AGENT
-    self.NUM_DICE_SIDES = 6
+    self.NUM_DICE_SIDES = numDiceSides
 
   def rollDice(self):
     """
@@ -83,14 +82,20 @@ class DiceAgent:
     # Return the list of probability tuples
     return [(roll, rollCounter[roll] / float(totalRolls)) for roll in rollCounter]
 
-
-
-
   def deepCopy(self):
+    """
+    Method: deepCopy
+    -------------------------
+    Parameters: NA
+    Returns: a new DiceAgent object
+
+    Returns a copy of this agent (which is essentially just a new DiceAgent).
+    -------------------------
+    """
     return DiceAgent()
 
 
-class PlayerAgent:
+class PlayerAgent(object):
   """
   Class: PlayerAgent
   ---------------------
@@ -105,6 +110,7 @@ class PlayerAgent:
   evaluationFunction = the eval function to use in the minimax algorithm
   name = a string containing the name of the player
   agentIndex = the player index
+  color = the color of this player's game pieces on the board
   victoryPoints = the number of victory points the player has
   depth = the maximum depth to recurse in the minimax tree
   roads = a list of Edge objects representing the roads a player has
@@ -114,12 +120,12 @@ class PlayerAgent:
   ---------------------
   """
 
-  def __init__(self, name, agentIndex, evalFn = defaultEvalFn):
+  def __init__(self, name, agentIndex, color, evalFn = defaultEvalFn):
     self.agentType = AGENT.PLAYER_AGENT
     self.evaluationFunction = evalFn
     self.name = name
     self.agentIndex = agentIndex
-    self.color = draw.getColorForPlayer(agentIndex)
+    self.color = color
     self.victoryPoints = 0
     self.depth = 3
 
@@ -144,9 +150,7 @@ class PlayerAgent:
     Method: __repr__
     ---------------------
     Parameters: NA
-    Returns:the player's name
-
-    A string representation of the given PlayerAgent.
+    Returns: a string representation of the current PlayerAgent.
     ---------------------
     """
     s = "---------- " + self.name + " : " + self.color + " ----------\n"
@@ -226,12 +230,13 @@ class PlayerAgent:
       copies of all instance Variables
     ----------------------
     """
-    newCopy = PlayerAgent(self.name, self.agentIndex)
+    newCopy = PlayerAgent(self.name, self.agentIndex, self.color, evalFn=self.evaluationFunction)
     newCopy.victoryPoints = self.victoryPoints
     newCopy.depth = self.depth
     newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
     newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
     newCopy.resources = copy.deepcopy(self.resources)
+    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
     return newCopy
 
   def applyAction(self, action):
@@ -243,7 +248,7 @@ class PlayerAgent:
     Returns: NA
 
     Applies the given action tuple to the current player.  Does this
-    by deducting resources appropriately and adding to the player's
+    by deducting resources appropriately and adding to/removing from the player's
     lists of roads, settlements, and cities.
     -----------------------
     """
@@ -252,28 +257,38 @@ class PlayerAgent:
 
     # Settling
     if action[0] is ACTIONS.SETTLE:
-      self.settlements.append(action[1])
       if not self.canSettle():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a settlement!")
+      
+      # Add this settlement to our settlements list and update victory
+      # points and resources
+      self.settlements.append(action[1])
       self.resources.subtract(SETTLEMENT_COST)
       self.victoryPoints += SETTLEMENT_VICTORY_POINTS
 
     # Building a road
     if action[0] is ACTIONS.ROAD:
-      self.roads.append(action[1])
       if not self.canBuildRoad():
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a road!")
+
+      # Add this road to our roads list and update resources
+      self.roads.append(action[1])
       self.resources.subtract(ROAD_COST)
 
     # Building a city
     if action[0] is ACTIONS.CITY:
+      if not self.canBuildCity():
+        raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a city!")
+      
+      # Add this city to our list of cities and remove this city
+      # from our list of settlements (since it was formerly a settlement)
       self.cities.append(action[1])
       for settlement in self.settlements:
         if settlement.X == action[1].X and settlement.Y == action[1].Y:
           self.settlements.remove(settlement)
           break
-      if not self.canBuildCity():
-        raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a city!")
+
+      # and update victory points and resources
       self.resources.subtract(CITY_COST)
       self.victoryPoints += CITY_VICTORY_POINTS
 
@@ -356,8 +371,8 @@ class PlayerAgentExpectiminimax(PlayerAgent):
   --------------------------------
   """
 
-  def __init__(self, name, agentIndex, evalFn = defaultEvalFn):
-    PlayerAgent.__init__(self, name, agentIndex, evalFn)
+  def __init__(self, name, agentIndex, color, evalFn = defaultEvalFn):
+    super(PlayerAgentExpectiminimax, self).__init__(name, agentIndex, color, evalFn=evalFn)
 
   def getAction(self, state):
     """
@@ -475,6 +490,25 @@ class PlayerAgentExpectiminimax(PlayerAgent):
 
     return (max(vals), actions[vals.index(max(vals))])
 
+  def deepCopy(self, board):
+    """
+    Method: deepCopy
+    ----------------------
+    Parameters:
+      board - the current state of the board (an instance of Board)
+    Returns: a deep copy of this instance of PlayerAgent, including full
+      copies of all instance Variables
+    ----------------------
+    """
+    newCopy = PlayerAgentExpectiminimax(self.name, self.agentIndex, self.color, evalFn=self.evaluationFunction)
+    newCopy.victoryPoints = self.victoryPoints
+    newCopy.depth = self.depth
+    newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
+    newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
+    newCopy.resources = copy.deepcopy(self.resources)
+    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
+    return newCopy
+
 
 class PlayerAgentRandom(PlayerAgent):
   """
@@ -510,6 +544,25 @@ class PlayerAgentRandom(PlayerAgent):
     # Otherwise pick a random action
     return (0, choice(possibleActions))
 
+  def deepCopy(self, board):
+    """
+    Method: deepCopy
+    ----------------------
+    Parameters:
+      board - the current state of the board (an instance of Board)
+    Returns: a deep copy of this instance of PlayerAgent, including full
+      copies of all instance Variables
+    ----------------------
+    """
+    newCopy = PlayerAgentRandom(self.name, self.agentIndex, self.color, evalFn=self.evaluationFunction)
+    newCopy.victoryPoints = self.victoryPoints
+    newCopy.depth = self.depth
+    newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
+    newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
+    newCopy.resources = copy.deepcopy(self.resources)
+    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
+    return newCopy
+
 
 class PlayerAgentExpectimax(PlayerAgent):
   """
@@ -522,8 +575,8 @@ class PlayerAgentExpectimax(PlayerAgent):
   follow a uniformly random policy).
   -------------------------------
   """
-  def __init__(self, name, agentIndex, evalFn = defaultEvalFn):
-    PlayerAgent.__init__(self, name, agentIndex, evalFn)
+  def __init__(self, name, agentIndex, color, evalFn = defaultEvalFn):
+    super(PlayerAgentExpectimax, self).__init__(name, agentIndex, color, evalFn=evalFn)
 
   def getAction(self, state):
     """
@@ -640,4 +693,23 @@ class PlayerAgentExpectimax(PlayerAgent):
       actions.append(currAction)
 
     return (max(vals), actions[vals.index(max(vals))])
+
+  def deepCopy(self, board):
+    """
+    Method: deepCopy
+    ----------------------
+    Parameters:
+      board - the current state of the board (an instance of Board)
+    Returns: a deep copy of this instance of PlayerAgent, including full
+      copies of all instance Variables
+    ----------------------
+    """
+    newCopy = PlayerAgentExpectimax(self.name, self.agentIndex, self.color, evalFn=self.evaluationFunction)
+    newCopy.victoryPoints = self.victoryPoints
+    newCopy.depth = self.depth
+    newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
+    newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
+    newCopy.resources = copy.deepcopy(self.resources)
+    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
+    return newCopy
     

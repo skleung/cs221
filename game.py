@@ -219,6 +219,34 @@ class Game:
     #     self.hideButtons()          #hide all buttons 
     #     self.f.place(x=20, y=565)   #except for New Game button
 
+  def createPlayer(self, playerCode, index):
+    color = getColorForPlayer(index)
+
+    if playerCode == 0:
+      return PlayerAgentExpectiminimax("Player "+str(index), index, color)
+    elif playerCode == 1:
+      return PlayerAgentRandom("Player "+str(index), index, color)
+    elif playerCode == 2:
+      return PlayerAgentExpectiminimax("Player "+str(index), index, color, evalFn=builderEvalFn)
+    elif playerCode == 3:
+      return PlayerAgentExpectiminimax("Player "+str(index), index, color, evalFn=resourceEvalFn)
+
+  def initializePlayers(self):
+    print "Player Agent Specifications:"
+    print "-----------------------------"
+    print "0: ExpectiMiniMax Agent - with default heuristic"
+    print "1: Random Agent"
+    print "2: ExpectiMiniMax Agent - with builder Heuristic"
+    print "3: ExpectiMiniMax Agent - with resource Heuristic"
+
+    playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1'):").strip()
+    playerAgentStr = '0 1' if playerAgentStr is "" else playerAgentStr
+
+    playerAgents = [int(num) for num in playerAgentStr.split(" ")]    
+
+    for i in xrange(NUM_PLAYERS):
+      self.gameState.playerAgents[i] = self.createPlayer(playerAgents[i], i)
+
   def run(self):    
     """
     Method: run
@@ -234,46 +262,13 @@ class Game:
     VICTORY_POINTS_TO_WIN victory points.
     ----------------------
     """
-
-    # --- GAME START --- #
-
     # Welcome message
     print "WELCOME TO SETTLERS OF CATAN!"
     print "-----------------------------"
     DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
-
-    # --- PLAYER INITIALIZATION --- #
-    print "Player Agent Specifications:"
-    print "-----------------------------"
-    print "0: ExpectiMiniMax Agent - with default heuristic"
-    print "1: Random Agent"
-    print "2: ExpectiMiniMax Agent - with builder Heuristic"
-    print "3: ExpectiMiniMax Agent - with resource Heuristic"
-
-    playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1 1'):").strip()
-    if playerAgentStr == "":
-      playerAgentStr = '0 1 1'
-    playerAgents = [int(num) for num in playerAgentStr.split(" ")]
-    
-
-    # Helper method to create a player given an index
-    def createPlayer(playerCode, index):
-      if playerCode == 0:
-        return PlayerAgentExpectiminimax("Player "+str(index), index)
-      elif playerCode == 1:
-        return PlayerAgentRandom("Player "+str(index), index)
-      elif playerCode == 2:
-        return PlayerAgentExpectiminimax("Player "+str(index), index, builderEvalFn)
-      elif playerCode == 3:
-        return PlayerAgentExpectiminimax("Player "+str(index), index, resourceEvalFn)
-
-    for i in range(NUM_PLAYERS):
-      self.gameState.playerAgents[i] = createPlayer(playerAgents[i], i)
-
-    # --- END PLAYER INITIALIZATION --- #
+    self.initializePlayers()
 
     # --- START RESOURCE/SETTLEMENT INITIALIZATION --- #
-
 
     # Each player starts with 2 settlements
     # Use beginner board suggested settlements
@@ -307,11 +302,7 @@ class Game:
     for agent in self.gameState.playerAgents:
       agent.collectInitialResources(self.gameState.board)
 
-
     # --- END RESOURCE/SETTLEMENT INITIALIZATION --- #
-
-
-    
 
     # Turn tracking
     turnNumber = 1
