@@ -255,6 +255,8 @@ class Game:
       return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=betterEvalFn)
     elif playerCode == 11:
       return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH,evalFn=betterEvalFn)
+    elif playerCode == 12:
+      return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=betterEvalFn)
 
   def initializePlayers(self):
     if (self.playerAgentNums == None):
@@ -448,7 +450,8 @@ def getStringForPlayer(playerCode):
     8: "AlphaBeta Agent - with builder Heuristic",
     9: "AlphaBeta Agent - with resource Heuristic",
     10: "AlphaBeta Agent - with better Heuristic",
-    11: "Expectimax Agent - with better Heuristic"
+    11: "Expectimax Agent - with better Heuristic",
+    12: "Expectiminimax Agent - with better Heuristic"
   }.get(playerCode, "Not a player."))
 
 def getPlayerAgentSpecifications():
@@ -467,6 +470,7 @@ def getPlayerAgentSpecifications():
     print "9: AlphaBeta Agent - with resource Heuristic"
     print "10: AlphaBeta Agent - with better Heuristic"
     print "11: Expectimax Agent - with better Heuristic"
+    print "12: Expectiminimax Agent - with better Heuristic"
 
     firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip())
     secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip())
