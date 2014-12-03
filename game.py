@@ -383,39 +383,45 @@ def getPlayerAgentSpecifications():
 
 numZeroWins = 0
 numOneWins = 0
-TOTAL_ITERATIONS = int(raw_input("Enter number of iterations: "));
+NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
 DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
 playerAgentNums = getPlayerAgentSpecifications()
 
 numWins = {}
-diffVictoryPoints = {}
-turnAverages = {}
+totalVictoryPointDiff = {}
+totalTurns = {}
+debugStatistics = []
 for player in range(4):
   numWins[player] = -1
-  diffVictoryPoints[player] = 0
-  turnAverages[player] = 0
-for i in range(TOTAL_ITERATIONS): # for multiple iterations
+  totalVictoryPointDiff[player] = 0
+  totalTurns[player] = 0
+for i in range(NUM_ITERATIONS): # for multiple iterations
   game = Game(playerAgentNums = playerAgentNums)
-  winner, turns, diffPoints = game.run()
+  stats = game.run()
+  debugStatistics.append(stats)
+  winner, turns, diffPoints = stats
   for playerNum in game.playerAgentNums:
     if numWins[playerNum] < 0: numWins[playerNum] = 0
   winnerNum = game.playerAgentNums[winner]
   numWins[winnerNum]+=1
-  diffVictoryPoints[winnerNum] = ((float)(diffVictoryPoints[winnerNum] + diffPoints)/numWins[winnerNum])
-  turnAverages[winnerNum] = ((float)(turnAverages[winnerNum] + turns)/numWins[winnerNum])
+  totalVictoryPointDiff[winnerNum] += diffPoints
+  totalTurns[winnerNum] += turns
 
-print "\n============="
+print "\nGame statistics for " + str(NUM_ITERATIONS) + " iterations and depth " + str(DEPTH) + ": "
+print "============="
+# print debugStatistics
 for player, wins in numWins.iteritems():
   if wins >= 0: print "PlayerAgent " + str(playerAgentNums.index(player)) + " (" + getStringForPlayer(player) + ") won "+str(wins)+ " games."
   if wins > 0:
-    print "With an average of " + str(diffVictoryPoints[player]) + " victory points difference per game."
-    print "And an average of " + str(turnAverages[player]) + " turns to win game."
+    print "With an average of " + str(totalVictoryPointDiff[player]/float(wins)) + " victory points difference per game."
+    print "And an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
 print "============="
 expectiMiniMaxTotal = 0
 if numWins[0] > 0: expectiMiniMaxTotal+=numWins[0]
 if numWins[2] > 0: expectiMiniMaxTotal+=numWins[2]
 if numWins[3] > 0: expectiMiniMaxTotal+=numWins[3]
-print "Expectiminimax Agent win percentage: "+str(float(expectiMiniMaxTotal)/TOTAL_ITERATIONS)
-if numWins[1] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/TOTAL_ITERATIONS)
+print "Expectiminimax Agent win percentage: "+str(float(expectiMiniMaxTotal)/NUM_ITERATIONS)
+if numWins[1] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/NUM_ITERATIONS)
+print "\n"
 
 
