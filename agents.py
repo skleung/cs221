@@ -27,13 +27,13 @@ def betterEvalFn(currentGameState, currentPlayerIndex):
   board = currentGameState.board
   currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
   otherPlayer = currentGameState.playerAgents[1-currentPlayerIndex]
-  currentResourceTouches = getResourceTouches(currentPlayer.settlements)
-  otherResourceTouches = getResourceTouches(otherPlayer.settlements)
+  currentResourceTouches = getResourceTouches(currentPlayer.settlements, board)
+  otherResourceTouches = getResourceTouches(otherPlayer.settlements, board)
   return 3 * len(currentResourceTouches) + 2 * len(currentPlayer.cities)
 
-def getResourceTouches(settlements):
+def getResourceTouches(settlements, board):
   resourceTouches = []
-  for settlement in currentPlayer.settlements:
+  for settlement in settlements:
     hexes = board.getHexes(settlement)
     resourceTouches.extend(hexes)
   return resourceTouches
