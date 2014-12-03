@@ -169,7 +169,7 @@ class GameState:
     """
     for agent in self.playerAgents:
       gainedResources = agent.updateResources(diceRoll, self.board)
-      if VERBOSE:
+      if VERBOSE and DEBUG:
         print str(agent.name) + " received: " + str(gainedResources)
         print str(agent.name) + " now has: " + str(agent.resources)
 
