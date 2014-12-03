@@ -29,7 +29,8 @@ def betterEvalFn(currentGameState, currentPlayerIndex):
   otherPlayer = currentGameState.playerAgents[1-currentPlayerIndex]
   currentResourceTouches = getResourceTouches(currentPlayer.settlements, board)
   otherResourceTouches = getResourceTouches(otherPlayer.settlements, board)
-  return 3 * len(currentResourceTouches) + 2 * len(currentPlayer.cities)
+  return (3 * len(currentResourceTouches) + 2 * len(currentPlayer.cities)
+    - (2 * len(otherResourceTouches) + len(otherPlayer.cities)))
 
 def getResourceTouches(settlements, board):
   resourceTouches = []
@@ -427,10 +428,11 @@ class PlayerAgentExpectiminimax(PlayerAgent):
       elif currDepth is 0:
         return self.evaluationFunction(currState, self.agentIndex)
 
-      possibleActions = currState.getLegalActions(playerIndex)
+      # possibleActions = currState.getLegalActions(playerIndex)
+      possibleActionsQueue = currState.getLegalActionsQueue(playerIndex)
 
       # If there are no possible actions (must pass)
-      if len(possibleActions) is 0:
+      if possibleActionsQueue.qsize() is 0:
         return self.evaluationFunction(currState, self.agentIndex)
       # if len(possibleActions) > 6:
       #   return self.evaluationFunction(currState, self.agentIndex)
@@ -450,8 +452,11 @@ class PlayerAgentExpectiminimax(PlayerAgent):
       vals = []
 
       # Try all possible actions
-      for currAction in possibleActions:
+      # for currAction in possibleActions:
+      actionNum = 0
+      while actionNum < CUTOFF_ACTIONS and not possibleActionsQueue.empty(): # only try 10 actions
         currVal = 0
+        priority, currAction = possibleActionsQueue.get()
 
         # For each action, the utility is the sum of the weighted
         # utilities for all possible dice rolls (we need to add all weighted
@@ -461,10 +466,10 @@ class PlayerAgentExpectiminimax(PlayerAgent):
           successor = currState.generateSuccessor(playerIndex, currAction)
           successor.updatePlayerResourcesForDiceRoll(roll)
           value = recurse(successor, newDepth, newPlayerIndex)
-
           currVal += probability * value
 
         vals.append(currVal)
+        actionNum += 1
 
       # Maximize/minimize depending on player
       if playerIndex is self.agentIndex:
@@ -488,10 +493,10 @@ class PlayerAgentExpectiminimax(PlayerAgent):
     elif self.depth is 0:
       return (self.evaluationFunction(state, self.agentIndex), None)
 
-    possibleActions = state.getLegalActions(self.agentIndex)
+    possibleActionsQueue = state.getLegalActionsQueue(self.agentIndex)
 
     # If there are no possible actions (must pass)
-    if len(possibleActions) is 0:
+    if possibleActionsQueue.qsize() is 0:
       return (self.evaluationFunction(state, self.agentIndex), None)
 
     # RECURSIVE CASE
@@ -504,11 +509,14 @@ class PlayerAgentExpectiminimax(PlayerAgent):
     newPlayerIndex = (self.agentIndex + 1) % state.getNumPlayerAgents()
 
     # Try all possible actions
-    for currAction in possibleActions:
+    actionNum = 0
+    while actionNum < CUTOFF_ACTIONS and not possibleActionsQueue.empty(): # only try 10 actions
+      priority, currAction = possibleActionsQueue.get()
       successor = state.generateSuccessor(self.agentIndex, currAction)
       value = recurse(successor, self.depth, newPlayerIndex)
       vals.append(value)
       actions.append(currAction)
+      actionNum += 1
 
     return (max(vals), actions[vals.index(max(vals))])
 
@@ -702,7 +710,7 @@ class PlayerAgentRandom(PlayerAgent):
     if state.gameOver() > -1:
       return (0, None)
 
-    possibleActions = state.getLegalActions(self.agentIndex)
+    possibleActions = state.getLegalActionsList(self.agentIndex)
 
     # If there are no possible actions (must pass)
     if len(possibleActions) is 0:
