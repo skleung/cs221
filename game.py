@@ -2,9 +2,8 @@ from agents import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from gameConstants import *
 from collections import Counter
-from draw import *
+# from draw import *
 import time
-import Queue as queue
 
 class GameState:
   """
@@ -47,11 +46,8 @@ class GameState:
     copy.playerAgents = [playerAgent.deepCopy(copy.board) for playerAgent in self.playerAgents]
     return copy
 
-  def getLegalActionsList(self, agentIndex):
-    return self.getLegalActions(agentIndex)[0]
+  # def sortLegalActions(self, actions):
 
-  def getLegalActionsQueue(self, agentIndex):
-    return self.getLegalActions(agentIndex)[1]
 
   def getLegalActions(self, agentIndex):
     """
@@ -64,14 +60,7 @@ class GameState:
       representing all the valid actions that the given agent/player can take
     ------------------------------
     """
-    ROAD_PRIORITY = 10
-    SETTLEMENT_PRIORITY_RESOURCES = 2
-    SETTLEMENT_PRIORITY = 4
-    CITY_PRIORITY_RESOURCES = 1
-    CITY_PRIORITY = 3
-
-    legalActions = set( )
-    legalActionsQueue = queue.PriorityQueue()
+    legalActions = set()
     if self.gameOver() >= 0: return legalActions
     agent = self.playerAgents[agentIndex]
 
@@ -85,7 +74,6 @@ class GameState:
           if not currEdge.isOccupied():
             if (ACTIONS.ROAD, currEdge) not in legalActions:
               legalActions.add((ACTIONS.ROAD, currEdge))
-              legalActionsQueue.put((ROAD_PRIORITY, (ACTIONS.ROAD, currEdge)))
 
       # Look at all unoccupied edges coming from the player's existing roads
       for road in agent.roads:
@@ -96,8 +84,7 @@ class GameState:
           for currEdge in currEdges:
             if not currEdge.isOccupied(): 
               if (ACTIONS.ROAD, currEdge) not in legalActions:
-                legalActions.add((ACTIONS.ROAD, currEdge))
-                legalActionsQueue.put((ROAD_PRIORITY, (ACTIONS.ROAD, currEdge)))
+                legalActions.add((ACTIONS.ROAD, currEdge)) 
 
     # If they can settle...
     if agent.canSettle():
@@ -109,17 +96,14 @@ class GameState:
           if possibleSettlement.canSettle:
             if (ACTIONS.SETTLE, possibleSettlement) not in legalActions:
               legalActions.add((ACTIONS.SETTLE, possibleSettlement))
-              legalActionsQueue.put((SETTLEMENT_PRIORITY, (ACTIONS.SETTLE, possibleSettlement)))
 
     # If they can build a city...
     if agent.canBuildCity():
       # All current settlements are valid city locations
       for settlement in agent.settlements:
         legalActions.add((ACTIONS.CITY, settlement))
-        legalActionsQueue.put((CITY_PRIORITY, (ACTIONS.CITY, settlement)))
             
-    # return legalActions
-    return (legalActions, legalActionsQueue)
+    return legalActions
 
   def generateSuccessor(self, playerIndex, action):
     """
@@ -218,31 +202,31 @@ class Game:
     self.moveHistory = []
     self.gameState = GameState()
     self.playerAgentNums = playerAgentNums 
-    if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
+    # if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
 
-  def drawGame(self):
-    """
-    Method: drawGame
-    ----------------------
-    Parameters: NA
-    Returns: NA
-    Draws the graphics for displaying the board
-    tiles.
-    ----------------------
-    """
-    self.draw.drawBG()
-    self.draw.drawTitle()
-    self.draw.drawBoard()
-    # draw.drawDiceRoll()
-    # draw.drawPlayer(self.curPlayer)
-    #draw.drawKey(self)
-    self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
-    self.draw.drawSettlements(self.gameState.board.allSettlements)
-    self.draw.drawCities(self.gameState.board.allCities)
-    # else: #gameOver is true
-    #     draw.drawWinner(self) #draw winning screen
-    #     self.hideButtons()          #hide all buttons 
-    #     self.f.place(x=20, y=565)   #except for New Game button
+  # def drawGame(self):
+  #   """
+  #   Method: drawGame
+  #   ----------------------
+  #   Parameters: NA
+  #   Returns: NA
+  #   Draws the graphics for displaying the board
+  #   tiles.
+  #   ----------------------
+  #   """
+  #   self.draw.drawBG()
+  #   self.draw.drawTitle()
+  #   self.draw.drawBoard()
+  #   # draw.drawDiceRoll()
+  #   # draw.drawPlayer(self.curPlayer)
+  #   #draw.drawKey(self)
+  #   self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
+  #   self.draw.drawSettlements(self.gameState.board.allSettlements)
+  #   self.draw.drawCities(self.gameState.board.allCities)
+  #   # else: #gameOver is true
+  #   #     draw.drawWinner(self) #draw winning screen
+  #   #     self.hideButtons()          #hide all buttons 
+  #   #     self.f.place(x=20, y=565)   #except for New Game button
 
   def createPlayer(self, playerCode, index):
     color = getColorForPlayer(index)
@@ -256,7 +240,7 @@ class Game:
     elif playerCode == 3:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
     elif playerCode == 4:
-      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH)
+      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH, evalFn=betterEvalFn)
     elif playerCode == 5:
       return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
     elif playerCode == 6:
@@ -406,7 +390,7 @@ class Game:
     # Main game loop
     while (self.gameState.gameOver() < 0):
       # Draw the gameboard
-      if GRAPHICS: self.drawGame()
+      # if GRAPHICS: self.drawGame()
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
       if VERBOSE:
