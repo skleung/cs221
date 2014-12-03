@@ -399,7 +399,7 @@ class Game:
     self.initializePlayers()
     # self.initializeSettlementsAndResourcesPreset()
     # self.initializeSettlementsAndResourcesRandom()
-    self.initializeSettlementsAndResourcesForSettlements()
+    self.initializeSettlementsAndResourcesLumberBrick()
     # Turn tracking
     turnNumber = 1
     currentAgentIndex = 0
