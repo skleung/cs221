@@ -363,19 +363,25 @@ class Game:
 
 def getStringForPlayer(playerCode):
   return ({
-    0: "ExpectiMiniMax Agent - with default heuristic",
-    1: "Random Agent",
+    0: "Random Agent",
+    1: "ExpectiMiniMax Agent - with default heuristic",
     2: "ExpectiMiniMax Agent - with builder Heuristic",
     3: "ExpectiMiniMax Agent - with resource Heuristic"
+    4: "AlphaBeta Agent - with default Heuristic"
+    5: "AlphaBeta Agent - with builder Heuristic"
+    6: "AlphaBeta Agent - with resource Heuristic"
   }.get(playerCode, "Not a player."))
 
 def getPlayerAgentSpecifications():
   print "Player Agent Specifications:"
   print "-----------------------------"
-  print "0: ExpectiMiniMax Agent - with default heuristic"
-  print "1: Random Agent"
+  print "0: Random Agent"
+  print "1: ExpectiMiniMax Agent - with default heuristic"
   print "2: ExpectiMiniMax Agent - with builder Heuristic"
   print "3: ExpectiMiniMax Agent - with resource Heuristic"
+  print "4: AlphaBeta Agent - with default Heuristic"
+  print "5: AlphaBeta Agent - with builder Heuristic"
+  print "6: AlphaBeta Agent - with resource Heuristic"
   firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip())
   secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip())
   return [firstPlayerAgent, secondPlayerAgent]
@@ -417,11 +423,11 @@ for player, wins in numWins.iteritems():
     print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
 print "============="
 expectiMiniMaxTotal = 0
-if numWins[0] > 0: expectiMiniMaxTotal+=numWins[0]
+if numWins[1] > 0: expectiMiniMaxTotal+=numWins[1]
 if numWins[2] > 0: expectiMiniMaxTotal+=numWins[2]
 if numWins[3] > 0: expectiMiniMaxTotal+=numWins[3]
 print "Expectiminimax Agent win percentage: "+str(float(expectiMiniMaxTotal)/NUM_ITERATIONS)
-if numWins[1] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/NUM_ITERATIONS)
+if numWins[0] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/NUM_ITERATIONS)
 print "\n"
 
 
