@@ -2,7 +2,7 @@ from agents import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from gameConstants import *
 from collections import Counter
-# from draw import *
+from draw import *
 import time
 
 class GameState:

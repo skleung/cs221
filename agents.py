@@ -236,7 +236,6 @@ class PlayerAgent(object):
     newCopy.depth = self.depth
     newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
     newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
-    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
     newCopy.resources = copy.deepcopy(self.resources)
     newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
     return newCopy
@@ -498,26 +497,6 @@ class PlayerAgentExpectiminimax(PlayerAgent):
 
     return (max(vals), actions[vals.index(max(vals))])
 
-  def deepCopy(self, board):
-    """
-    Method: deepCopy
-    ----------------------
-    Parameters:
-      board - the current state of the board (an instance of Board)
-    Returns: a deep copy of this instance of PlayerAgent, including full
-      copies of all instance Variables
-    ----------------------
-    """
-    newCopy = PlayerAgentExpectiminimax(self.name, self.agentIndex, self.color, evalFn=self.evaluationFunction)
-    newCopy.victoryPoints = self.victoryPoints
-    newCopy.depth = self.depth
-    newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
-    newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
-    newCopy.resources = copy.deepcopy(self.resources)
-    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
-    return newCopy
-
-
 class PlayerAgentAlphaBeta(PlayerAgent):
   """
   Class: PlayerAgentAlphaBeta
@@ -717,25 +696,6 @@ class PlayerAgentRandom(PlayerAgent):
     # Otherwise pick a random action
     return (0, choice(list(possibleActions)))
 
-  def deepCopy(self, board):
-    """
-    Method: deepCopy
-    ----------------------
-    Parameters:
-      board - the current state of the board (an instance of Board)
-    Returns: a deep copy of this instance of PlayerAgent, including full
-      copies of all instance Variables
-    ----------------------
-    """
-    newCopy = PlayerAgentRandom(self.name, self.agentIndex, self.color, evalFn=self.evaluationFunction)
-    newCopy.victoryPoints = self.victoryPoints
-    newCopy.depth = self.depth
-    newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
-    newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
-    newCopy.resources = copy.deepcopy(self.resources)
-    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
-    return newCopy
-
 
 class PlayerAgentExpectimax(PlayerAgent):
   """
@@ -769,38 +729,38 @@ class PlayerAgentExpectimax(PlayerAgent):
     # A function that recursively calculates and returns the utility for self
     # of the given game state with the given depth on the given player's turn.
     # Assumes other players are random agents.
-    def recurse(state, currDepth, playerIndex):
+    def recurse(currState, currDepth, playerIndex):
       # TERMINAL CASES
       # ---------------------
       
       # If the player won
-      if state.gameOver() == playerIndex:
+      if currState.gameOver() == playerIndex:
         return float('inf')
 
       # or lost
-      elif state.gameOver() > -1:
+      elif currState.gameOver() > -1:
         return float('-inf')
 
       # If the max depth has been reached, call the eval function
       elif currDepth is 0:
-        return self.evaluationFunction(state, self.agentIndex)
+        return self.evaluationFunction(currState, self.agentIndex)
 
-      possibleActions = state.getLegalActions(playerIndex)
+      possibleActions = currState.getLegalActions(playerIndex)
 
       # If there are no possible actions (must pass)
       if len(possibleActions) is 0:
-        return self.evaluationFunction(state, self.agentIndex)
+        return self.evaluationFunction(currState, self.agentIndex)
 
       # RECURSIVE CASE
       # ----------------------
 
       # Get dice roll probabilities to calculate expected utility
-      rollProbabilities = state.diceAgent.getRollDistribution()
+      rollProbabilities = currState.diceAgent.getRollDistribution()
 
       # New depth (depth - 1 for last player, otherwise depth)
       # newPlayerIndex goes through 0, 1,...numAgents - 1 (looping around)
       newDepth = currDepth - 1 if playerIndex is not self.agentIndex else currDepth
-      newPlayerIndex = (playerIndex + 1) % state.getNumPlayerAgents()
+      newPlayerIndex = (playerIndex + 1) % currState.getNumPlayerAgents()
 
       # List of all values
       vals = []
@@ -814,9 +774,9 @@ class PlayerAgentExpectimax(PlayerAgent):
         # utilities together to get the expected utility)
         for probabilityTuple in rollProbabilities:
           roll, probability = probabilityTuple
-          state = GameState(state)
-          state.updatePlayerResourcesForDiceRoll(roll)
-          value = recurse(state.generateSuccessor(playerIndex, currAction), newDepth, newPlayerIndex)
+          successor = currState.generateSuccessor(playerIndex, currAction)
+          successor.updatePlayerResourcesForDiceRoll(roll)
+          value = recurse(successor, newDepth, newPlayerIndex)
 
           currVal += probability * value
 
@@ -866,23 +826,3 @@ class PlayerAgentExpectimax(PlayerAgent):
       actions.append(currAction)
 
     return (max(vals), actions[vals.index(max(vals))])
-
-  def deepCopy(self, board):
-    """
-    Method: deepCopy
-    ----------------------
-    Parameters:
-      board - the current state of the board (an instance of Board)
-    Returns: a deep copy of this instance of PlayerAgent, including full
-      copies of all instance Variables
-    ----------------------
-    """
-    newCopy = PlayerAgentExpectimax(self.name, self.agentIndex, self.color, evalFn=self.evaluationFunction)
-    newCopy.victoryPoints = self.victoryPoints
-    newCopy.depth = self.depth
-    newCopy.roads = [board.getEdge(road.X, road.Y) for road in self.roads]
-    newCopy.settlements = [board.getVertex(settlement.X, settlement.Y) for settlement in self.settlements]
-    newCopy.resources = copy.deepcopy(self.resources)
-    newCopy.cities = [board.getVertex(city.X, city.Y) for city in self.cities]
-    return newCopy
-    
