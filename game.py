@@ -446,7 +446,9 @@ for i in range(NUM_ITERATIONS): # for multiple iterations
   stats = game.run()
   debugStatistics.append(stats)
   winner, turns, diffPoints = stats
-  if winner < 0: continue
+  if winner < 0: 
+    print "**did not finish**"
+    continue
   numWins[winner]+=1
   totalVictoryPointDiff[winner] += diffPoints
   totalTurns[winner] += turns
