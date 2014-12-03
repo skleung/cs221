@@ -377,8 +377,8 @@ numWins = {}
 totalVictoryPointDiff = {}
 totalTurns = {}
 debugStatistics = []
-for player in range(4):
-  numWins[player] = -1
+for player in range(2):
+  numWins[player] = 0
   totalVictoryPointDiff[player] = 0
   totalTurns[player] = 0
 for i in range(NUM_ITERATIONS): # for multiple iterations
@@ -388,28 +388,22 @@ for i in range(NUM_ITERATIONS): # for multiple iterations
   debugStatistics.append(stats)
   winner, turns, diffPoints = stats
   if winner < 0: continue
-  for playerNum in game.playerAgentNums:
-    if numWins[playerNum] < 0: numWins[playerNum] = 0
-  winnerNum = game.playerAgentNums[winner]
-  numWins[winnerNum]+=1
-  totalVictoryPointDiff[winnerNum] += diffPoints
-  totalTurns[winnerNum] += turns
+  numWins[winner]+=1
+  totalVictoryPointDiff[winner] += diffPoints
+  totalTurns[winner] += turns
 
 print "\nGame statistics for " + str(NUM_ITERATIONS) + " iterations and depth " + str(DEPTH) + ": "
 print "============="
 # print debugStatistics
+# player is the player num, not the type of player
 for player, wins in numWins.iteritems():
-  if wins >= 0: print "PlayerAgent " + str(playerAgentNums.index(player)) + " (" + getStringForPlayer(player) + ") won "+str(wins)+ " games."
+  playerType = playerAgentNums[player]
+  if wins >= 0: print "PlayerAgent " + str(player) + " (" + getStringForPlayer(playerType) + ") won "+str(wins)+ " games."
   if wins > 0:
     print "With an average of " + str(totalVictoryPointDiff[player]/float(wins)) + " victory points difference per game."
     print "And an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
 print "============="
-expectiMiniMaxTotal = 0
-if numWins[0] > 0: expectiMiniMaxTotal+=numWins[0]
-if numWins[2] > 0: expectiMiniMaxTotal+=numWins[2]
-if numWins[3] > 0: expectiMiniMaxTotal+=numWins[3]
-print "Expectiminimax Agent win percentage: "+str(float(expectiMiniMaxTotal)/NUM_ITERATIONS)
-if numWins[1] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/NUM_ITERATIONS)
-print "\n"
+for player in numWins:
+  print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/NUM_ITERATIONS)
 
 
