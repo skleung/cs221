@@ -282,7 +282,7 @@ class Game:
     #add random settlement
     for i in range(len(self.gameState.playerAgents)):
       agent = self.gameState.playerAgents[i]
-      for s in range(1):
+      for s in range(2):
         settlement = self.gameState.board.getRandomVertexForSettlement()
         self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settlement))
         agent.settlements.append(settlement); 
