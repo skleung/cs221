@@ -204,29 +204,29 @@ class Game:
     self.playerAgentNums = playerAgentNums 
     if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
 
-  def drawGame(self):
-    """
-    Method: drawGame
-    ----------------------
-    Parameters: NA
-    Returns: NA
-    Draws the graphics for displaying the board
-    tiles.
-    ----------------------
-    """
-    self.draw.drawBG()
-    self.draw.drawTitle()
-    self.draw.drawBoard()
-    # draw.drawDiceRoll()
-    # draw.drawPlayer(self.curPlayer)
-    #draw.drawKey(self)
-    self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
-    self.draw.drawSettlements(self.gameState.board.allSettlements)
-    self.draw.drawCities(self.gameState.board.allCities)
-    # else: #gameOver is true
-    #     draw.drawWinner(self) #draw winning screen
-    #     self.hideButtons()          #hide all buttons 
-    #     self.f.place(x=20, y=565)   #except for New Game button
+  # def drawGame(self):
+  #   """
+  #   Method: drawGame
+  #   ----------------------
+  #   Parameters: NA
+  #   Returns: NA
+  #   Draws the graphics for displaying the board
+  #   tiles.
+  #   ----------------------
+  #   """
+  #   self.draw.drawBG()
+  #   self.draw.drawTitle()
+  #   self.draw.drawBoard()
+  #   # draw.drawDiceRoll()
+  #   # draw.drawPlayer(self.curPlayer)
+  #   #draw.drawKey(self)
+  #   self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
+  #   self.draw.drawSettlements(self.gameState.board.allSettlements)
+  #   self.draw.drawCities(self.gameState.board.allCities)
+  #   # else: #gameOver is true
+  #   #     draw.drawWinner(self) #draw winning screen
+  #   #     self.hideButtons()          #hide all buttons 
+  #   #     self.f.place(x=20, y=565)   #except for New Game button
 
   def createPlayer(self, playerCode, index):
     color = getColorForPlayer(index)

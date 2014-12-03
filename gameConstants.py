@@ -1,7 +1,7 @@
 from enum import Enum
 from collections import Counter
 
-GRAPHICS = False
+GRAPHICS = True
 # Moved here because not in draw
 def getColorForPlayer(player):
     return {
@@ -43,4 +43,4 @@ DEPTH = 3
 AGENT = Enum(["PLAYER_AGENT", "DICE_AGENT"])
 
 # Set debug mode on or off
-DEBUG = True
+DEBUG = False
