@@ -1,14 +1,6 @@
 from board import *
 from Tkinter import *
 
-def getColorForPlayer(player):
-    return {
-      0: "red",
-      1: "blue",
-      2: "black",
-      3: "brown"
-    }.get(player, None)
-
 class Draw:
 	# Takes a list of 19 tiles
   def __init__(self, tiles):

@@ -1,6 +1,16 @@
 from enum import Enum
 from collections import Counter
 
+# Moved here because not in draw
+def getColorForPlayer(player):
+    return {
+      0: "red",
+      1: "blue",
+      2: "black",
+      3: "brown"
+    }.get(player, None)
+
+
 VICTORY_POINTS_TO_WIN = 10
 SETTLEMENT_VICTORY_POINTS = 1
 CITY_VICTORY_POINTS = SETTLEMENT_VICTORY_POINTS + 1
