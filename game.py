@@ -226,7 +226,6 @@ class Game:
     ----------------------
     Parameters: NA
     Returns: NA
-
     Draws the graphics for displaying the board
     tiles.
     ----------------------
@@ -272,6 +271,8 @@ class Game:
       return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=betterEvalFn)
     elif playerCode == 11:
       return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH,evalFn=betterEvalFn)
+    elif playerCode == 12:
+      return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=betterEvalFn)
 
   def initializePlayers(self):
     if (self.playerAgentNums == None):
@@ -305,6 +306,21 @@ class Game:
         self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, road))
         agent.roads.append(road);
 
+    # Each player starts with resources for each of their settlements
+    for agent in self.gameState.playerAgents:
+      agent.collectInitialResources(self.gameState.board)
+    # --- START RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
+
+  def initializeSettlementsAndResourcesForSettlements(self):
+    # --- START RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
+    settlements = self.gameState.board.getRandomVerticesForAllResources()
+    for i, playerSettlements in enumerate(settlements):
+      agent = self.gameState.playerAgents[i]
+      for settlement in playerSettlements:
+        randomRoad = self.gameState.board.getRandomRoad(settlement)
+        self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, randomRoad))
+        agent.settlements.append(settlement)
+        agent.roads.append(randomRoad)
     # Each player starts with resources for each of their settlements
     for agent in self.gameState.playerAgents:
       agent.collectInitialResources(self.gameState.board)
@@ -383,7 +399,7 @@ class Game:
     self.initializePlayers()
     # self.initializeSettlementsAndResourcesPreset()
     # self.initializeSettlementsAndResourcesRandom()
-    self.initializeSettlementsAndResourcesLumberBrick()
+    self.initializeSettlementsAndResourcesForSettlements()
     # Turn tracking
     turnNumber = 1
     currentAgentIndex = 0
@@ -450,7 +466,8 @@ def getStringForPlayer(playerCode):
     8: "AlphaBeta Agent - with builder Heuristic",
     9: "AlphaBeta Agent - with resource Heuristic",
     10: "AlphaBeta Agent - with better Heuristic",
-    11: "Expectimax Agent - with better Heuristic"
+    11: "Expectimax Agent - with better Heuristic",
+    12: "Expectiminimax Agent - with better Heuristic"
   }.get(playerCode, "Not a player."))
 
 def getPlayerAgentSpecifications():
@@ -469,6 +486,7 @@ def getPlayerAgentSpecifications():
     print "9: AlphaBeta Agent - with resource Heuristic"
     print "10: AlphaBeta Agent - with better Heuristic"
     print "11: Expectimax Agent - with better Heuristic"
+    print "12: Expectiminimax Agent - with better Heuristic"
 
     firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip())
     secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip())
