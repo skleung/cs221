@@ -120,14 +120,14 @@ class PlayerAgent(object):
   ---------------------
   """
 
-  def __init__(self, name, agentIndex, color, evalFn = defaultEvalFn):
+  def __init__(self, name, agentIndex, color, depth = 3, evalFn = defaultEvalFn):
     self.agentType = AGENT.PLAYER_AGENT
     self.evaluationFunction = evalFn
     self.name = name
     self.agentIndex = agentIndex
     self.color = color
     self.victoryPoints = 0
-    self.depth = 1
+    self.depth = depth
 
     # List of Edges
     self.roads = []
@@ -378,8 +378,8 @@ class PlayerAgentExpectiminimax(PlayerAgent):
   --------------------------------
   """
 
-  def __init__(self, name, agentIndex, color, evalFn = defaultEvalFn):
-    super(PlayerAgentExpectiminimax, self).__init__(name, agentIndex, color, evalFn=evalFn)
+  def __init__(self, name, agentIndex, color, depth = 3, evalFn = defaultEvalFn):
+    super(PlayerAgentExpectiminimax, self).__init__(name, agentIndex, color, depth=depth, evalFn=evalFn)
 
   def getAction(self, state):
     """

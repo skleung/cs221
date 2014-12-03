@@ -18,6 +18,8 @@ CITY_COST = Counter({ResourceTypes.GRAIN: 2, ResourceTypes.ORE: 3})
 # so we can print out the resource type easily
 ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
 NUM_PLAYERS = 2
+TOTAL_ITERATIONS = 4
+DEPTH = 3
 
 # Types of Agents
 AGENT = Enum(["PLAYER_AGENT", "DICE_AGENT"])

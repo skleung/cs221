@@ -1,5 +1,6 @@
 from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentRandom
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
+from gameConstants import *
 from collections import Counter
 from draw import *
 
@@ -184,7 +185,7 @@ class Game:
   ------------------------
   """
 
-  def __init__(self):
+  def __init__(self, playerAgentNums = None):
     """
     Method: __init__
     ----------------------
@@ -200,6 +201,7 @@ class Game:
     """
     self.moveHistory = []
     self.gameState = GameState()
+    self.playerAgentNums = playerAgentNums 
     # self.draw = Draw(self.gameState.board.tiles)
 
   def drawGame(self):
@@ -231,29 +233,19 @@ class Game:
     color = getColorForPlayer(index)
 
     if playerCode == 0:
-      return PlayerAgentExpectiminimax("Player "+str(index), index, color)
+      return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH)
     elif playerCode == 1:
       return PlayerAgentRandom("Player "+str(index), index, color)
     elif playerCode == 2:
-      return PlayerAgentExpectiminimax("Player "+str(index), index, color, evalFn=builderEvalFn)
+      return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
     elif playerCode == 3:
-      return PlayerAgentExpectiminimax("Player "+str(index), index, color, evalFn=resourceEvalFn)
+      return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
 
   def initializePlayers(self):
-    print "Player Agent Specifications:"
-    print "-----------------------------"
-    print "0: ExpectiMiniMax Agent - with default heuristic"
-    print "1: Random Agent"
-    print "2: ExpectiMiniMax Agent - with builder Heuristic"
-    print "3: ExpectiMiniMax Agent - with resource Heuristic"
-
-    playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1'):").strip()
-    playerAgentStr = '1 0' if playerAgentStr is "" else playerAgentStr
-
-    playerAgents = [int(num) for num in playerAgentStr.split(" ")]    
-
+    if (self.playerAgentNums == None):
+      self.playerAgentNums = getPlayerAgentSpecifications()
     for i in xrange(NUM_PLAYERS):
-      self.gameState.playerAgents[i] = self.createPlayer(playerAgents[i], i)
+      self.gameState.playerAgents[i] = self.createPlayer(self.playerAgentNums[i], i)
 
   def run(self):    
     """
@@ -363,23 +355,67 @@ class Game:
       currentAgentIndex = (currentAgentIndex+1) % self.gameState.getNumPlayerAgents()
       turnNumber += 1
 
-    print self.gameState.playerAgents[self.gameState.gameOver()].name + " won the game"
-    return self.gameState.gameOver()
+    winner = self.gameState.gameOver()
+    agentWinner = self.gameState.playerAgents[winner]
+    agentLoser = self.gameState.playerAgents[1-winner]
+    print agentWinner.name + " won the game"
+    return (winner, turnNumber, agentWinner.victoryPoints - agentLoser.victoryPoints)
 
+def getStringForPlayer(playerCode):
+  return ({
+    0: "ExpectiMiniMax Agent - with default heuristic",
+    1: "Random Agent",
+    2: "ExpectiMiniMax Agent - with builder Heuristic",
+    3: "ExpectiMiniMax Agent - with resource Heuristic"
+  }.get(playerCode, "Not a player."))
+
+def getPlayerAgentSpecifications():
+  print "Player Agent Specifications:"
+  print "-----------------------------"
+  print "0: ExpectiMiniMax Agent - with default heuristic"
+  print "1: Random Agent"
+  print "2: ExpectiMiniMax Agent - with builder Heuristic"
+  print "3: ExpectiMiniMax Agent - with resource Heuristic"
+  playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1'): ").strip()
+  playerAgentStr = '0 1' if playerAgentStr is "" else playerAgentStr
+  playerAgentNums = [int(num) for num in playerAgentStr.split(" ")] 
+  return playerAgentNums
 
 numZeroWins = 0
 numOneWins = 0
-TOTAL_ITERATIONS = 4
+TOTAL_ITERATIONS = int(raw_input("Enter number of iterations: "));
+DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
+playerAgentNums = getPlayerAgentSpecifications()
+
+numWins = {}
+diffVictoryPoints = {}
+turnAverages = {}
+for player in range(4):
+  numWins[player] = -1
+  diffVictoryPoints[player] = 0
+  turnAverages[player] = 0
 for i in range(TOTAL_ITERATIONS): # for multiple iterations
-  game = Game()
-  if game.run() == 0:
-    numZeroWins+=1
-  else:
-    numOneWins +=1
-print "PlayerAgent 0 (expectiminimax with default heuristic) won "+str(numZeroWins)+ "games"
-print "PlayerAgent 1 (random agent) won "+str(numOneWins)+ "games"
+  game = Game(playerAgentNums = playerAgentNums)
+  winner, turns, diffPoints = game.run()
+  for playerNum in game.playerAgentNums:
+    if numWins[playerNum] < 0: numWins[playerNum] = 0
+  winnerNum = game.playerAgentNums[winner]
+  numWins[winnerNum]+=1
+  diffVictoryPoints[winnerNum] = ((float)(diffVictoryPoints[winnerNum] + diffPoints)/numWins[winnerNum])
+  turnAverages[winnerNum] = ((float)(turnAverages[winnerNum] + turns)/numWins[winnerNum])
+
+print "\n============="
+for player, wins in numWins.iteritems():
+  if wins >= 0: print "PlayerAgent " + str(playerAgentNums.index(player)) + " (" + getStringForPlayer(player) + ") won "+str(wins)+ " games."
+  if wins > 0:
+    print "With an average of " + str(diffVictoryPoints[player]) + " victory points difference per game."
+    print "And an average of " + str(turnAverages[player]) + " turns to win game."
 print "============="
-print "Expectiminimax Agent: "+str(float(numZeroWins)/TOTAL_ITERATIONS)
-print "Random Agent: "+str(float(numOneWins)/TOTAL_ITERATIONS)
+expectiMiniMaxTotal = 0
+if numWins[0] > 0: expectiMiniMaxTotal+=numWins[0]
+if numWins[2] > 0: expectiMiniMaxTotal+=numWins[2]
+if numWins[3] > 0: expectiMiniMaxTotal+=numWins[3]
+print "Expectiminimax Agent win percentage: "+str(float(expectiMiniMaxTotal)/TOTAL_ITERATIONS)
+if numWins[1] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/TOTAL_ITERATIONS)
 
 
