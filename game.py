@@ -239,10 +239,16 @@ class Game:
     elif playerCode == 3:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
     elif playerCode == 4:
-      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH)
+      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH)
     elif playerCode == 5:
-      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
+      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
     elif playerCode == 6:
+      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
+    elif playerCode == 7:
+      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH)
+    elif playerCode == 8:
+      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
+    elif playerCode == 9:
       return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
 
   def initializePlayers(self):
@@ -349,7 +355,7 @@ class Game:
       turnNumber += 1
 
       # Caps the total number of iterations for a game
-      if turnNumber > 500: break
+      if turnNumber > NUM_ITERATIONS_CAP: break
 
     winner = self.gameState.gameOver()
     if winner < 0: return (winner, turnNumber, -1)
@@ -364,9 +370,12 @@ def getStringForPlayer(playerCode):
     1: "ExpectiMiniMax Agent - with default heuristic",
     2: "ExpectiMiniMax Agent - with builder Heuristic",
     3: "ExpectiMiniMax Agent - with resource Heuristic",
-    4: "AlphaBeta Agent - with default Heuristic",
-    5: "AlphaBeta Agent - with builder Heuristic",
-    6: "AlphaBeta Agent - with resource Heuristic"
+    4: "Expectimax Agent - with default heuristic",
+    5: "Expectimax Agent - with builder Heuristic",
+    6: "Expectimax Agent - with resource Heuristic",
+    7: "AlphaBeta Agent - with default Heuristic",
+    8: "AlphaBeta Agent - with builder Heuristic",
+    9: "AlphaBeta Agent - with resource Heuristic"
   }.get(playerCode, "Not a player."))
 
 def getPlayerAgentSpecifications():
@@ -376,15 +385,17 @@ def getPlayerAgentSpecifications():
   print "1: ExpectiMiniMax Agent - with default heuristic"
   print "2: ExpectiMiniMax Agent - with builder Heuristic"
   print "3: ExpectiMiniMax Agent - with resource Heuristic"
-  print "4: AlphaBeta Agent - with default Heuristic"
-  print "5: AlphaBeta Agent - with builder Heuristic"
-  print "6: AlphaBeta Agent - with resource Heuristic"
+  print "4: Expectimax Agent - with default heuristic"
+  print "5: Expectimax Agent - with builder Heuristic"
+  print "6: Expectimax Agent - with resource Heuristic"
+  print "7: AlphaBeta Agent - with default Heuristic"
+  print "8: AlphaBeta Agent - with builder Heuristic"
+  print "9: AlphaBeta Agent - with resource Heuristic"
   firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip()[0])
   secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip()[0])
   return [firstPlayerAgent, secondPlayerAgent]
 
 # We now have 7 agents including the alpha beta agents
-TOTAL_NUM_AGENTS = 7
 NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
 DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
 playerAgentNums = getPlayerAgentSpecifications()

@@ -19,7 +19,7 @@ def builderEvalFn(currentGameState, currentPlayerIndex):
 # 3 utility points per settlement, 1 per road
 def defaultEvalFn(currentGameState, currentPlayerIndex):
   currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
-  return 3 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+  return 100 * len(currentPlayer.settlements) + len(currentPlayer.roads)
 
 # EVAL FUNCTION: RESOURCE AGENT
 # --------------------------
@@ -746,8 +746,8 @@ class PlayerAgentExpectimax(PlayerAgent):
   follow a uniformly random policy).
   -------------------------------
   """
-  def __init__(self, name, agentIndex, color, evalFn = defaultEvalFn):
-    super(PlayerAgentExpectimax, self).__init__(name, agentIndex, color, evalFn=evalFn)
+  def __init__(self, name, agentIndex, color, depth=DEPTH, evalFn = defaultEvalFn):
+    super(PlayerAgentExpectimax, self).__init__(name, agentIndex, color, depth, evalFn=evalFn)
 
   def getAction(self, state):
     """
