@@ -2,12 +2,26 @@ from enum import Enum
 from collections import Counter
 
 GRAPHICS = False
+# Moved here because not in draw
+def getColorForPlayer(player):
+    return {
+      0: "red",
+      1: "blue",
+      2: "black",
+      3: "brown"
+    }.get(player, None)
 
 VICTORY_POINTS_TO_WIN = 10
 SETTLEMENT_VICTORY_POINTS = 1
 CITY_VICTORY_POINTS = SETTLEMENT_VICTORY_POINTS + 1
 
 NUM_INITIAL_SETTLEMENTS = 2
+TOTAL_NUM_AGENTS = 10
+CUTOFF_TURNS = 600
+
+VERBOSE = False
+
+DEFAULT_PLAYER_ARRAY = [4,0]
 
 ACTIONS = Enum(["SETTLE", "CITY", "ROAD"])
 
@@ -24,7 +38,6 @@ ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.O
 NUM_PLAYERS = 2
 NUM_ITERATIONS = 4
 DEPTH = 3
-CUTOFF_TURNS = 600
 
 # Types of Agents
 AGENT = Enum(["PLAYER_AGENT", "DICE_AGENT"])

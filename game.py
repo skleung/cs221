@@ -63,7 +63,6 @@ class GameState:
 
     # If they can build a road...
     if agent.canBuildRoad():
-
       # Look at all unoccupied edges coming from the player's existing settlements and cities
       agentSettlements = []; agentSettlements.extend(agent.settlements); agentSettlements.extend(agent.cities)
       for settlement in agentSettlements:
@@ -152,7 +151,7 @@ class GameState:
         return agent.agentIndex
     return -1
 
-  def updatePlayerResourcesForDiceRoll(self, diceRoll, verbose = False):
+  def updatePlayerResourcesForDiceRoll(self, diceRoll):
     """
     Method: updatePlayerResourcesForDiceRoll
     -----------------------------------------
@@ -167,7 +166,7 @@ class GameState:
     """
     for agent in self.playerAgents:
       gainedResources = agent.updateResources(diceRoll, self.board)
-      if verbose:
+      if VERBOSE:
         print str(agent.name) + " received: " + str(gainedResources)
         print str(agent.name) + " now has: " + str(agent.resources)
 
@@ -202,31 +201,6 @@ class Game:
     self.playerAgentNums = playerAgentNums 
     if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
 
-  def drawGame(self):
-    """
-    Method: drawGame
-    ----------------------
-    Parameters: NA
-    Returns: NA
-
-    Draws the graphics for displaying the board
-    tiles.
-    ----------------------
-    """
-    self.draw.drawBG()
-    self.draw.drawTitle()
-    self.draw.drawBoard()
-    # draw.drawDiceRoll()
-    # draw.drawPlayer(self.curPlayer)
-    #draw.drawKey(self)
-    self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
-    self.draw.drawSettlements(self.gameState.board.allSettlements)
-    self.draw.drawCities(self.gameState.board.allCities)
-    # else: #gameOver is true
-    #     draw.drawWinner(self) #draw winning screen
-    #     self.hideButtons()          #hide all buttons 
-    #     self.f.place(x=20, y=565)   #except for New Game button
-
   def createPlayer(self, playerCode, index):
     color = getColorForPlayer(index)
 
@@ -239,10 +213,16 @@ class Game:
     elif playerCode == 3:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
     elif playerCode == 4:
-      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH)
+      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH)
     elif playerCode == 5:
-      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
+      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
     elif playerCode == 6:
+      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
+    elif playerCode == 7:
+      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH)
+    elif playerCode == 8:
+      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
+    elif playerCode == 9:
       return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
 
   def initializePlayers(self):
@@ -348,8 +328,9 @@ class Game:
     ----------------------
     """
     # Welcome message
-    print "WELCOME TO SETTLERS OF CATAN!"
-    print "-----------------------------"
+    if VERBOSE:
+      print "WELCOME TO SETTLERS OF CATAN!"
+      print "-----------------------------"
     # DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
     self.initializePlayers()
     # self.initializeSettlementsAndResourcesPreset()
@@ -364,31 +345,34 @@ class Game:
       if GRAPHICS: self.drawGame()
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
-      print "---------- TURN " + str(turnNumber) + " --------------"
-      print "It's " + str(currentAgent.name) + "'s turn!"
+      if VERBOSE:
+        print "---------- TURN " + str(turnNumber) + " --------------"
+        print "It's " + str(currentAgent.name) + "'s turn!"
 
       # Print player info
-      if DEBUG:
+      if VERBOSE:
         print "PLAYER INFO:"
         for a in self.gameState.playerAgents:
           print a
+
       if GRAPHICS: raw_input("Press ENTER to proceed:")
       # Dice roll + resource distribution
       diceRoll = self.gameState.diceAgent.rollDice()
-      print "Rolled a " + str(diceRoll)
-      self.gameState.updatePlayerResourcesForDiceRoll(diceRoll, verbose = DEBUG)
+      if VERBOSE: print "Rolled a " + str(diceRoll)
+      self.gameState.updatePlayerResourcesForDiceRoll(diceRoll)
       # The current player performs 1 action
       value, action = currentAgent.getAction(self.gameState)
-      if DEBUG: 
+      if VERBOSE: 
         print "Best Action: " + str(action)
         print "Best Value: " + str(value)
       currentAgent.applyAction(action, self.gameState.board)
       self.gameState.board.applyAction(currentAgent.agentIndex, action)
-      # Print out the updated game state
-      if (action != None):
-        print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
-      else:
-        print str(currentAgent.name) + " had no actions to take"
+      
+      if VERBOSE:# Print out the updated game state
+        if (action != None):
+          print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
+        else:
+          print str(currentAgent.name) + " had no actions to take"
       # Track the game's move history
       self.moveHistory.append((currentAgent.name, action))
       # Go to the next player/turn
@@ -402,7 +386,7 @@ class Game:
     if winner < 0: return (winner, turnNumber, -1)
     agentWinner = self.gameState.playerAgents[winner]
     agentLoser = self.gameState.playerAgents[1-winner]
-    print agentWinner.name + " won the game"
+    if VERBOSE: print agentWinner.name + " won the game"
     return (winner, turnNumber, agentWinner.victoryPoints - agentLoser.victoryPoints)
 
 def getStringForPlayer(playerCode):
@@ -411,27 +395,36 @@ def getStringForPlayer(playerCode):
     1: "ExpectiMiniMax Agent - with default heuristic",
     2: "ExpectiMiniMax Agent - with builder Heuristic",
     3: "ExpectiMiniMax Agent - with resource Heuristic",
-    4: "AlphaBeta Agent - with default Heuristic",
-    5: "AlphaBeta Agent - with builder Heuristic",
-    6: "AlphaBeta Agent - with resource Heuristic"
+    4: "Expectimax Agent - with default heuristic",
+    5: "Expectimax Agent - with builder Heuristic",
+    6: "Expectimax Agent - with resource Heuristic",
+    7: "AlphaBeta Agent - with default Heuristic",
+    8: "AlphaBeta Agent - with builder Heuristic",
+    9: "AlphaBeta Agent - with resource Heuristic"
   }.get(playerCode, "Not a player."))
 
 def getPlayerAgentSpecifications():
-  print "Player Agent Specifications:"
-  print "-----------------------------"
-  print "0: Random Agent"
-  print "1: ExpectiMiniMax Agent - with default heuristic"
-  print "2: ExpectiMiniMax Agent - with builder Heuristic"
-  print "3: ExpectiMiniMax Agent - with resource Heuristic"
-  print "4: AlphaBeta Agent - with default Heuristic"
-  print "5: AlphaBeta Agent - with builder Heuristic"
-  print "6: AlphaBeta Agent - with resource Heuristic"
-  firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip()[0])
-  secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip()[0])
-  return [firstPlayerAgent, secondPlayerAgent]
+  if VERBOSE:
+    print "Player Agent Specifications:"
+    print "-----------------------------"
+    print "0: Random Agent"
+    print "1: ExpectiMiniMax Agent - with default heuristic"
+    print "2: ExpectiMiniMax Agent - with builder Heuristic"
+    print "3: ExpectiMiniMax Agent - with resource Heuristic"
+    print "4: Expectimax Agent - with default heuristic"
+    print "5: Expectimax Agent - with builder Heuristic"
+    print "6: Expectimax Agent - with resource Heuristic"
+    print "7: AlphaBeta Agent - with default Heuristic"
+    print "8: AlphaBeta Agent - with builder Heuristic"
+    print "9: AlphaBeta Agent - with resource Heuristic"
+
+    firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip()[0])
+    secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip()[0])
+    return [firstPlayerAgent, secondPlayerAgent]
+  else:
+    return DEFAULT_PLAYER_ARRAY
 
 # We now have 7 agents including the alpha beta agents
-TOTAL_NUM_AGENTS = 7
 NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
 DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
 playerAgentNums = getPlayerAgentSpecifications()
@@ -476,6 +469,8 @@ for player, wins in numWins.iteritems():
     print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
 print "============="
 for player in numWins:
+  if totalWins == 0:
+    totalWins = 1
   print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/totalWins)
 print "Total elapsed time: "+str(float(time.time()-START_TIME))
 print "\n"
