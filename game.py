@@ -2,7 +2,7 @@ from agents import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from gameConstants import *
 from collections import Counter
-from draw import *
+# from draw import *
 import time
 import Queue as queue
 
@@ -72,6 +72,7 @@ class GameState:
 
     legalActions = set( )
     legalActionsQueue = queue.PriorityQueue()
+
     if self.gameOver() >= 0: return legalActions
     agent = self.playerAgents[agentIndex]
 
@@ -218,7 +219,7 @@ class Game:
     self.moveHistory = []
     self.gameState = GameState()
     self.playerAgentNums = playerAgentNums 
-    if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
+    # if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
 
   def drawGame(self):
     """
@@ -256,7 +257,7 @@ class Game:
     elif playerCode == 3:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
     elif playerCode == 4:
-      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH)
+      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH, evalFn=betterEvalFn)
     elif playerCode == 5:
       return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
     elif playerCode == 6:
@@ -406,7 +407,7 @@ class Game:
     # Main game loop
     while (self.gameState.gameOver() < 0):
       # Draw the gameboard
-      if GRAPHICS: self.drawGame()
+      # if GRAPHICS: self.drawGame()
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
       if VERBOSE:

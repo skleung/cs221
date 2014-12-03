@@ -844,7 +844,8 @@ class PlayerAgentExpectimax(PlayerAgent):
 
     # Try all possible actions
     for currAction in possibleActions:
-      value = recurse(state.generateSuccessor(newPlayerIndex, currAction), self.depth, newPlayerIndex)
+      successor = state.generateSuccessor(self.agentIndex, currAction)
+      value = recurse(successor, self.depth, newPlayerIndex)
       vals.append(value)
       actions.append(currAction)
 
