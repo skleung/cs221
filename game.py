@@ -1,9 +1,9 @@
-from agents import PlayerAgent, DiceAgent, PlayerAgentExpectiminimax, PlayerAgentRandom
+from agents import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from gameConstants import *
 from collections import Counter
 from draw import *
-
+import time
 
 class GameState:
   """
@@ -376,13 +376,10 @@ def getPlayerAgentSpecifications():
   print "1: Random Agent"
   print "2: ExpectiMiniMax Agent - with builder Heuristic"
   print "3: ExpectiMiniMax Agent - with resource Heuristic"
-  playerAgentStr = raw_input("Enter your specifications (Press ENTER for '0 1'): ").strip()
-  playerAgentStr = '0 1' if playerAgentStr is "" else playerAgentStr
-  playerAgentNums = [int(num) for num in playerAgentStr.split(" ")] 
-  return playerAgentNums
+  firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip())
+  secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip())
+  return [firstPlayerAgent, secondPlayerAgent]
 
-numZeroWins = 0
-numOneWins = 0
 NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
 DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
 playerAgentNums = getPlayerAgentSpecifications()
@@ -395,6 +392,8 @@ for player in range(4):
   numWins[player] = -1
   totalVictoryPointDiff[player] = 0
   totalTurns[player] = 0
+
+START_TIME = time.time()
 for i in range(NUM_ITERATIONS): # for multiple iterations
   game = Game(playerAgentNums = playerAgentNums)
   stats = game.run()
@@ -414,7 +413,8 @@ for player, wins in numWins.iteritems():
   if wins >= 0: print "PlayerAgent " + str(playerAgentNums.index(player)) + " (" + getStringForPlayer(player) + ") won "+str(wins)+ " games."
   if wins > 0:
     print "With an average of " + str(totalVictoryPointDiff[player]/float(wins)) + " victory points difference per game."
-    print "And an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
+    print "     an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
+    print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
 print "============="
 expectiMiniMaxTotal = 0
 if numWins[0] > 0: expectiMiniMaxTotal+=numWins[0]
