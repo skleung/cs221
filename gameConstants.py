@@ -1,7 +1,7 @@
 from enum import Enum
 from collections import Counter
 
-GRAPHICS = True
+GRAPHICS = False
 # Moved here because not in draw
 def getColorForPlayer(player):
     return {
@@ -18,6 +18,7 @@ CITY_VICTORY_POINTS = SETTLEMENT_VICTORY_POINTS + 1
 NUM_INITIAL_SETTLEMENTS = 2
 TOTAL_NUM_AGENTS = 13
 CUTOFF_TURNS = 600
+CUTOFF_ACTIONS = 2
 
 VERBOSE = False
 
