@@ -256,7 +256,24 @@ class Game:
     for i in xrange(NUM_PLAYERS):
       self.gameState.playerAgents[i] = self.createPlayer(self.playerAgentNums[i], i)
 
-  def initializeSettlementsAndResources(self):
+  def initializeSettlementsAndResourcesRandom(self):
+    # --- START RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
+    for i in range(len(self.gameState.playerAgents)):
+      agent = self.gameState.playerAgents[i]
+      for s in range(NUM_INITIAL_SETTLEMENTS):
+        settlement = self.gameState.board.getRandomVertexForSettlement()
+        self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settlement))
+        agent.settlements.append(settlement); 
+        road = self.gameState.board.getRandomRoad(settlement)
+        self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, road))
+        agent.roads.append(road);
+
+    # Each player starts with resources for each of their settlements
+    for agent in self.gameState.playerAgents:
+      agent.collectInitialResources(self.gameState.board)
+    # --- START RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
+
+  def initializeSettlementsAndResourcesPreset(self):
     # --- START RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
     # Each player starts with 2 settlements
     # # Use beginner board suggested settlements
@@ -272,10 +289,7 @@ class Game:
       (self.gameState.board.getEdge(6, 1), self.gameState.board.getEdge(8, 3)), # unused
       (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)) # unused
       ])
-    # --- END RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
 
-
-    # --- START RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
     # Pick two settlements at random and two roads that connect from them
     for i in range(len(self.gameState.playerAgents)):
       agent = self.gameState.playerAgents[i]
@@ -290,7 +304,7 @@ class Game:
     # Each player starts with resources for each of their settlements
     for agent in self.gameState.playerAgents:
       agent.collectInitialResources(self.gameState.board)
-    # --- END RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
+    # --- START RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
 
   def run(self):    
     """
@@ -313,7 +327,8 @@ class Game:
       print "-----------------------------"
     # DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
     self.initializePlayers()
-    self.initializeSettlementsAndResources()
+    # self.initializeSettlementsAndResourcesPreset()
+    self.initializeSettlementsAndResourcesRandom()
     # Turn tracking
     turnNumber = 1
     currentAgentIndex = 0
@@ -358,7 +373,7 @@ class Game:
       turnNumber += 1
 
       # Caps the total number of iterations for a game
-      if turnNumber > NUM_ITERATIONS_CAP: break
+      if turnNumber > CUTOFF_TURNS: break
 
     winner = self.gameState.gameOver()
     if winner < 0: return (winner, turnNumber, -1)
@@ -436,7 +451,9 @@ print "Player 1: "+ getStringForPlayer(playerAgentNums[1])
 print "============="
 # print debugStatistics
 # player is the player num, not the type of player
+totalWins = 0
 for player, wins in numWins.iteritems():
+  totalWins += wins
   playerType = playerAgentNums[player]
   if wins >= 0: print "PlayerAgent " + str(player) + " (" + getStringForPlayer(playerType) + ") won "+str(wins)+ " games."
   if wins > 0:
@@ -445,7 +462,9 @@ for player, wins in numWins.iteritems():
     print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
 print "============="
 for player in numWins:
-  print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/NUM_ITERATIONS)
+  if totalWins == 0:
+    totalWins = 1
+  print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/totalWins)
 print "Total elapsed time: "+str(float(time.time()-START_TIME))
 print "\n"
 

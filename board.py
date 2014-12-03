@@ -477,7 +477,11 @@ class Board:
 
     return resources
 
+  # def getRandom
+
   def getRandomVertexForSettlement(self):
+    # get random lumber hex
+    lumberIndex = random.randint(0, 3)
     vertex = None
     while vertex == None:
       vX = random.randint(0, len(self.vertices)-1)
