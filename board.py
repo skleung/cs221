@@ -477,11 +477,65 @@ class Board:
 
     return resources
 
-  # def getRandom
+  # return lumber hex num=index
+  def getLumberHex(self, index):
+    return ({
+      1: self.hexagons[0][1],
+      2: self.hexagons[3][2],
+      3: self.hexagons[1][3],
+      4: self.hexagons[4][3]
+    }.get(index, None))
+
+  def getBrickHex(self, index):
+    return ({
+      1: self.hexagons[2][1],
+      2: self.hexagons[0][2],
+      3: self.hexagons[1][4]
+    }.get(index, None))
+
+  def getRandomVertexOnHex(self, hex):
+    vertices = self.getVertices(hex)
+    vertex = None
+    while vertex == None:
+      index = random.randint(0, len(vertices)-1)
+      vertex = vertices[index]
+      if not vertex.canSettle: vertex = None
+    return vertex
+
+  # returns 4 locations for settlements
+  def getRandomVerticesForSettlement(self):
+    # get random lumber hexes
+    lumberIndexOne = random.randint(1, 4)
+    lumberIndexTwo = random.randint(1, 4)
+    while lumberIndexTwo == lumberIndexOne:
+      lumberIndexTwo = random.randint(1, 4)
+    lumberHexOne = self.getLumberHex(lumberIndexOne)
+    lumberHexTwo = self.getLumberHex(lumberIndexTwo)
+
+    # get random brick hexes
+    brickIndexOne = random.randint(1, 3)
+    brickIndexTwo = random.randint(1, 3)
+    while brickIndexTwo == brickIndexOne:
+      brickIndexTwo = random.randint(1, 3)
+    brickHexOne = self.getBrickHex(brickIndexOne)
+    brickHexTwo = self.getBrickHex(brickIndexTwo)
+
+    if (lumberHexOne.resource != ResourceTypes.LUMBER
+      or lumberHexTwo.resource != ResourceTypes.LUMBER
+      or brickHexOne.resource != ResourceTypes.BRICK
+      or brickHexTwo.resource != ResourceTypes.BRICK): raise Exception("Should be a lumber or brick hex")
+
+    vertexOne = self.getRandomVertexOnHex(lumberHexOne)
+    self.applyAction(0, (ACTIONS.SETTLE, vertexOne))
+    vertexTwo = self.getRandomVertexOnHex(brickHexOne)
+    self.applyAction(0, (ACTIONS.SETTLE, vertexTwo))
+    vertexThree = self.getRandomVertexOnHex(lumberHexTwo)
+    self.applyAction(1, (ACTIONS.SETTLE, vertexThree))
+    vertexFour = self.getRandomVertexOnHex(brickHexTwo)
+    self.applyAction(1, (ACTIONS.SETTLE, vertexFour))
+    return [(vertexOne, vertexTwo), (vertexThree, vertexFour)]
 
   def getRandomVertexForSettlement(self):
-    # get random lumber hex
-    lumberIndex = random.randinit(0, 3)
     vertex = None
     while vertex == None:
       vX = random.randint(0, len(self.vertices)-1)

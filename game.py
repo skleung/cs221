@@ -200,7 +200,7 @@ class Game:
     self.moveHistory = []
     self.gameState = GameState()
     self.playerAgentNums = playerAgentNums 
-    # self.draw = Draw(self.gameState.board.tiles)
+    if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
 
   def drawGame(self):
     """
@@ -251,8 +251,39 @@ class Game:
     for i in xrange(NUM_PLAYERS):
       self.gameState.playerAgents[i] = self.createPlayer(self.playerAgentNums[i], i)
 
+  def initializeSettlementsAndResourcesLumberBrick(self):
+    # --- START RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
+    settlements = self.gameState.board.getRandomVerticesForSettlement()
+    for i, playerSettlements in enumerate(settlements):
+      agent = self.gameState.playerAgents[i]
+      settleOne, settleTwo = playerSettlements
+      agent.settlements.append(settleOne); 
+      agent.settlements.append(settleTwo); 
+      roadOne = self.gameState.board.getRandomRoad(settleOne)
+      roadTwo = self.gameState.board.getRandomRoad(settleTwo)
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, roadOne))
+      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, roadTwo))
+      agent.roads.append(roadOne);
+      agent.roads.append(roadTwo);
+
+    #add random settlement
+    for i in range(len(self.gameState.playerAgents)):
+      agent = self.gameState.playerAgents[i]
+      for s in range(1):
+        settlement = self.gameState.board.getRandomVertexForSettlement()
+        self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settlement))
+        agent.settlements.append(settlement); 
+        road = self.gameState.board.getRandomRoad(settlement)
+        self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, road))
+        agent.roads.append(road);
+
+    # Each player starts with resources for each of their settlements
+    for agent in self.gameState.playerAgents:
+      agent.collectInitialResources(self.gameState.board)
+    # --- START RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
+
   def initializeSettlementsAndResourcesRandom(self):
-    # --- START RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
+    # --- START RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
     for i in range(len(self.gameState.playerAgents)):
       agent = self.gameState.playerAgents[i]
       for s in range(NUM_INITIAL_SETTLEMENTS):
@@ -266,7 +297,7 @@ class Game:
     # Each player starts with resources for each of their settlements
     for agent in self.gameState.playerAgents:
       agent.collectInitialResources(self.gameState.board)
-    # --- START RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
+    # --- START RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
 
   def initializeSettlementsAndResourcesPreset(self):
     # --- START RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
@@ -322,14 +353,15 @@ class Game:
     # DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
     self.initializePlayers()
     # self.initializeSettlementsAndResourcesPreset()
-    self.initializeSettlementsAndResourcesRandom()
+    # self.initializeSettlementsAndResourcesRandom()
+    self.initializeSettlementsAndResourcesLumberBrick()
     # Turn tracking
     turnNumber = 1
     currentAgentIndex = 0
     # Main game loop
     while (self.gameState.gameOver() < 0):
       # Draw the gameboard
-      # self.drawGame()
+      if GRAPHICS: self.drawGame()
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
       print "---------- TURN " + str(turnNumber) + " --------------"
@@ -340,7 +372,7 @@ class Game:
         print "PLAYER INFO:"
         for a in self.gameState.playerAgents:
           print a
-      # raw_input("Press ENTER to proceed:")
+      if GRAPHICS: raw_input("Press ENTER to proceed:")
       # Dice roll + resource distribution
       diceRoll = self.gameState.diceAgent.rollDice()
       print "Rolled a " + str(diceRoll)

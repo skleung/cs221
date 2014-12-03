@@ -1,6 +1,8 @@
 from enum import Enum
 from collections import Counter
 
+GRAPHICS = False
+
 VICTORY_POINTS_TO_WIN = 10
 SETTLEMENT_VICTORY_POINTS = 1
 CITY_VICTORY_POINTS = SETTLEMENT_VICTORY_POINTS + 1
