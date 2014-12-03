@@ -426,17 +426,8 @@ for player, wins in numWins.iteritems():
     print "     an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
     print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
 print "============="
-<<<<<<< HEAD
 for player in numWins:
   print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/NUM_ITERATIONS)
-=======
-expectiMiniMaxTotal = 0
-if numWins[1] > 0: expectiMiniMaxTotal+=numWins[1]
-if numWins[2] > 0: expectiMiniMaxTotal+=numWins[2]
-if numWins[3] > 0: expectiMiniMaxTotal+=numWins[3]
-print "Expectiminimax Agent win percentage: "+str(float(expectiMiniMaxTotal)/NUM_ITERATIONS)
-if numWins[0] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/NUM_ITERATIONS)
 print "Total elapsed time: "+str(float(time.time()-START_TIME))
 print "\n"
->>>>>>> 6e1d5fae012c3442e4d6ef0b4f8780774981b72a
 
