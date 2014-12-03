@@ -240,7 +240,7 @@ class Game:
     elif playerCode == 3:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
     elif playerCode == 4:
-      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH)
+      return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH, evalFn=betterEvalFn)
     elif playerCode == 5:
       return PlayerAgentExpectimax("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
     elif playerCode == 6:
