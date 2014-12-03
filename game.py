@@ -60,7 +60,7 @@ class GameState:
       representing all the valid actions that the given agent/player can take
     ------------------------------
     """
-    legalActions = set( )
+    legalActions = set()
     if self.gameOver() >= 0: return legalActions
     agent = self.playerAgents[agentIndex]
 
@@ -383,7 +383,7 @@ class Game:
     self.initializePlayers()
     # self.initializeSettlementsAndResourcesPreset()
     # self.initializeSettlementsAndResourcesRandom()
-    self.initializeSettlementsAndResourcesForSettlements()
+    self.initializeSettlementsAndResourcesLumberBrick()
     # Turn tracking
     turnNumber = 1
     currentAgentIndex = 0
