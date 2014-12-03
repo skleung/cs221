@@ -12,14 +12,16 @@ EVALUATION FUNCTIONS
 # 5 utility points per settlement, 2 per road
 def builderEvalFn(currentGameState, currentPlayerIndex):
   currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
-  return 5 * len(currentPlayer.settlements) + 2 * len(currentPlayer.roads)
+  return 5 * len(currentPlayer.settlements) + 5 * len(currentPlayer.cities) + 2 * len(currentPlayer.roads)
 
 # EVAL FUNCTION: DEFAULT AGENT
 # --------------------------
 # 3 utility points per settlement, 1 per road
 def defaultEvalFn(currentGameState, currentPlayerIndex):
   currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
-  return 100 * len(currentPlayer.settlements) + len(currentPlayer.roads)
+  otherPlayer = currentGameState.playerAgents[1-currentPlayerIndex]
+  return (3 * len(currentPlayer.settlements) + 5 * len(currentPlayer.cities) + len(currentPlayer.roads)
+    - (2 * len(otherPlayer.settlements) + 4 * len(otherPlayer.cities) + len(otherPlayer.roads)))
 
 # EVAL FUNCTION: RESOURCE AGENT
 # --------------------------

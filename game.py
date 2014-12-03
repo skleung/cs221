@@ -63,7 +63,6 @@ class GameState:
 
     # If they can build a road...
     if agent.canBuildRoad():
-
       # Look at all unoccupied edges coming from the player's existing settlements and cities
       agentSettlements = []; agentSettlements.extend(agent.settlements); agentSettlements.extend(agent.cities)
       for settlement in agentSettlements:
@@ -152,7 +151,7 @@ class GameState:
         return agent.agentIndex
     return -1
 
-  def updatePlayerResourcesForDiceRoll(self, diceRoll, verbose = False):
+  def updatePlayerResourcesForDiceRoll(self, diceRoll):
     """
     Method: updatePlayerResourcesForDiceRoll
     -----------------------------------------
@@ -167,7 +166,7 @@ class GameState:
     """
     for agent in self.playerAgents:
       gainedResources = agent.updateResources(diceRoll, self.board)
-      if verbose:
+      if VERBOSE:
         print str(agent.name) + " received: " + str(gainedResources)
         print str(agent.name) + " now has: " + str(agent.resources)
 
@@ -309,8 +308,9 @@ class Game:
     ----------------------
     """
     # Welcome message
-    print "WELCOME TO SETTLERS OF CATAN!"
-    print "-----------------------------"
+    if VERBOSE:
+      print "WELCOME TO SETTLERS OF CATAN!"
+      print "-----------------------------"
     # DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
     self.initializePlayers()
     self.initializeSettlementsAndResources()
@@ -323,31 +323,34 @@ class Game:
       # self.drawGame()
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
-      print "---------- TURN " + str(turnNumber) + " --------------"
-      print "It's " + str(currentAgent.name) + "'s turn!"
+      if VERBOSE:
+        print "---------- TURN " + str(turnNumber) + " --------------"
+        print "It's " + str(currentAgent.name) + "'s turn!"
 
       # Print player info
-      if DEBUG:
+      if VERBOSE:
         print "PLAYER INFO:"
         for a in self.gameState.playerAgents:
           print a
       # raw_input("Press ENTER to proceed:")
+
       # Dice roll + resource distribution
       diceRoll = self.gameState.diceAgent.rollDice()
-      print "Rolled a " + str(diceRoll)
-      self.gameState.updatePlayerResourcesForDiceRoll(diceRoll, verbose = DEBUG)
+      if VERBOSE: print "Rolled a " + str(diceRoll)
+      self.gameState.updatePlayerResourcesForDiceRoll(diceRoll)
       # The current player performs 1 action
       value, action = currentAgent.getAction(self.gameState)
-      if DEBUG: 
+      if VERBOSE: 
         print "Best Action: " + str(action)
         print "Best Value: " + str(value)
       currentAgent.applyAction(action, self.gameState.board)
       self.gameState.board.applyAction(currentAgent.agentIndex, action)
-      # Print out the updated game state
-      if (action != None):
-        print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
-      else:
-        print str(currentAgent.name) + " had no actions to take"
+      
+      if VERBOSE:# Print out the updated game state
+        if (action != None):
+          print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
+        else:
+          print str(currentAgent.name) + " had no actions to take"
       # Track the game's move history
       self.moveHistory.append((currentAgent.name, action))
       # Go to the next player/turn
@@ -361,7 +364,7 @@ class Game:
     if winner < 0: return (winner, turnNumber, -1)
     agentWinner = self.gameState.playerAgents[winner]
     agentLoser = self.gameState.playerAgents[1-winner]
-    print agentWinner.name + " won the game"
+    if VERBOSE: print agentWinner.name + " won the game"
     return (winner, turnNumber, agentWinner.victoryPoints - agentLoser.victoryPoints)
 
 def getStringForPlayer(playerCode):
@@ -379,21 +382,25 @@ def getStringForPlayer(playerCode):
   }.get(playerCode, "Not a player."))
 
 def getPlayerAgentSpecifications():
-  print "Player Agent Specifications:"
-  print "-----------------------------"
-  print "0: Random Agent"
-  print "1: ExpectiMiniMax Agent - with default heuristic"
-  print "2: ExpectiMiniMax Agent - with builder Heuristic"
-  print "3: ExpectiMiniMax Agent - with resource Heuristic"
-  print "4: Expectimax Agent - with default heuristic"
-  print "5: Expectimax Agent - with builder Heuristic"
-  print "6: Expectimax Agent - with resource Heuristic"
-  print "7: AlphaBeta Agent - with default Heuristic"
-  print "8: AlphaBeta Agent - with builder Heuristic"
-  print "9: AlphaBeta Agent - with resource Heuristic"
-  firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip()[0])
-  secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip()[0])
-  return [firstPlayerAgent, secondPlayerAgent]
+  if VERBOSE:
+    print "Player Agent Specifications:"
+    print "-----------------------------"
+    print "0: Random Agent"
+    print "1: ExpectiMiniMax Agent - with default heuristic"
+    print "2: ExpectiMiniMax Agent - with builder Heuristic"
+    print "3: ExpectiMiniMax Agent - with resource Heuristic"
+    print "4: Expectimax Agent - with default heuristic"
+    print "5: Expectimax Agent - with builder Heuristic"
+    print "6: Expectimax Agent - with resource Heuristic"
+    print "7: AlphaBeta Agent - with default Heuristic"
+    print "8: AlphaBeta Agent - with builder Heuristic"
+    print "9: AlphaBeta Agent - with resource Heuristic"
+
+    firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip()[0])
+    secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip()[0])
+    return [firstPlayerAgent, secondPlayerAgent]
+  else:
+    return DEFAULT_PLAYER_ARRAY
 
 # We now have 7 agents including the alpha beta agents
 NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
@@ -404,8 +411,9 @@ numWins = {}
 totalVictoryPointDiff = {}
 totalTurns = {}
 debugStatistics = []
-for player in range(TOTAL_NUM_AGENTS):
-  numWins[player] = -1
+
+for player in range(2):
+  numWins[player] = 0
   totalVictoryPointDiff[player] = 0
   totalTurns[player] = 0
 
@@ -417,12 +425,9 @@ for i in range(NUM_ITERATIONS): # for multiple iterations
   debugStatistics.append(stats)
   winner, turns, diffPoints = stats
   if winner < 0: continue
-  for playerNum in game.playerAgentNums:
-    if numWins[playerNum] < 0: numWins[playerNum] = 0
-  winnerNum = game.playerAgentNums[winner]
-  numWins[winnerNum]+=1
-  totalVictoryPointDiff[winnerNum] += diffPoints
-  totalTurns[winnerNum] += turns
+  numWins[winner]+=1
+  totalVictoryPointDiff[winner] += diffPoints
+  totalTurns[winner] += turns
 
 print "============="
 print "\nGame statistics for " + str(NUM_ITERATIONS) + " iterations and depth " + str(DEPTH) + ": "
@@ -430,19 +435,17 @@ print "Player 0: "+ getStringForPlayer(playerAgentNums[0])
 print "Player 1: "+ getStringForPlayer(playerAgentNums[1])
 print "============="
 # print debugStatistics
+# player is the player num, not the type of player
 for player, wins in numWins.iteritems():
-  if wins >= 0: print "PlayerAgent " + str(playerAgentNums.index(player)) + " (" + getStringForPlayer(player) + ") won "+str(wins)+ " games."
+  playerType = playerAgentNums[player]
+  if wins >= 0: print "PlayerAgent " + str(player) + " (" + getStringForPlayer(playerType) + ") won "+str(wins)+ " games."
   if wins > 0:
     print "With an average of " + str(totalVictoryPointDiff[player]/float(wins)) + " victory points difference per game."
     print "     an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
     print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
 print "============="
-expectiMiniMaxTotal = 0
-if numWins[1] > 0: expectiMiniMaxTotal+=numWins[1]
-if numWins[2] > 0: expectiMiniMaxTotal+=numWins[2]
-if numWins[3] > 0: expectiMiniMaxTotal+=numWins[3]
-print "Expectiminimax Agent win percentage: "+str(float(expectiMiniMaxTotal)/NUM_ITERATIONS)
-if numWins[0] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/NUM_ITERATIONS)
+for player in numWins:
+  print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/NUM_ITERATIONS)
 print "Total elapsed time: "+str(float(time.time()-START_TIME))
 print "\n"
 
