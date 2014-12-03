@@ -238,6 +238,12 @@ class Game:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
     elif playerCode == 3:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
+    elif playerCode == 4:
+      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH)
+    elif playerCode == 5:
+      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
+    elif playerCode == 6:
+      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
 
   def initializePlayers(self):
     if (self.playerAgentNums == None):
@@ -249,18 +255,18 @@ class Game:
     # --- START RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
     # Each player starts with 2 settlements
     # # Use beginner board suggested settlements
-    # initialSettlements = ([
-    #   (self.gameState.board.getVertex(2, 4), self.gameState.board.getVertex(4, 8)),
-    #   (self.gameState.board.getVertex(2, 8), self.gameState.board.getVertex(3, 5)),
-    #   (self.gameState.board.getVertex(3, 1), self.gameState.board.getVertex(4, 3)), # unused
-    #   (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6)) # unused
-    #   ]) 
-    # initialRoads = ([
-    #   (self.gameState.board.getEdge(4, 3), self.gameState.board.getEdge(8, 8)),
-    #   (self.gameState.board.getEdge(4, 7), self.gameState.board.getEdge(6, 4)),
-    #   (self.gameState.board.getEdge(6, 1), self.gameState.board.getEdge(8, 3)), # unused
-    #   (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)) # unused
-    #   ])
+    initialSettlements = ([
+      (self.gameState.board.getVertex(2, 4), self.gameState.board.getVertex(4, 8)),
+      (self.gameState.board.getVertex(2, 8), self.gameState.board.getVertex(3, 5)),
+      (self.gameState.board.getVertex(3, 1), self.gameState.board.getVertex(4, 3)), # unused
+      (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6)) # unused
+      ]) 
+    initialRoads = ([
+      (self.gameState.board.getEdge(4, 3), self.gameState.board.getEdge(8, 8)),
+      (self.gameState.board.getEdge(4, 7), self.gameState.board.getEdge(6, 4)),
+      (self.gameState.board.getEdge(6, 1), self.gameState.board.getEdge(8, 3)), # unused
+      (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)) # unused
+      ])
     # --- END RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
 
 
@@ -269,12 +275,13 @@ class Game:
     for i in range(len(self.gameState.playerAgents)):
       agent = self.gameState.playerAgents[i]
       for s in range(NUM_INITIAL_SETTLEMENTS):
-        settlement = self.gameState.board.getRandomVertexForSettlement()
+        settlement = initialSettlements[i][s]
         self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settlement))
         agent.settlements.append(settlement); 
-        road = self.gameState.board.getRandomRoad(settlement)
+        road = initialRoads[i][s]
         self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, road))
         agent.roads.append(road);
+
     # Each player starts with resources for each of their settlements
     for agent in self.gameState.playerAgents:
       agent.collectInitialResources(self.gameState.board)
@@ -376,6 +383,8 @@ def getPlayerAgentSpecifications():
   secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip()[0])
   return [firstPlayerAgent, secondPlayerAgent]
 
+# We now have 7 agents including the alpha beta agents
+TOTAL_NUM_AGENTS = 7
 NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
 DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
 playerAgentNums = getPlayerAgentSpecifications()
@@ -384,7 +393,7 @@ numWins = {}
 totalVictoryPointDiff = {}
 totalTurns = {}
 debugStatistics = []
-for player in range(4):
+for player in range(TOTAL_NUM_AGENTS):
   numWins[player] = -1
   totalVictoryPointDiff[player] = 0
   totalTurns[player] = 0
@@ -425,5 +434,4 @@ print "Expectiminimax Agent win percentage: "+str(float(expectiMiniMaxTotal)/NUM
 if numWins[0] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/NUM_ITERATIONS)
 print "Total elapsed time: "+str(float(time.time()-START_TIME))
 print "\n"
-
 
