@@ -46,6 +46,9 @@ class GameState:
     copy.playerAgents = [playerAgent.deepCopy(copy.board) for playerAgent in self.playerAgents]
     return copy
 
+  # def sortLegalActions(self, actions):
+
+
   def getLegalActions(self, agentIndex):
     """
     Method: getLegalActions
@@ -224,6 +227,8 @@ class Game:
       return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
     elif playerCode == 9:
       return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=resourceEvalFn)
+    elif playerCode == 10:
+      return PlayerAgentAlphaBeta("Player "+str(index), index, color, depth=DEPTH,evalFn=betterEvalFn)
 
   def initializePlayers(self):
     if (self.playerAgentNums == None):
@@ -400,7 +405,8 @@ def getStringForPlayer(playerCode):
     6: "Expectimax Agent - with resource Heuristic",
     7: "AlphaBeta Agent - with default Heuristic",
     8: "AlphaBeta Agent - with builder Heuristic",
-    9: "AlphaBeta Agent - with resource Heuristic"
+    9: "AlphaBeta Agent - with resource Heuristic",
+    10: "AlphaBeta Agent - with better Heuristic"
   }.get(playerCode, "Not a player."))
 
 def getPlayerAgentSpecifications():
@@ -417,6 +423,7 @@ def getPlayerAgentSpecifications():
     print "7: AlphaBeta Agent - with default Heuristic"
     print "8: AlphaBeta Agent - with builder Heuristic"
     print "9: AlphaBeta Agent - with resource Heuristic"
+    print "10: AlphaBeta Agent - with better Heuristic"
 
     firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip()[0])
     secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip()[0])

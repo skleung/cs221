@@ -378,28 +378,6 @@ class Board:
       for tile in row:
         if tile != None: self.tiles.append(tile)
 
-  #TODO(sierrakn): Figure out how to print settlements and cities and roads
-  def printBoard(self):
-    # print visual board if exists for numrows/numcols
-    if self.visualBoard != None:
-      for i, row in enumerate(self.visualBoard):
-        s = ""
-        for hexagon in row:
-          if hexagon is None:
-            s += "  "
-          else:
-            s += hexagon.__repr__() + "  "
-        print s
-
-    else:
-      for i, row in enumerate(self.hexagons):
-        s = str(i) + " ["
-        for hexagon in row:
-          if hexagon == None: s += "   "
-          else:
-            s += " /-\\ "
-        print s
-
   def printData(self):
     print self.hexagons
     print self.edges

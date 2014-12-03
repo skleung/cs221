@@ -23,6 +23,21 @@ def defaultEvalFn(currentGameState, currentPlayerIndex):
   return (3 * len(currentPlayer.settlements) + 5 * len(currentPlayer.cities) + len(currentPlayer.roads)
     - (2 * len(otherPlayer.settlements) + 4 * len(otherPlayer.cities) + len(otherPlayer.roads)))
 
+def betterEvalFn(currentGameState, currentPlayerIndex):
+  board = currentGameState.board
+  currentPlayer = currentGameState.playerAgents[currentPlayerIndex]
+  otherPlayer = currentGameState.playerAgents[1-currentPlayerIndex]
+  currentResourceTouches = getResourceTouches(currentPlayer.settlements)
+  otherResourceTouches = getResourceTouches(otherPlayer.settlements)
+  return 3 * len(currentResourceTouches) + 2 * len(currentPlayer.cities)
+
+def getResourceTouches(settlements):
+  resourceTouches = []
+  for settlement in currentPlayer.settlements:
+    hexes = board.getHexes(settlement)
+    resourceTouches.extend(hexes)
+  return resourceTouches
+
 # EVAL FUNCTION: RESOURCE AGENT
 # --------------------------
 # 1 utility points per resource
