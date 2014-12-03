@@ -549,7 +549,7 @@ class PlayerAgentRandom(PlayerAgent):
       return (0, None)
 
     # Otherwise pick a random action
-    return (0, choice(possibleActions))
+    return (0, choice(list(possibleActions)))
 
   def deepCopy(self, board):
     """

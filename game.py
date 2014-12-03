@@ -57,7 +57,7 @@ class GameState:
       representing all the valid actions that the given agent/player can take
     ------------------------------
     """
-    legalActions = []
+    legalActions = set( )
     if self.gameOver() >= 0: return legalActions
     agent = self.playerAgents[agentIndex]
 
@@ -71,7 +71,7 @@ class GameState:
         for currEdge in currEdges:
           if not currEdge.isOccupied():
             if (ACTIONS.ROAD, currEdge) not in legalActions:
-              legalActions.append((ACTIONS.ROAD, currEdge))
+              legalActions.add((ACTIONS.ROAD, currEdge))
 
       # Look at all unoccupied edges coming from the player's existing roads
       for road in agent.roads:
@@ -82,7 +82,7 @@ class GameState:
           for currEdge in currEdges:
             if not currEdge.isOccupied(): 
               if (ACTIONS.ROAD, currEdge) not in legalActions:
-                legalActions.append((ACTIONS.ROAD, currEdge)) 
+                legalActions.add((ACTIONS.ROAD, currEdge)) 
 
     # If they can settle...
     if agent.canSettle():
@@ -93,15 +93,13 @@ class GameState:
         for possibleSettlement in possibleSettlements:
           if possibleSettlement.canSettle:
             if (ACTIONS.SETTLE, possibleSettlement) not in legalActions:
-              legalActions.append((ACTIONS.SETTLE, possibleSettlement))
+              legalActions.add((ACTIONS.SETTLE, possibleSettlement))
 
     # If they can build a city...
     if agent.canBuildCity():
-
       # All current settlements are valid city locations
       for settlement in agent.settlements:
-        if (ACTIONS.CITY, settlement) not in legalActions:
-          legalActions.append((ACTIONS.CITY, settlement))
+        legalActions.add((ACTIONS.CITY, settlement))
             
     return legalActions
 
@@ -233,9 +231,9 @@ class Game:
     color = getColorForPlayer(index)
 
     if playerCode == 0:
-      return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH)
-    elif playerCode == 1:
       return PlayerAgentRandom("Player "+str(index), index, color)
+    elif playerCode == 1:
+      return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH)
     elif playerCode == 2:
       return PlayerAgentExpectiminimax("Player "+str(index), index, color, depth=DEPTH,evalFn=builderEvalFn)
     elif playerCode == 3:
@@ -246,6 +244,41 @@ class Game:
       self.playerAgentNums = getPlayerAgentSpecifications()
     for i in xrange(NUM_PLAYERS):
       self.gameState.playerAgents[i] = self.createPlayer(self.playerAgentNums[i], i)
+
+  def initializeSettlementsAndResources(self):
+    # --- START RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
+    # Each player starts with 2 settlements
+    # # Use beginner board suggested settlements
+    # initialSettlements = ([
+    #   (self.gameState.board.getVertex(2, 4), self.gameState.board.getVertex(4, 8)),
+    #   (self.gameState.board.getVertex(2, 8), self.gameState.board.getVertex(3, 5)),
+    #   (self.gameState.board.getVertex(3, 1), self.gameState.board.getVertex(4, 3)), # unused
+    #   (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6)) # unused
+    #   ]) 
+    # initialRoads = ([
+    #   (self.gameState.board.getEdge(4, 3), self.gameState.board.getEdge(8, 8)),
+    #   (self.gameState.board.getEdge(4, 7), self.gameState.board.getEdge(6, 4)),
+    #   (self.gameState.board.getEdge(6, 1), self.gameState.board.getEdge(8, 3)), # unused
+    #   (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)) # unused
+    #   ])
+    # --- END RESOURCE/SETTLEMENT PRESET INITIALIZATION --- #
+
+
+    # --- START RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
+    # Pick two settlements at random and two roads that connect from them
+    for i in range(len(self.gameState.playerAgents)):
+      agent = self.gameState.playerAgents[i]
+      for s in range(NUM_INITIAL_SETTLEMENTS):
+        settlement = self.gameState.board.getRandomVertexForSettlement()
+        self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settlement))
+        agent.settlements.append(settlement); 
+        road = self.gameState.board.getRandomRoad(settlement)
+        self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, road))
+        agent.roads.append(road);
+    # Each player starts with resources for each of their settlements
+    for agent in self.gameState.playerAgents:
+      agent.collectInitialResources(self.gameState.board)
+    # --- END RESOURCE/SETTLEMENT RANDOM INITIALIZATION --- #
 
   def run(self):    
     """
@@ -267,54 +300,14 @@ class Game:
     print "-----------------------------"
     # DEBUG = True if raw_input("DEBUG mode? (y/n) ") == "y" else False
     self.initializePlayers()
-
-    # --- START RESOURCE/SETTLEMENT INITIALIZATION --- #
-
-    # Each player starts with 2 settlements
-    # Use beginner board suggested settlements
-    initialSettlements = ([
-      (self.gameState.board.getVertex(2, 4), self.gameState.board.getVertex(4, 8)),
-      (self.gameState.board.getVertex(2, 8), self.gameState.board.getVertex(3, 5)),
-      (self.gameState.board.getVertex(3, 1), self.gameState.board.getVertex(4, 3)), # unused
-      (self.gameState.board.getVertex(1, 4), self.gameState.board.getVertex(4, 6)) # unused
-      ]) 
-
-    initialRoads = ([
-      (self.gameState.board.getEdge(4, 3), self.gameState.board.getEdge(8, 8)),
-      (self.gameState.board.getEdge(4, 7), self.gameState.board.getEdge(6, 4)),
-      (self.gameState.board.getEdge(6, 1), self.gameState.board.getEdge(8, 3)), # unused
-      (self.gameState.board.getEdge(2, 3), self.gameState.board.getEdge(8, 6)) # unused
-      ])
-    # Use % to essentially loop through and assign a settlement to each agent until
-    # there are no more settlements to assign
-    # ASSUMPTION: len(initialSettlements) is a clean multiple of # agents
-    for i in range(len(self.gameState.playerAgents)):
-      agent = self.gameState.playerAgents[i % self.gameState.getNumPlayerAgents()]
-      settleOne, settleTwo = initialSettlements[i]
-      roadOne, roadTwo = initialRoads[i]
-      agent.settlements.append(settleOne); agent.settlements.append(settleTwo)
-      agent.roads.append(roadOne); agent.roads.append(roadTwo)
-      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settleOne))
-      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settleTwo))
-      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, roadOne))
-      self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.ROAD, roadTwo))
-
-    # Each player starts with resources for each of their settlements
-    for agent in self.gameState.playerAgents:
-      agent.collectInitialResources(self.gameState.board)
-
-    # --- END RESOURCE/SETTLEMENT INITIALIZATION --- #
-
+    self.initializeSettlementsAndResources()
     # Turn tracking
     turnNumber = 1
     currentAgentIndex = 0
-
     # Main game loop
     while (self.gameState.gameOver() < 0):
-
       # Draw the gameboard
       # self.drawGame()
-
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
       print "---------- TURN " + str(turnNumber) + " --------------"
@@ -325,37 +318,34 @@ class Game:
         print "PLAYER INFO:"
         for a in self.gameState.playerAgents:
           print a
-
       # raw_input("Press ENTER to proceed:")
-      
       # Dice roll + resource distribution
       diceRoll = self.gameState.diceAgent.rollDice()
       print "Rolled a " + str(diceRoll)
       self.gameState.updatePlayerResourcesForDiceRoll(diceRoll, verbose = DEBUG)
-
       # The current player performs 1 action
       value, action = currentAgent.getAction(self.gameState)
       if DEBUG: 
         print "Best Action: " + str(action)
         print "Best Value: " + str(value)
-      
       currentAgent.applyAction(action, self.gameState.board)
       self.gameState.board.applyAction(currentAgent.agentIndex, action)
-
       # Print out the updated game state
       if (action != None):
         print str(currentAgent.name) + " took action " + str(action[0]) + " at " + str(action[1]) + "\n"
       else:
         print str(currentAgent.name) + " had no actions to take"
-
       # Track the game's move history
       self.moveHistory.append((currentAgent.name, action))
-      
       # Go to the next player/turn
       currentAgentIndex = (currentAgentIndex+1) % self.gameState.getNumPlayerAgents()
       turnNumber += 1
 
+      # Caps the total number of iterations for a game
+      if turnNumber > 500: break
+
     winner = self.gameState.gameOver()
+    if winner < 0: return (winner, turnNumber, -1)
     agentWinner = self.gameState.playerAgents[winner]
     agentLoser = self.gameState.playerAgents[1-winner]
     print agentWinner.name + " won the game"
@@ -366,9 +356,9 @@ def getStringForPlayer(playerCode):
     0: "Random Agent",
     1: "ExpectiMiniMax Agent - with default heuristic",
     2: "ExpectiMiniMax Agent - with builder Heuristic",
-    3: "ExpectiMiniMax Agent - with resource Heuristic"
-    4: "AlphaBeta Agent - with default Heuristic"
-    5: "AlphaBeta Agent - with builder Heuristic"
+    3: "ExpectiMiniMax Agent - with resource Heuristic",
+    4: "AlphaBeta Agent - with default Heuristic",
+    5: "AlphaBeta Agent - with builder Heuristic",
     6: "AlphaBeta Agent - with resource Heuristic"
   }.get(playerCode, "Not a player."))
 
@@ -382,8 +372,8 @@ def getPlayerAgentSpecifications():
   print "4: AlphaBeta Agent - with default Heuristic"
   print "5: AlphaBeta Agent - with builder Heuristic"
   print "6: AlphaBeta Agent - with resource Heuristic"
-  firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip())
-  secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip())
+  firstPlayerAgent = int(raw_input("Which player type should the first player be: ").strip()[0])
+  secondPlayerAgent = int(raw_input("Which player type should the second player be: ").strip()[0])
   return [firstPlayerAgent, secondPlayerAgent]
 
 NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
@@ -401,10 +391,12 @@ for player in range(4):
 
 START_TIME = time.time()
 for i in range(NUM_ITERATIONS): # for multiple iterations
+  print "STARTING GAME " + str(i) + ": "
   game = Game(playerAgentNums = playerAgentNums)
   stats = game.run()
   debugStatistics.append(stats)
   winner, turns, diffPoints = stats
+  if winner < 0: continue
   for playerNum in game.playerAgentNums:
     if numWins[playerNum] < 0: numWins[playerNum] = 0
   winnerNum = game.playerAgentNums[winner]
@@ -412,7 +404,10 @@ for i in range(NUM_ITERATIONS): # for multiple iterations
   totalVictoryPointDiff[winnerNum] += diffPoints
   totalTurns[winnerNum] += turns
 
+print "============="
 print "\nGame statistics for " + str(NUM_ITERATIONS) + " iterations and depth " + str(DEPTH) + ": "
+print "Player 0: "+ getStringForPlayer(playerAgentNums[0])
+print "Player 1: "+ getStringForPlayer(playerAgentNums[1])
 print "============="
 # print debugStatistics
 for player, wins in numWins.iteritems():
@@ -428,6 +423,7 @@ if numWins[2] > 0: expectiMiniMaxTotal+=numWins[2]
 if numWins[3] > 0: expectiMiniMaxTotal+=numWins[3]
 print "Expectiminimax Agent win percentage: "+str(float(expectiMiniMaxTotal)/NUM_ITERATIONS)
 if numWins[0] >= 0: print "Random Agent win percentage: "+str(float(numWins[1])/NUM_ITERATIONS)
+print "Total elapsed time: "+str(float(time.time()-START_TIME))
 print "\n"
 
 

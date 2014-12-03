@@ -1,11 +1,11 @@
 
 # CHANGES - Vertex canSettle -> occupied(), Hexagon tostring
-
 from sets import Set
 from enum import Enum
 from collections import Counter
 from gameConstants import *
 import math
+import random
 
 # Possible actions a player can take
 Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
@@ -325,6 +325,7 @@ class Board:
   def __init__(self, layout=None):
     if layout == None: raise Exception("Must pass layout to Board.")
     self.layout = layout
+    random.seed()
     
     self.numRows = len(layout)
     self.numCols = len(layout[0])
@@ -475,6 +476,23 @@ class Board:
             if vertex.isCity: resources.append(hexagon.resource)
 
     return resources
+
+  def getRandomVertexForSettlement(self):
+    vertex = None
+    while vertex == None:
+      vX = random.randint(0, len(self.vertices)-1)
+      vY = random.randint(0, len(self.vertices[vX])-1)
+      vertex = self.vertices[vX][vY]
+      if vertex != None and not vertex.canSettle: vertex = None
+    return vertex
+
+  def getRandomRoad(self, vertex):
+    edges = self.getEdgesOfVertex(vertex)
+    randomEdge = None
+    while randomEdge == None:
+      randomEdge = edges[random.randint(0, len(edges)-1)]
+      if randomEdge.isOccupied(): randomEdge = None
+    return randomEdge
 
   def getEdge(self, x, y):
     return self.edges[x][y]
@@ -636,7 +654,7 @@ class Board:
     xOffset = x % 2
     yOffset = y % 2
 
-    if x < len(self.hexagons):
+    if x < len(self.hexagons) and y/2 < len(self.hexagons[x]):
       hexOne = self.hexagons[x][y/2]
       if hexOne != None: vertexHexes.append(hexOne)
 
@@ -645,11 +663,11 @@ class Board:
     weirdY = y/2 
     if yOffset == 1: weirdY += 1
     else: weirdY -= 1
-    if weirdX >= 0 and weirdX < len(self.hexagons):
+    if weirdX >= 0 and weirdX < len(self.hexagons) and weirdY >= 0 and weirdY < len(self.hexagons):
       hexTwo = self.hexagons[weirdX][weirdY]
       if hexTwo != None: vertexHexes.append(hexTwo)
 
-    if x > 0:
+    if x > 0 and x < len(self.hexagons) and y/2 < len(self.hexagons[x]):
       hexThree = self.hexagons[x-1][y/2]
       if hexThree != None: vertexHexes.append(hexThree)
       
