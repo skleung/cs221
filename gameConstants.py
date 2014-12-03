@@ -22,6 +22,7 @@ ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.O
 NUM_PLAYERS = 2
 NUM_ITERATIONS = 4
 DEPTH = 3
+CUTOFF_TURNS = 600
 
 # Types of Agents
 AGENT = Enum(["PLAYER_AGENT", "DICE_AGENT"])
