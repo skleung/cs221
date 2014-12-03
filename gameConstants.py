@@ -1,7 +1,7 @@
 from enum import Enum
 from collections import Counter
 
-GRAPHICS = True
+GRAPHICS = False
 # Moved here because not in draw
 def getColorForPlayer(player):
     return {

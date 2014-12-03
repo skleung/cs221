@@ -2,7 +2,7 @@ from agents import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from gameConstants import *
 from collections import Counter
-from draw import *
+# from draw import *
 import time
 
 class GameState:
@@ -202,7 +202,7 @@ class Game:
     self.moveHistory = []
     self.gameState = GameState()
     self.playerAgentNums = playerAgentNums 
-    if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
+    # if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
 
   # def drawGame(self):
   #   """
@@ -390,7 +390,7 @@ class Game:
     # Main game loop
     while (self.gameState.gameOver() < 0):
       # Draw the gameboard
-      if GRAPHICS: self.drawGame()
+      # if GRAPHICS: self.drawGame()
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
       if VERBOSE:
