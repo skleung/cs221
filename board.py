@@ -337,6 +337,7 @@ class Board:
     self.allRoads = []
     # This dictionary will map a tile's dice number to a list of tiles that that dice roll corresponds to
     self.dieRollDict = {}
+    self.resourceDict = {}
     for i in range(self.numRows):
       for j in range(self.numCols):
         tile = layout[j][i] # Layout reverse, see above
@@ -348,6 +349,12 @@ class Board:
             self.dieRollDict[tile.number].append(self.hexagons[i][j])
           else:
             self.dieRollDict[tile.number] = [self.hexagons[i][j]]
+
+          if tile.resource in self.resourceDict:
+            self.resourceDict[tile.resource].append(self.hexagons[i][j])
+          else:
+            self.resourceDict[tile.resource] = [self.hexagons[i][j]]
+
     for row in self.hexagons:
       for hexagon in row:
         if hexagon == None: continue
@@ -454,6 +461,23 @@ class Board:
             if vertex.isCity: resources.append(hexagon.resource)
 
     return resources
+
+  # Gives back a random hex corresponding to that resource
+  def getRandomResourceHex(self, resource):
+    return random.choice(self.resourceDict[resource])
+
+  def getRandomVerticesForAllResources(self):
+    resourcesForSettlement = [ResourceTypes.LUMBER, ResourceTypes.BRICK, ResourceTypes.WOOL, ResourceTypes.GRAIN]
+    randomVerticesForBothPlayers = []
+    for playerAgent in range(2):
+      verticesForPlayer = []
+      for resource in resourcesForSettlement:
+        randomHex = self.getRandomResourceHex(resource)
+        randomVertex = self.getRandomVertexOnHex(randomHex)
+        self.applyAction(playerAgent, (ACTIONS.SETTLE, randomVertex))
+        verticesForPlayer.append(randomVertex)
+      randomVerticesForBothPlayers.append(verticesForPlayer)
+    return randomVerticesForBothPlayers
 
   # return lumber hex num=index
   def getLumberHex(self, index):
