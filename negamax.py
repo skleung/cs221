@@ -8,18 +8,22 @@ from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from game import *
 from agents import * 
 class Settlers(TwoPlayersGame):
-  def __init__(self, players):
+  def __init__(self, players, nplayer = 1):
     self.game = Game()
     self.players = players
     self.game.initializePlayers()
     self.game.initializeSettlementsAndResourcesLumberBrick()
-    self.nplayer = 1
+    self.nplayer = nplayer
 
   def possible_moves(self):
     return self.game.gameState.getLegalActions(self.nplayer-1)
 
   def make_move(self, action):
     self.game.gameState.makeMove(self.nplayer-1, action)
+    self.game.gameState.board.applyAction(self.nplayer-1, action)
+    diceRoll = self.game.gameState.diceAgent.rollDice()
+    self.game.gameState.updatePlayerResourcesForDiceRoll(diceRoll)
+
 
   def is_over(self):
     """
@@ -31,6 +35,10 @@ class Settlers(TwoPlayersGame):
 
   def show(self):
     return
+  def copy(self):
+    copy = Settlers(self.players, self.nplayer)
+    copy.game.gameState = self.game.gameState.deepCopy()
+    return copy
 
   def scoring(self):
     return defaultEvalFn(self.game.gameState, self.nplayer-1)
