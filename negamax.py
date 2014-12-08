@@ -35,6 +35,7 @@ class Settlers(TwoPlayersGame):
 
   def show(self):
     return
+    
   def copy(self):
     copy = Settlers(self.players, self.nplayer)
     copy.game.gameState = self.game.gameState.deepCopy()
