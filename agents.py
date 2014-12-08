@@ -287,7 +287,6 @@ class PlayerAgent(object):
     # Building a road
     if action[0] is ACTIONS.ROAD:
       if not self.canBuildRoad():
-        import pdb; pdb.set_trace()
         raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to build a road!")
 
       # Add this road to our roads list and update resources
