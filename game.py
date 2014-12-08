@@ -182,7 +182,7 @@ class GameState:
     """
     for agent in self.playerAgents:
       gainedResources = agent.updateResources(diceRoll, self.board)
-      if VERBOSE:
+      if VERBOSE and DEBUG:
         print str(agent.name) + " received: " + str(gainedResources)
         print str(agent.name) + " now has: " + str(agent.resources)
 
@@ -295,7 +295,7 @@ class Game:
     #add random settlement
     for i in range(len(self.gameState.playerAgents)):
       agent = self.gameState.playerAgents[i]
-      for s in range(1):
+      for s in range(2):
         settlement = self.gameState.board.getRandomVertexForSettlement()
         self.gameState.board.applyAction(agent.agentIndex, (ACTIONS.SETTLE, settlement))
         agent.settlements.append(settlement); 
