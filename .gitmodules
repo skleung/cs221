@@ -1,0 +1,3 @@
+[submodule "lib/easyAI"]
+	path = lib/easyAI
+	url = git@github.com:Zulko/easyAI.git
