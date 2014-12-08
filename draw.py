@@ -21,8 +21,8 @@ class Draw:
     self.hexHeight = self.d * 1.6
     self.rowHeight = self.hexHeight * 0.75
     self.numR = 11 # radius of number oval
-    self.width = 700
-    self.height = 600
+    self.width = 1020
+    self.height = 800
     self.yOffset = self.height/4
     self.xOffset = self.width/2
 

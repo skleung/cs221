@@ -2,7 +2,7 @@ from agents import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from gameConstants import *
 from collections import Counter
-# from draw import *
+from draw import *
 import time
 
 class GameState:
@@ -102,8 +102,7 @@ class GameState:
       # All current settlements are valid city locations
       for settlement in agent.settlements:
         legalActions.add((ACTIONS.CITY, settlement))
-            
-    return legalActions
+    return list(legalActions)
 
   def generateSuccessor(self, playerIndex, action):
     """
@@ -129,6 +128,20 @@ class GameState:
     copy.playerAgents[playerIndex].applyAction(action, copy.board)
     copy.board.applyAction(playerIndex, action)
     return copy
+
+  def makeMove(self, playerIndex, action):
+    """
+    Method: generateSuccessor
+    ----------------------------
+    Parameters:
+      playerIndex - the number of the player that is about to take an action
+      action - the action that the player is about to take
+
+    Modifies the current game state to reflect the action that is passed in
+    ----------------------------
+    """
+    self.playerAgents[playerIndex].applyAction(action, self.board)
+    self.board.applyAction(playerIndex, action)
 
   def getNumPlayerAgents(self):
     """
@@ -202,31 +215,31 @@ class Game:
     self.moveHistory = []
     self.gameState = GameState()
     self.playerAgentNums = playerAgentNums 
-    # if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
+    if GRAPHICS: self.draw = Draw(self.gameState.board.tiles)
 
-  # def drawGame(self):
-  #   """
-  #   Method: drawGame
-  #   ----------------------
-  #   Parameters: NA
-  #   Returns: NA
-  #   Draws the graphics for displaying the board
-  #   tiles.
-  #   ----------------------
-  #   """
-  #   self.draw.drawBG()
-  #   self.draw.drawTitle()
-  #   self.draw.drawBoard()
-  #   # draw.drawDiceRoll()
-  #   # draw.drawPlayer(self.curPlayer)
-  #   #draw.drawKey(self)
-  #   self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
-  #   self.draw.drawSettlements(self.gameState.board.allSettlements)
-  #   self.draw.drawCities(self.gameState.board.allCities)
-  #   # else: #gameOver is true
-  #   #     draw.drawWinner(self) #draw winning screen
-  #   #     self.hideButtons()          #hide all buttons 
-  #   #     self.f.place(x=20, y=565)   #except for New Game button
+  def drawGame(self):
+    """
+    Method: drawGame
+    ----------------------
+    Parameters: NA
+    Returns: NA
+    Draws the graphics for displaying the board
+    tiles.
+    ----------------------
+    """
+    self.draw.drawBG()
+    self.draw.drawTitle()
+    self.draw.drawBoard()
+    # draw.drawDiceRoll()
+    # draw.drawPlayer(self.curPlayer)
+    #draw.drawKey(self)
+    self.draw.drawRoads(self.gameState.board.allRoads, self.gameState.board)
+    self.draw.drawSettlements(self.gameState.board.allSettlements)
+    self.draw.drawCities(self.gameState.board.allCities)
+    # else: #gameOver is true
+    #     draw.drawWinner(self) #draw winning screen
+    #     self.hideButtons()          #hide all buttons 
+    #     self.f.place(x=20, y=565)   #except for New Game button
 
   def createPlayer(self, playerCode, index):
     color = getColorForPlayer(index)
@@ -390,7 +403,7 @@ class Game:
     # Main game loop
     while (self.gameState.gameOver() < 0):
       # Draw the gameboard
-      # if GRAPHICS: self.drawGame()
+      if GRAPHICS: self.drawGame()
       # Initial information
       currentAgent = self.gameState.playerAgents[currentAgentIndex]
       if VERBOSE:
@@ -479,55 +492,55 @@ def getPlayerAgentSpecifications():
     return DEFAULT_PLAYER_ARRAY
 
 # We now have 7 agents including the alpha beta agents
-NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
-DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
-playerAgentNums = getPlayerAgentSpecifications()
+# NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
+# DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
+# playerAgentNums = getPlayerAgentSpecifications()
 
-numWins = {}
-totalVictoryPointDiff = {}
-totalTurns = {}
-debugStatistics = []
+# numWins = {}
+# totalVictoryPointDiff = {}
+# totalTurns = {}
+# debugStatistics = []
 
-for player in range(2):
-  numWins[player] = 0
-  totalVictoryPointDiff[player] = 0
-  totalTurns[player] = 0
+# for player in range(2):
+#   numWins[player] = 0
+#   totalVictoryPointDiff[player] = 0
+#   totalTurns[player] = 0
 
-START_TIME = time.time()
-for i in range(NUM_ITERATIONS): # for multiple iterations
-  print "STARTING GAME " + str(i) + ": "
-  game = Game(playerAgentNums = playerAgentNums)
-  stats = game.run()
-  debugStatistics.append(stats)
-  winner, turns, diffPoints = stats
-  if winner < 0: 
-    print "**did not finish**"
-    continue
-  numWins[winner]+=1
-  totalVictoryPointDiff[winner] += diffPoints
-  totalTurns[winner] += turns
+# START_TIME = time.time()
+# for i in range(NUM_ITERATIONS): # for multiple iterations
+#   print "STARTING GAME " + str(i) + ": "
+#   game = Game(playerAgentNums = playerAgentNums)
+#   stats = game.run()
+#   debugStatistics.append(stats)
+#   winner, turns, diffPoints = stats
+#   if winner < 0: 
+#     print "**did not finish**"
+#     continue
+#   numWins[winner]+=1
+#   totalVictoryPointDiff[winner] += diffPoints
+#   totalTurns[winner] += turns
 
-print "============="
-print "\nGame statistics for " + str(NUM_ITERATIONS) + " iterations and depth " + str(DEPTH) + ": "
-print "Player 0: "+ getStringForPlayer(playerAgentNums[0])
-print "Player 1: "+ getStringForPlayer(playerAgentNums[1])
-print "============="
-# print debugStatistics
-# player is the player num, not the type of player
-totalWins = 0
-for player, wins in numWins.iteritems():
-  totalWins += wins
-  playerType = playerAgentNums[player]
-  if wins >= 0: print "PlayerAgent " + str(player) + " (" + getStringForPlayer(playerType) + ") won "+str(wins)+ " games."
-  if wins > 0:
-    print "With an average of " + str(totalVictoryPointDiff[player]/float(wins)) + " victory points difference per game."
-    print "     an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
-    print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
-print "============="
-for player in numWins:
-  if totalWins == 0:
-    totalWins = 1
-  print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/totalWins)
-print "Total elapsed time: "+str(float(time.time()-START_TIME))
-print "\n"
+# print "============="
+# print "\nGame statistics for " + str(NUM_ITERATIONS) + " iterations and depth " + str(DEPTH) + ": "
+# print "Player 0: "+ getStringForPlayer(playerAgentNums[0])
+# print "Player 1: "+ getStringForPlayer(playerAgentNums[1])
+# print "============="
+# # print debugStatistics
+# # player is the player num, not the type of player
+# totalWins = 0
+# for player, wins in numWins.iteritems():
+#   totalWins += wins
+#   playerType = playerAgentNums[player]
+#   if wins >= 0: print "PlayerAgent " + str(player) + " (" + getStringForPlayer(playerType) + ") won "+str(wins)+ " games."
+#   if wins > 0:
+#     print "With an average of " + str(totalVictoryPointDiff[player]/float(wins)) + " victory points difference per game."
+#     print "     an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
+#     print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
+# print "============="
+# for player in numWins:
+#   if totalWins == 0:
+#     totalWins = 1
+#   print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/totalWins)
+# print "Total elapsed time: "+str(float(time.time()-START_TIME))
+# print "\n"
 
