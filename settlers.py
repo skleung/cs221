@@ -1,7 +1,8 @@
 import sys
 import mcts
+import time
 
-def play(human=True, n=1000):
+def play(human=False, n=1000):
 # Testing ConnectFour - mcts_uct()
     game = mcts.Settlers()
     state = game.game.gameState
@@ -11,7 +12,7 @@ def play(human=True, n=1000):
     while not game.terminal(state):
         print game.pretty_state(state, False)
         if human:
-            prompt = 'Choose a move, choices are %s: ' % (game.actions(state), player)
+            prompt = 'Choose a move, choices are %s: ' % (game.actions(state, player))
             success = False
             while not success:
                 choice = raw_input(prompt)
@@ -26,8 +27,7 @@ def play(human=True, n=1000):
         else:
             action = mcts.mcts_uct(game, state, player, n)
             state = game.result(state, action, player)
-
-        print 'Player 1 chose %s' % action
+        print 'Player 1 chose ' + str(action)
         print game.pretty_state(state, False)
 
         # Intermediate win check
@@ -38,7 +38,7 @@ def play(human=True, n=1000):
         action = mcts.mcts_uct(game, state, computer, n)
         state = game.result(state, action, computer)
 
-        print 'Player 2 chose %s' % action
+        print 'Player 2 chose ' + str(action)
 
     print game.pretty_state(state, False)
     print
@@ -51,25 +51,25 @@ def play(human=True, n=1000):
         print 'Tie game.'
     
 
-n = 1000
+n = 100
 if len(sys.argv) > 1:
     try:
         n = int(sys.argv[1])
     except ValueError:
         pass
 
-n = 1000
+n = 100
 if '-n' in sys.argv:
     try:
         n = int(sys.argv[sys.argv.index('-n') + 1])
     except:
         pass
 
-human = True
+human = False
 if '-c' in sys.argv:
     human = False
-
+START_TIME = time.time()
 print 'Number of Sample Iterations: ' + str(n)
 print 'Human Player: ' + str(human)
-print
 play(n=n, human=human)
+print "time elapsed = "+str(time.time()-START_TIME)

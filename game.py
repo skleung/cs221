@@ -102,6 +102,13 @@ class GameState:
       # All current settlements are valid city locations
       for settlement in agent.settlements:
         legalActions.add((ACTIONS.CITY, settlement))
+
+    # Trading actions
+    for curResource in agent.resources: 
+      if agent.resources[curResource] >=4:
+        for otherResource in agent.resources:
+          if curResource != otherResource:
+            legalActions.add((ACTIONS.TRADE, (curResource, otherResource)))
     return list(legalActions)
 
   def generateSuccessor(self, playerIndex, action):

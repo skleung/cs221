@@ -10,6 +10,9 @@ from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from game import *
 from agents import * 
 
+VALUE_WIN = 1
+VALUE_LOSE = -1
+
 class MCTSGame(object):
     """
     Base class for multi-player adversarial games.
@@ -49,6 +52,8 @@ class Settlers(MCTSGame):
         return state.getLegalActions(player)
 
     def result(self, state, action, player):
+        dieRoll = state.diceAgent.rollDice()
+        state.updatePlayerResourcesForDiceRoll(dieRoll)
         return state.generateSuccessor(player, action)
 
     def terminal(self, state):
@@ -66,9 +71,9 @@ class Settlers(MCTSGame):
         
     def outcome(self, state, player):
         if state.gameOver() == player:
-            return self.VALUE_WIN
+            return VALUE_WIN
         else:
-            return self.VALUE_LOSE
+            return VALUE_LOSE
 
 
 class Node(object):
@@ -304,7 +309,7 @@ def full_tree(game, state, player):
     
     current = None
     while active.qsize() > 0:
-        current = active.get()
+        current = active.get()  
         # Assign value if this is a terminal node
         if game.terminal(current.state):
             continue

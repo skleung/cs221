@@ -7,9 +7,6 @@ from gameConstants import *
 import math
 import random
 
-# Possible actions a player can take
-Actions = Enum(["DRAW", "SETTLE", "CITY", "ROAD", "TRADE"])
-
 # Different resource types a tile could have
 ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER" ,"NOTHING"])
 # A dictionary from resource type (enum, above) to string representation
@@ -423,6 +420,9 @@ class Board:
 
   def applyAction(self, playerIndex, action):
     if action is None:
+      return
+    
+    if action[0] == ACTIONS.TRADE: 
       return
       
     if action[0] == ACTIONS.SETTLE:

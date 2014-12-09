@@ -3,7 +3,6 @@ sys.path.insert(0, '/easyAI/easyAI')
 
 from easyAI import TwoPlayersGame
 from easyAI import AI_Player, Negamax
-from agents import *
 from board import BeginnerLayout, Board, Edge, Hexagon, Vertex
 from game import *
 from agents import * 
