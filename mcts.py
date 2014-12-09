@@ -45,8 +45,8 @@ class Settlers(MCTSGame):
         self.game.initializePlayers()
         self.game.initializeSettlementsAndResourcesLumberBrick()
 
-    def pretty_state(self, state, escape=False):
-        return
+    def pretty_state(self, state):
+        self.game.drawGame()
 
     def actions(self, state, player):
         return state.getLegalActions(player)
