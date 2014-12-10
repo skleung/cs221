@@ -55,7 +55,7 @@ def play(n=100, human=False, randomFlag=True):
     if graphics: game.pretty_state(state)
     print
     outcome = game.outcome(state, player)
-    ptDeficit = abs(game.game.gameState.playerAgents[0].victoryPoints - game.game.gameState.playerAgents[1].victoryPoints)
+    ptDeficit = abs(state.playerAgents[0].victoryPoints - state.playerAgents[1].victoryPoints)
     if outcome == 1:
         print 'Player 1 wins.'
         return (1, numTurns, ptDeficit)
@@ -135,17 +135,22 @@ for i in range(n):
         randomPtDeficit.append(ptDeficit)
     else:
         weirdGames += 1
+
+def getAvg(arr):
+    if len(arr) == 0:
+        return "0"
+    return str(sum(arr)/float(len(arr)))
 print "===================="
 print "Overall statistics: "
 print str(mctsWins) + " wins for MCTS"
-print "Average time to win for MCTS =" + str(sum(mctsTimes)/len(mctsTimes))
-print "Average turns to win for MCTS =" + str(sum(mctsTurns)/len(mctsTurns))
-print "Average ptDecifit to win for MCTS =" + str(sum(mctsPtDeficit)/len(mctsPtDeficit))
+print "Average time to win for MCTS =" + getAvg(mctsTimes)
+print "Average turns to win for MCTS =" + getAvg(mctsTurns)
+print "Average ptDecifit to win for MCTS =" + getAvg(mctsPtDeficit)
 
 print str(randomWins) + " wins for Random player"
-print "Average time to win for Random Player =" + str(sum(randomTimes)/len(randomTimes))
-print "Average turns to win for Random Player =" + str(sum(randomTurns)/len(randomTurns))
-print "Average ptDecifit to win for Random Player =" + str(sum(randomPtDeficit)/len(randomPtDeficit))
+print "Average time to win for Random player =" + getAvg(randomTimes)
+print "Average turns to win for Random player =" + getAvg(randomTurns)
+print "Average ptDecifit to win for Random player =" + getAvg(randomPtDeficit)
 print
 
 
