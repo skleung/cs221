@@ -498,7 +498,6 @@ def getPlayerAgentSpecifications():
   else:
     return DEFAULT_PLAYER_ARRAY
 
-# We now have 7 agents including the alpha beta agents
 # NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
 # DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
 # playerAgentNums = getPlayerAgentSpecifications()

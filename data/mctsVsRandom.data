@@ -1,0 +1,46 @@
+MCTS vs. RANDOM (10 Iterations)
+---------------
+Overall statistics:
+6 wins for MCTS
+Average time to win for MCTS =429.69735531
+Average turns to win for MCTS =28.1666666667
+Average ptDecifit to win for MCTS =5.5
+1 wins for Random player
+Average time to win for Random player =449.044687033
+Average turns to win for Random player =33.0
+Average ptDecifit to win for Random player =1.0
+
+3 unfinished games happened
+0.857142857143 %% win rate by MCTS agent
+
+
+MCTS vs. RANDOM (10 Iterations)
+---------------
+Overall statistics:
+5 wins for MCTS
+Average time to win for MCTS =376.12567296
+Average turns to win for MCTS =27.4
+Average ptDecifit to win for MCTS =6.4
+1 wins for Random player
+Average time to win for Random player =543.352169991
+Average turns to win for Random player =46.0
+Average ptDecifit to win for Random player =5.0
+
+4 unfinished games happened
+0.833333333333 %% win rate by MCTS agent
+
+
+MCTS vs. Random (10 iterations)
+-------------------------------------
+Overall statistics:
+4 wins for MCTS
+Average time to win for MCTS =492.655431986
+Average turns to win for MCTS =29.75
+Average ptDecifit to win for MCTS =8.0
+1 wins for Random player
+Average time to win for Random player =392.213704109
+Average turns to win for Random player =32.0
+Average ptDecifit to win for Random player =2.0
+
+5 unfinished games happened
+0.8 %% win rate by MCTS agent
