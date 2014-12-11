@@ -67,14 +67,14 @@ def play(n=100, human=False, randomFlag=True):
     return (0, numTurns, ptDeficit)
     
 
-n = 100
+n = 20
 if len(sys.argv) > 1:
     try:
         n = int(sys.argv[1])
     except ValueError:
         pass
 
-n = 100
+n = 20
 if '-n' in sys.argv:
     try:
         n = int(sys.argv[sys.argv.index('-n') + 1])

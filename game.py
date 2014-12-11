@@ -498,55 +498,76 @@ def getPlayerAgentSpecifications():
   else:
     return DEFAULT_PLAYER_ARRAY
 
-# NUM_ITERATIONS = int(raw_input("Enter number of iterations: "));
-# DEPTH = int(raw_input("Enter depth of recursion for non-random agents: "));
-# playerAgentNums = getPlayerAgentSpecifications()
+minimaxFlag = False
+if '-m' in sys.argv:
+    minimaxFlag = True
 
-# numWins = {}
-# totalVictoryPointDiff = {}
-# totalTurns = {}
-# debugStatistics = []
 
-# for player in range(2):
-#   numWins[player] = 0
-#   totalVictoryPointDiff[player] = 0
-#   totalTurns[player] = 0
+NUM_ITERATIONS = 10
+if '-n' in sys.argv:
+    try:
+        NUM_ITERATIONS = int(sys.argv[sys.argv.index('-n') + 1])
+    except:
+        pass
 
-# START_TIME = time.time()
-# for i in range(NUM_ITERATIONS): # for multiple iterations
-#   print "STARTING GAME " + str(i) + ": "
-#   game = Game(playerAgentNums = playerAgentNums)
-#   stats = game.run()
-#   debugStatistics.append(stats)
-#   winner, turns, diffPoints = stats
-#   if winner < 0: 
-#     print "**did not finish**"
-#     continue
-#   numWins[winner]+=1
-#   totalVictoryPointDiff[winner] += diffPoints
-#   totalTurns[winner] += turns
+DEPTH = 1
+if '-d' in sys.argv:
+    try:
+        NUM_ITERATIONS = int(sys.argv[sys.argv.index('-d') + 1])
+    except:
+        pass
 
-# print "============="
-# print "\nGame statistics for " + str(NUM_ITERATIONS) + " iterations and depth " + str(DEPTH) + ": "
-# print "Player 0: "+ getStringForPlayer(playerAgentNums[0])
-# print "Player 1: "+ getStringForPlayer(playerAgentNums[1])
-# print "============="
-# # print debugStatistics
-# # player is the player num, not the type of player
-# totalWins = 0
-# for player, wins in numWins.iteritems():
-#   totalWins += wins
-#   playerType = playerAgentNums[player]
-#   if wins >= 0: print "PlayerAgent " + str(player) + " (" + getStringForPlayer(playerType) + ") won "+str(wins)+ " games."
-#   if wins > 0:
-#     print "With an average of " + str(totalVictoryPointDiff[player]/float(wins)) + " victory points difference per game."
-#     print "     an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
-#     print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
-# print "============="
-# for player in numWins:
-#   if totalWins == 0:
-#     totalWins = 1
-#   print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/totalWins)
-# print "Total elapsed time: "+str(float(time.time()-START_TIME))
-# print "\n"
+VERBOSE = False
+if '-v' in sys.argv:
+  VERBOSE = True
+  
+if minimaxFlag:
+  playerAgentNums = getPlayerAgentSpecifications()
+  numWins = {}
+  totalVictoryPointDiff = {}
+  totalTurns = {}
+  debugStatistics = []
+
+  for player in range(2):
+    numWins[player] = 0
+    totalVictoryPointDiff[player] = 0
+    totalTurns[player] = 0
+
+  START_TIME = time.time()
+  for i in range(NUM_ITERATIONS): # for multiple iterations
+    print "STARTING GAME " + str(i) + ": "
+    game = Game(playerAgentNums = playerAgentNums)
+    stats = game.run()
+    debugStatistics.append(stats)
+    winner, turns, diffPoints = stats
+    if winner < 0: 
+      print "**did not finish**"
+      continue
+    numWins[winner]+=1
+    totalVictoryPointDiff[winner] += diffPoints
+    totalTurns[winner] += turns
+
+  print "============="
+  print "\nGame statistics for " + str(NUM_ITERATIONS) + " iterations and depth " + str(DEPTH) + ": "
+  print "Player 0: "+ getStringForPlayer(playerAgentNums[0])
+  print "Player 1: "+ getStringForPlayer(playerAgentNums[1])
+  print "============="
+  # print debugStatistics
+  # player is the player num, not the type of player
+  totalWins = 0
+  for player, wins in numWins.iteritems():
+    totalWins += wins
+    playerType = playerAgentNums[player]
+    if wins >= 0: print "PlayerAgent " + str(player) + " (" + getStringForPlayer(playerType) + ") won "+str(wins)+ " games."
+    if wins > 0:
+      print "With an average of " + str(totalVictoryPointDiff[player]/float(wins)) + " victory points difference per game."
+      print "     an average of " + str(totalTurns[player]/float(wins)) + " turns to win game."
+      print " and an average of " + str(float(time.time()-START_TIME)/NUM_ITERATIONS) + " seconds per game."
+  print "============="
+  for player in numWins:
+    if totalWins == 0:
+      totalWins = 1
+    print "Player " + str(player) + " win percentage: "+str(float(numWins[player])/totalWins)
+  print "Total elapsed time: "+str(float(time.time()-START_TIME))
+  print "\n"
 
