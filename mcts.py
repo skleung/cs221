@@ -274,6 +274,7 @@ class Node(object):
         manner. The outcome of the simulation is returns as the state value for
         the given player.
         """
+        
         st = self.state
         pl = self.player
         heuristic = self.game.heuristicFnForComputerType(computerHeuristic)

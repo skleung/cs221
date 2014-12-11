@@ -2,6 +2,7 @@ import sys
 import mcts
 import random
 import time
+import traceback
 
 def play(n=100, computerHeuristic=None, randomFlag=True):
 # Testing ConnectFour - mcts_uct()
@@ -124,6 +125,7 @@ for i in range(n):
     except Exception as e:
         whoWon = 0
         print "EXCEPTION WAS THROWN: " + str(e)
+        traceback.print_exc()
         pass
     timeElapsed = time.time()-startTime
     print "Game #"+str(i)+": time elapsed = "+str(timeElapsed)
