@@ -314,6 +314,14 @@ class PlayerAgent(object):
       self.resources.subtract(CITY_COST)
       self.victoryPoints += CITY_VICTORY_POINTS
 
+        # Trading 4 of the first resource for another resource
+    if action[0] is ACTIONS.TRADE:
+      surplusResource, neededResource = action[1]
+      if (self.resources[surplusResource] < 4):
+        raise Exception("Player " + str(self.agentIndex) + " doesn't have enough resources to trade")
+      self.resources[surplusResource] -= 1
+      self.resources[neededResource] += 1
+
   def updateResources(self, diceRoll, board):
     """
     Method: updateResources

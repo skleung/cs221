@@ -23,7 +23,7 @@ VERBOSE = False
 
 DEFAULT_PLAYER_ARRAY = [4,0]
 
-ACTIONS = Enum(["SETTLE", "CITY", "ROAD"])
+ACTIONS = Enum(["SETTLE", "CITY", "ROAD", "TRADE"])
 
 ResourceTypes = Enum(["BRICK", "WOOL", "ORE", "GRAIN", "LUMBER" ,"NOTHING"])
 
