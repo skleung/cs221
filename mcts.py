@@ -76,6 +76,50 @@ class Settlers(MCTSGame):
         else:
             return VALUE_LOSE
 
+    """
+    Method: heuristicFnForComputerType
+    ----------------------------------
+
+    Returns the appropriate heuristic for the given type of
+    computer player to use in MCTS.
+    This heuristic is used to determine what action to choose
+    when traversing the game tree.  The heuristic takes
+    a list of all possible actions as a parameter.  The heuristics are:
+    
+    computer = 0: uniformly random
+    computer = 1: random with emphasis on trading
+    computer = 2: random with emphasis on roads
+    computer = 3: random with emphasis on settlements
+    computer = 4: random with emphasis on cities
+    """
+    def heuristicFnForComputerType(self, computer):
+
+        # A function that returns a random action from the given
+        # list, with the given type of action weighted twice
+        # as heavily as all the others
+        def chooseWeightedActionFromList(actionsList, preferredAction):
+
+            # Build a new actions list, where we double every action
+            # that is of the preferred type so it's 2x as likely to be chosen
+            weightedActionsList = []
+            for action in actionsList:
+                weightedActionsList.append(action)
+                if action[0] is preferredAction:
+                    weightedActionsList.append(action)
+
+            return random.choice(weightedActionsList)
+
+
+        # Return the appropriate heuristic lambda function
+        return {
+            0: lambda actions: random.choice(actions),
+            1: lambda actions: chooseWeightedActionFromList(actions, ACTIONS.TRADE),
+            2: lambda actions: chooseWeightedActionFromList(actions, ACTIONS.ROAD),
+            3: lambda actions: chooseWeightedActionFromList(actions, ACTIONS.SETTLE),
+            4: lambda actions: chooseWeightedActionFromList(actions, ACTIONS.CITY)
+        }.get(computer, None)
+
+
 
 class Node(object):
 
@@ -224,7 +268,7 @@ class Node(object):
         """
         return max(self.children.values(), key=lambda x: x.weight)
 
-    def simulation(self, player):
+    def simulation(self, player, computerHeuristic):
         """
         Simulates the game to completion, choosing moves in a uniformly random
         manner. The outcome of the simulation is returns as the state value for
@@ -232,10 +276,11 @@ class Node(object):
         """
         st = self.state
         pl = self.player
+        heuristic = self.game.heuristicFnForComputerType(computerHeuristic)
         while not self.game.terminal(st):
             action = None
             if len(self.game.actions(st, pl)) > 0:
-                action = sample(self.game.actions(st, pl), 1)[0]
+                action = heuristic(self.game.actions(st, pl))
             st = self.game.result(st, action, pl)
             # update resources here!
 
@@ -272,10 +317,11 @@ class Node(object):
         return output
 
 
-def mcts_uct(game, state, player, budget):
+def mcts_uct(game, state, player, computerHeuristic, budget):
     """
     Implementation of the UCT variant of the MCTS algorithm.
     """
+
     root = Node(None, None, state, player, game)
     while budget:
         budget -= 1
@@ -288,7 +334,7 @@ def mcts_uct(game, state, player, budget):
             else:
                 child = child.best_child()
         # Default Policy
-        delta = child.simulation(player)
+        delta = child.simulation(player, computerHeuristic)
         # Backup
         while not child is None:
             child.visits += 1

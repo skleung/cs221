@@ -3,7 +3,7 @@ import mcts
 import random
 import time
 
-def play(n=100, human=False, randomFlag=True):
+def play(n=100, computerHeuristic=None, randomFlag=True):
 # Testing ConnectFour - mcts_uct()
     game = mcts.Settlers()
     state = game.game.gameState
@@ -15,7 +15,7 @@ def play(n=100, human=False, randomFlag=True):
     while not game.terminal(state):
         numTurns += 1
         if graphics: game.pretty_state(state)
-        if human:
+        if computerHeuristic is None:
             prompt = 'Choose a move, choices are %s: ' % (game.actions(state, player))
             success = False
             while not success:
@@ -48,7 +48,7 @@ def play(n=100, human=False, randomFlag=True):
 
         # Computer plays now
         ts = time.time()
-        action = mcts.mcts_uct(game, state, computer, n)
+        action = mcts.mcts_uct(game, state, computer, computerHeuristic, n)
         state = game.result(state, action, computer)
         print 'Player 2 (MCTS) chose ' + str(action) + " (elapsed time="+str(time.time()-ts)+")"
 
@@ -81,9 +81,12 @@ if '-n' in sys.argv:
     except:
         pass
 
-human = False
+computer = None
 if '-c' in sys.argv:
-    human = False
+    try:
+        computer = int(sys.argv[sys.argv.index('-c') + 1])
+    except:
+        pass
 
 randomFlag = False
 if '-r' in sys.argv:
@@ -93,7 +96,8 @@ START_TIME = time.time()
 print 'Number of Total Iterations: ' + str(n)
 print 'Number of Sample simulations for MCTS algorithm: ' + str(50)
 print 'Who is the first player?'
-print 'Human Player: ' + str(human)
+print 'Human Player: ' + str(computer is None)
+print 'Computer Player: ' + str(computer)
 print 'Random Player: ' + str(randomFlag)
 print 'Expectimax Player: ' + str(not randomFlag)
 
@@ -116,10 +120,10 @@ for i in range(n):
     startTime = time.time()
     try:
         # Note: I'm hardcoding our number of sample iterations to 50 here!
-        whoWon, nTurns, ptDeficit = play(n=50, human=human, randomFlag=randomFlag)
-    except Exception:
+        whoWon, nTurns, ptDeficit = play(n=50, computerHeuristic=computer, randomFlag=randomFlag)
+    except Exception as e:
         whoWon = 0
-        print "EXCEPTION WAS THROWN"
+        print "EXCEPTION WAS THROWN: " + str(e)
         pass
     timeElapsed = time.time()-startTime
     print "Game #"+str(i)+": time elapsed = "+str(timeElapsed)
