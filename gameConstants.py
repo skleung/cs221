@@ -21,7 +21,7 @@ CUTOFF_TURNS = 600
 
 VERBOSE = False
 
-DEFAULT_PLAYER_ARRAY = [4,0]
+DEFAULT_PLAYER_ARRAY = [11,11]
 
 ACTIONS = Enum(["SETTLE", "CITY", "ROAD", "TRADE"])
 
@@ -37,7 +37,7 @@ CITY_COST = Counter({ResourceTypes.GRAIN: 2, ResourceTypes.ORE: 3})
 ResourceDict = {ResourceTypes.GRAIN:"G", ResourceTypes.WOOL:"W", ResourceTypes.ORE:"O", ResourceTypes.LUMBER:"L", ResourceTypes.BRICK:"B", ResourceTypes.NOTHING:"N"}
 NUM_PLAYERS = 2
 NUM_ITERATIONS = 4
-DEPTH = 3
+DEPTH = 1
 
 # Types of Agents
 AGENT = Enum(["PLAYER_AGENT", "DICE_AGENT"])

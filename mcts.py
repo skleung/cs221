@@ -42,6 +42,7 @@ class Settlers(MCTSGame):
     def __init__(self):
         self.players  = (0,1)
         self.game = Game()
+        # Note that this initialization actually initializes both players to be alphaBeta agents
         self.game.initializePlayers()
         self.game.initializeSettlementsAndResourcesLumberBrick()
 
@@ -208,7 +209,6 @@ class Node(object):
     def best_child(self, c=1/sqrt(2)):
         if not self.fully_expanded():
             raise Exception('Node is not fully expanded')
-
         return max(self.children.values(), key=lambda x: x.search_weight(c))
         
     def best_action(self, c=1/sqrt(2)):
