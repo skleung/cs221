@@ -109,6 +109,12 @@ class GameState:
         for otherResource in agent.resources:
           if curResource != otherResource:
             legalActions.add((ACTIONS.TRADE, (curResource, otherResource)))
+
+    # If there are no possible actions, all you can do is pass
+    if len(legalActions) is 0:
+      return [(ACTIONS.PASS, None)]
+
+    # Otherwise, return all possible actions
     return list(legalActions)
 
   def generateSuccessor(self, playerIndex, action):

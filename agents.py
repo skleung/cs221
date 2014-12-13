@@ -269,6 +269,9 @@ class PlayerAgent(object):
     -----------------------
     """
     if action is None:
+      raise Exception("Action is none!")
+
+    if action[0] is ACTIONS.PASS:
       return
 
     # Settling
@@ -437,8 +440,10 @@ class PlayerAgentExpectiminimax(PlayerAgent):
 
       possibleActions = currState.getLegalActions(playerIndex)
 
+      if len(possibleActions) is 0: raise Exception("no actions!")
+
       # If there are no possible actions (must pass)
-      if len(possibleActions) is 0:
+      if len(possibleActions) is 1 and possibleActions[0][0] is ACTIONS.PASS:
         return self.evaluationFunction(currState, self.agentIndex)
       # if len(possibleActions) > 6:
       #   return self.evaluationFunction(currState, self.agentIndex)
@@ -498,9 +503,11 @@ class PlayerAgentExpectiminimax(PlayerAgent):
 
     possibleActions = state.getLegalActions(self.agentIndex)
 
+    if len(possibleActions) is 0: raise Exception("no actions!")
+
     # If there are no possible actions (must pass)
-    if len(possibleActions) is 0:
-      return (self.evaluationFunction(state, self.agentIndex), None)
+    if len(possibleActions) is 1 and possibleActions[0][0] is ACTIONS.PASS:
+        return self.evaluationFunction(currState, self.agentIndex)
 
     # RECURSIVE CASE
     # ----------------------
@@ -570,9 +577,11 @@ class PlayerAgentAlphaBeta(PlayerAgent):
 
       possibleActions = currState.getLegalActions(playerIndex)
 
+      if len(possibleActions) is 0: raise Exception("no actions!")
+
       # If there are no possible actions (must pass)
-      if len(possibleActions) is 0:
-        return (self.evaluationFunction(currState, self.agentIndex), None)
+      if len(possibleActions) is 1 and possibleActions[0][0] is ACTIONS.PASS:
+        return self.evaluationFunction(currState, self.agentIndex)
 
       # RECURSIVE CASE
       # ----------------------
@@ -663,9 +672,11 @@ class PlayerAgentAlphaBeta(PlayerAgent):
 
     possibleActions = state.getLegalActions(self.agentIndex)
 
+    if len(possibleActions) is 0: raise Exception("no actions!")
+
     # If there are no possible actions (must pass)
-    if len(possibleActions) is 0:
-      return (self.evaluationFunction(state, self.agentIndex), None)
+    if len(possibleActions) is 1 and possibleActions[0][0] is ACTIONS.PASS:
+        return self.evaluationFunction(currState, self.agentIndex)
 
     # RECURSIVE CASE
     # ----------------------
@@ -712,8 +723,10 @@ class PlayerAgentRandom(PlayerAgent):
 
     possibleActions = state.getLegalActions(self.agentIndex)
 
+    if len(possibleActions) is 0: raise Exception("no actions!")
+
     # If there are no possible actions (must pass)
-    if len(possibleActions) is 0:
+    if len(possibleActions) is 1 and possibleActions[0][0] is ACTIONS.PASS:
       return (0, None)
 
     # Otherwise pick a random action
@@ -770,8 +783,10 @@ class PlayerAgentExpectimax(PlayerAgent):
 
       possibleActions = currState.getLegalActions(playerIndex)
 
+      if len(possibleActions) is 0: raise Exception("no actions!")
+
       # If there are no possible actions (must pass)
-      if len(possibleActions) is 0:
+      if len(possibleActions) is 1 and possibleActions[0][0] is ACTIONS.PASS:
         return self.evaluationFunction(currState, self.agentIndex)
 
       # RECURSIVE CASE
@@ -829,9 +844,11 @@ class PlayerAgentExpectimax(PlayerAgent):
 
     possibleActions = state.getLegalActions(self.agentIndex)
 
+    if len(possibleActions) is 0: raise Exception("no actions!")
+    
     # If there are no possible actions (must pass)
-    if len(possibleActions) is 0:
-      return (self.evaluationFunction(state, self.agentIndex), None)
+    if len(possibleActions) is 1 and possibleActions[0][0] is ACTIONS.PASS:
+        return self.evaluationFunction(currState, self.agentIndex)
 
     # RECURSIVE CASE
     # ----------------------

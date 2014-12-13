@@ -420,6 +420,9 @@ class Board:
 
   def applyAction(self, playerIndex, action):
     if action is None:
+      raise Exception("Action is none!")
+
+    if action[0] is ACTIONS.PASS:
       return
     
     if action[0] == ACTIONS.TRADE: 
