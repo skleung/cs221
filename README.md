@@ -10,15 +10,14 @@ By default, you can play the MCTS agent vs. random by running:
 
 To change the number of iterations played, use the `-n` flag and a number to specify the number you want.
 
-To run the Expectimax and the Expectiminimax agents, run
-`python game.py -m`
+To run the minimax agents, run
+`python game.py -v`
 
-By default, this will run the non-graphics, Expectimax vs. Random simulation.  To run Expectiminimax vs.
-Random, please go into gameConstants.py and change the first number in DEFAULT_PLAYER_ARRAY from 11 to 12.
-(11 is Expectimax, 12 is Expectiminimax).
+Choose an Expectimax Agent (#11) or an Expectiminimax Agent (#12) from the game menu.
 
 By default the depth is set to 1 and the number of iterations are set to 10. Use the `-d` and the `-n` flag respectively to change these values.
 
-To view the actions and the turn by turn summary associated with the game, add the -v flag.
+To turn off the turn-by-turn summary associated with the game, run:
+`python game.py -m`
 
 To view the graphics associated with the game,  add the -g flag.
