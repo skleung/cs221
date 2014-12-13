@@ -3,7 +3,7 @@ import mcts
 import random
 import time
 
-def play(n=100, human=False, randomFlag=True):
+def play(n=100, human=False, minimaxFlag=True):
 # Testing ConnectFour - mcts_uct()
     game = mcts.Settlers()
     state = game.game.gameState
@@ -116,7 +116,7 @@ for i in range(n):
     startTime = time.time()
     try:
         # Note: I'm hardcoding our number of sample iterations to 50 here!
-        whoWon, nTurns, ptDeficit = play(n=50, human=human, randomFlag=randomFlag)
+        whoWon, nTurns, ptDeficit = play(n=50, human=human, minimaxFlag=minimaxFlag)
     except Exception:
         whoWon = 0
         print "EXCEPTION WAS THROWN"
