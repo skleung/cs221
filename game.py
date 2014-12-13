@@ -503,6 +503,10 @@ if '-m' in sys.argv:
     minimaxFlag = True
 
 
+if '-g' in sys.argv:
+    GRAPHICS = True
+
+
 NUM_ITERATIONS = 10
 if '-n' in sys.argv:
     try:
@@ -520,7 +524,7 @@ if '-d' in sys.argv:
 VERBOSE = False
 if '-v' in sys.argv:
   VERBOSE = True
-  
+
 if minimaxFlag:
   playerAgentNums = getPlayerAgentSpecifications()
   numWins = {}
