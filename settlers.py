@@ -29,16 +29,17 @@ def play(n=100, human=False, randomFlag=True):
                 except Exception:
                     pass
             print 'Player 1 (Human) chose ' + str(action)
-        elif randomFlag:
+        elif minimaxFlag:
+            action = state.playerAgents[player].getAction(state)
+            state = game.result(state, action, player)
+            print 'Player 1 (Expectiminimax) chose ' + str(action)
+            
+        # defaults to Random agent...
+        else:
             actions = game.actions(state, player)
             action = random.choice(actions)
             state = game.result(state, action, player)
             print 'Player 1 (Random) chose ' + str(action)
-        # defaults to Minimax agent...
-        else:
-            action = state.playerAgents[player].getAction(state)
-            state = game.result(state, action, player)
-            print 'Player 1 (Expectiminimax) chose ' + str(action)
         
         if graphics: game.pretty_state(state)
 
@@ -85,18 +86,17 @@ human = False
 if '-c' in sys.argv:
     human = False
 
-randomFlag = False
-if '-r' in sys.argv:
-    randomFlag = True
+minimaxFlag = False
+if '-m' in sys.argv:
+    minimaxFlag = True
 
 START_TIME = time.time()
 print 'Number of Total Iterations: ' + str(n)
 print 'Number of Sample simulations for MCTS algorithm: ' + str(50)
 print 'Who is the first player?'
 print 'Human Player: ' + str(human)
-print 'Random Player: ' + str(randomFlag)
-print 'Expectimax Player: ' + str(not randomFlag)
-
+print 'Random Player: ' + str(not minimaxFlag)
+print 'Expectimax Player: ' + str(minimaxFlag)
 
 mctsWins = 0
 mctsTurns = []
